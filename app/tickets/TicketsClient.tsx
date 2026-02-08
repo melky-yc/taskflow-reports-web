@@ -1,0 +1,1081 @@
+﻿"use client";
+
+import { useMemo, useRef, useState } from "react";
+import { useFormStatus } from "react-dom";
+import { ChevronDown, Inbox } from "lucide-react";
+import cidadesPi from "@/data/cidades_pi.json";
+import { createTicketAction, updateTicketAction } from "@/app/tickets/actions";
+import type { TicketClient } from "@/app/tickets/types";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  buildTicketsFilename,
+  exportToCSV,
+  exportToXLSX,
+  mapToExportRow,
+} from "@/utils/exportTickets";
+
+const MOTIVOS = [
+  "Problema de cadastro",
+  "Informações incorretas na plataforma",
+  "Dificuldade de utilizar a plataforma",
+  "Problema em área e atuação",
+  "Outro",
+];
+
+const PRIORIDADES = ["Baixa", "Media", "Alta"];
+const USO_PLATAFORMA = ["Mobile", "Web"];
+const UF_PADRAO = "PI";
+const CIDADES_PI = cidadesPi.cidades;
+const CIDADES_LIST_ID = "cidades-pi";
+
+type TicketsClientProps = {
+  currentUserName: string;
+  tickets: TicketClient[];
+  filters: { period: string; motivo: string };
+  pagination: {
+    page: number;
+    totalPages: number;
+    prevHref?: string;
+    nextHref?: string;
+  };
+  status?: string;
+  error?: string;
+};
+
+type EditFormState = {
+  motivo: string;
+  motivoOutro: string;
+  prioridade: string;
+  dataAtendimentoBr: string;
+  dataAtendimentoIso: string;
+  retroativoMotivo: string;
+  clienteNome: string;
+  clienteCpfDigits: string;
+  clienteCidade: string;
+  clienteEstado: string;
+  clienteUsoPlataforma: string;
+  clienteUnidade: string;
+};
+
+function formatCpf(digits: string) {
+  const clean = digits.replace(/\D/g, "").slice(0, 11);
+  const part1 = clean.slice(0, 3);
+  const part2 = clean.slice(3, 6);
+  const part3 = clean.slice(6, 9);
+  const part4 = clean.slice(9, 11);
+  if (!clean) {
+    return "";
+  }
+  if (clean.length <= 3) {
+    return part1;
+  }
+  if (clean.length <= 6) {
+    return `${part1}.${part2}`;
+  }
+  if (clean.length <= 9) {
+    return `${part1}.${part2}.${part3}`;
+  }
+  return `${part1}.${part2}.${part3}-${part4}`;
+}
+
+function maskCpf(digits: string) {
+  if (digits.length !== 11) {
+    return digits;
+  }
+  return `${digits.slice(0, 3)}.***.***-${digits.slice(9, 11)}`;
+}
+
+function parseDateOnly(value: string) {
+  return new Date(`${value}T00:00:00`);
+}
+
+function formatDate(value?: string | null) {
+  if (!value) {
+    return "-";
+  }
+  return new Intl.DateTimeFormat("pt-BR").format(parseDateOnly(value));
+}
+
+function formatDateTime(value?: string | null) {
+  if (!value) {
+    return "-";
+  }
+  return new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
+
+function maskDateInput(value: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 8);
+  const day = digits.slice(0, 2);
+  const month = digits.slice(2, 4);
+  const year = digits.slice(4, 8);
+  let result = day;
+  if (digits.length > 2) {
+    result += `/${month}`;
+  }
+  if (digits.length > 4) {
+    result += `/${year}`;
+  }
+  return result;
+}
+
+function brToIso(value: string) {
+  const match = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!match) {
+    return "";
+  }
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  const year = Number(match[3]);
+  if (!day || !month || !year) {
+    return "";
+  }
+  const date = new Date(year, month - 1, day);
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return "";
+  }
+  const dayValue = String(day).padStart(2, "0");
+  const monthValue = String(month).padStart(2, "0");
+  return `${year}-${monthValue}-${dayValue}`;
+}
+
+function isoToBr(value?: string | null) {
+  if (!value) {
+    return "";
+  }
+  const [year, month, day] = value.split("-");
+  if (!year || !month || !day) {
+    return "";
+  }
+  return `${day}/${month}/${year}`;
+}
+
+function isRetroativoIso(dateValue: string) {
+  if (!dateValue) {
+    return false;
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  return dateValue < today;
+}
+
+function prioridadeBadge(prioridade: string) {
+  if (prioridade === "Alta") return "danger";
+  if (prioridade === "Media") return "warning";
+  return "muted";
+}
+
+function motivoBadge(motivo: string) {
+  if (motivo === "Outro") return "warning";
+  if (motivo.includes("Problema")) return "muted";
+  return "success";
+}
+
+function SubmitButton({ disabled }: { disabled: boolean }) {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" disabled={disabled || pending}>
+      {pending ? "Salvando..." : "Salvar chamado"}
+    </Button>
+  );
+}
+
+function UpdateButton() {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" disabled={pending}>
+      {pending ? "Salvando..." : "Salvar alterações"}
+    </Button>
+  );
+}
+
+export default function TicketsClient({
+  currentUserName,
+  tickets,
+  filters,
+  pagination,
+  status,
+  error,
+}: TicketsClientProps) {
+  const [motivo, setMotivo] = useState("");
+  const [motivoOutro, setMotivoOutro] = useState("");
+  const [dataAtendimentoBr, setDataAtendimentoBr] = useState("");
+  const [dataAtendimentoIso, setDataAtendimentoIso] = useState("");
+  const [retroativoMotivo, setRetroativoMotivo] = useState("");
+  const [cpfDigits, setCpfDigits] = useState("");
+  const [isCreateValid, setIsCreateValid] = useState(false);
+  const [exportNotice, setExportNotice] = useState("");
+
+  const createFormRef = useRef<HTMLFormElement | null>(null);
+
+  const retroativo = useMemo(
+    () => isRetroativoIso(dataAtendimentoIso),
+    [dataAtendimentoIso]
+  );
+
+  const [editTicket, setEditTicket] = useState<TicketClient | null>(null);
+  const [editForm, setEditForm] = useState<EditFormState | null>(null);
+
+  const openEdit = (ticket: TicketClient) => {
+    const dataAtendimentoIso = ticket.data_atendimento ?? "";
+    setEditTicket(ticket);
+    setEditForm({
+      motivo: ticket.motivo,
+      motivoOutro: ticket.motivo_outro_descricao ?? "",
+      prioridade: ticket.prioridade,
+      dataAtendimentoBr: isoToBr(dataAtendimentoIso),
+      dataAtendimentoIso,
+      retroativoMotivo: ticket.retroativo_motivo ?? "",
+      clienteNome: ticket.client.nome,
+      clienteCpfDigits: ticket.client.cpf,
+      clienteCidade: ticket.client.cidade,
+      clienteEstado: ticket.client.estado_uf || UF_PADRAO,
+      clienteUsoPlataforma: ticket.client.uso_plataforma ?? "",
+      clienteUnidade: ticket.client.unidade,
+    });
+  };
+
+  const closeEdit = () => {
+    setEditTicket(null);
+    setEditForm(null);
+  };
+
+  const editRetroativo = useMemo(
+    () => (editForm ? isRetroativoIso(editForm.dataAtendimentoIso) : false),
+    [editForm]
+  );
+
+  const statusMessage =
+    status === "created"
+      ? "Chamado criado com sucesso."
+      : status === "updated"
+      ? "Chamado atualizado com sucesso."
+      : "";
+
+  const errorMessage = (() => {
+    switch (error) {
+      case "campos":
+        return "Preencha todos os campos obrigatórios.";
+      case "cpf":
+        return "CPF deve conter 11 dígitos.";
+      case "estado":
+        return "UF deve conter 2 letras.";
+      case "motivo":
+        return "Descreva o motivo quando selecionar Outro.";
+      case "retroativo":
+        return "Informe o motivo do retroativo.";
+      case "cliente":
+        return "Não foi possível salvar o cliente.";
+      case "ticket":
+        return "Não foi possível salvar o chamado.";
+      case "editar":
+        return "Não foi possível editar o chamado.";
+      default:
+        return "";
+    }
+  })();
+
+  const cpfDisplay = formatCpf(cpfDigits);
+
+  const updateCreateValidity = (nextBr?: string, nextIso?: string) => {
+    const form = createFormRef.current;
+    if (!form) return;
+    const brValue = typeof nextBr === "string" ? nextBr : dataAtendimentoBr;
+    const isoValue = typeof nextIso === "string" ? nextIso : dataAtendimentoIso;
+    const hasDateInput = brValue.trim().length > 0;
+    const isDateValid = !hasDateInput || Boolean(isoValue);
+    setIsCreateValid(form.checkValidity() && isDateValid);
+  };
+
+  const handleCreateInput = () => {
+    updateCreateValidity();
+  };
+
+  const handleCreateDateChange = (value: string) => {
+    const masked = maskDateInput(value);
+    const isoValue = brToIso(masked);
+    setDataAtendimentoBr(masked);
+    setDataAtendimentoIso(isoValue);
+    updateCreateValidity(masked, isoValue);
+  };
+
+  const handleExport = (type: "csv" | "xlsx") => {
+    const rows = tickets.map(mapToExportRow);
+    if (rows.length === 0) {
+      return;
+    }
+    const filename = buildTicketsFilename(filters, type);
+    if (type === "csv") {
+      exportToCSV(rows, filename);
+    } else {
+      exportToXLSX(rows, filename);
+    }
+    setExportNotice("Exportação gerada.");
+    window.setTimeout(() => setExportNotice(""), 3000);
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card id="novo-chamado">
+        <CardHeader>
+          <CardTitle>Chamados de Suporte</CardTitle>
+          <CardDescription>
+            Registre e acompanhe chamados de suporte de TI.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-3">
+            {statusMessage ? (
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-800">
+                {statusMessage}
+              </div>
+            ) : null}
+            {errorMessage ? (
+              <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-700">
+                {errorMessage}
+              </div>
+            ) : null}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Novo Chamado</CardTitle>
+          <CardDescription>
+            Preencha os dados abaixo para abrir um novo chamado.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form
+            ref={createFormRef}
+            action={createTicketAction}
+            className="space-y-6"
+            onInput={handleCreateInput}
+            onChange={handleCreateInput}
+          >
+            <section className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-slate-700">
+                  Profissional
+                </h3>
+                <Badge variant="muted">Autenticado</Badge>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-slate-600">
+                    E-mail
+                  </label>
+                  <Input
+                    readOnly
+                    value={currentUserName}
+                    className="bg-slate-100"
+                  />
+                </div>
+              </div>
+            </section>
+
+            <Separator />
+
+            <section className="space-y-3">
+              <h3 className="text-sm font-semibold text-slate-700">
+                Dados do Chamado
+              </h3>
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-slate-600">
+                    Motivo
+                  </label>
+                  <Select
+                    name="motivo"
+                    value={motivo}
+                    onChange={(event) => {
+                      setMotivo(event.target.value);
+                      if (event.target.value !== "Outro") {
+                        setMotivoOutro("");
+                      }
+                    }}
+                    required
+                  >
+                    <option value="">Selecione</option>
+                    {MOTIVOS.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-slate-600">
+                    Prioridade
+                  </label>
+                  <Select name="prioridade" required>
+                    <option value="">Selecione</option>
+                    {PRIORIDADES.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-slate-600">
+                    Data de atendimento
+                  </label>
+                  <Input
+                    value={dataAtendimentoBr}
+                    onChange={(event) => handleCreateDateChange(event.target.value)}
+                    inputMode="numeric"
+                    placeholder="DD/MM/AAAA"
+                  />
+                  <input
+                    type="hidden"
+                    name="data_atendimento"
+                    value={dataAtendimentoIso}
+                  />
+                </div>
+              </div>
+
+              {motivo === "Outro" ? (
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-slate-600">
+                    Descrição do motivo (Outro)
+                  </label>
+                  <Textarea
+                    name="motivo_outro_descricao"
+                    value={motivoOutro}
+                    onChange={(event) => setMotivoOutro(event.target.value)}
+                    required
+                  />
+                </div>
+              ) : null}
+            </section>
+
+            <Separator />
+
+            <section className="space-y-3">
+              <h3 className="text-sm font-semibold text-slate-700">
+                Dados do Cliente
+              </h3>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-slate-600">
+                    Nome
+                  </label>
+                  <Input name="cliente_nome" required />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-slate-600">
+                    CPF
+                  </label>
+                  <Input
+                    inputMode="numeric"
+                    value={cpfDisplay}
+                    onChange={(event) => {
+                      const digits = event.target.value
+                        .replace(/\D/g, "")
+                        .slice(0, 11);
+                      setCpfDigits(digits);
+                    }}
+                    placeholder="000.000.000-00"
+                    required
+                  />
+                  <input type="hidden" name="cliente_cpf" value={cpfDigits} />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-slate-600">
+                    Cidade
+                  </label>
+                  <Input
+                    name="cliente_cidade"
+                    list={CIDADES_LIST_ID}
+                    placeholder="Selecione a cidade"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-slate-600">UF</label>
+                  <Input
+                    name="cliente_estado"
+                    value={UF_PADRAO}
+                    readOnly
+                    className="bg-slate-100"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-slate-600">
+                    Uso da plataforma
+                  </label>
+                  <Select name="cliente_uso_plataforma">
+                    <option value="">Selecione</option>
+                    {USO_PLATAFORMA.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-slate-600">
+                    Unidade
+                  </label>
+                  <Input name="cliente_unidade" required />
+                </div>
+              </div>
+            </section>
+
+            <Separator />
+
+            <section className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-slate-700">Retroativo</h3>
+                <Badge variant={retroativo ? "warning" : "muted"}>
+                  {retroativo ? "Retroativo" : "Normal"}
+                </Badge>
+              </div>
+              <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                A data de atendimento define automaticamente se o chamado é
+                retroativo.
+              </div>
+
+              {retroativo ? (
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-slate-600">
+                    Motivo do retroativo
+                  </label>
+                  <Textarea
+                    name="retroativo_motivo"
+                    value={retroativoMotivo}
+                    onChange={(event) => setRetroativoMotivo(event.target.value)}
+                    required
+                  />
+                </div>
+              ) : null}
+            </section>
+
+            <div className="flex justify-end">
+              <SubmitButton disabled={!isCreateValid} />
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <CardTitle>Últimos Chamados</CardTitle>
+            <CardDescription>
+              {tickets.length} registros encontrados
+            </CardDescription>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <form method="get" className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 text-sm text-slate-600">
+              <span>Período</span>
+              <div className="relative">
+                <Select
+                  name="period"
+                  defaultValue={filters.period}
+                  className="h-9 pr-8"
+                >
+                  <option value="7">7 dias</option>
+                  <option value="30">30 dias</option>
+                  <option value="90">90 dias</option>
+                </Select>
+                <ChevronDown className="pointer-events-none absolute right-2 top-2.5 h-4 w-4 text-slate-400" />
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-slate-600">
+              <span>Motivo</span>
+              <div className="relative">
+                <Select
+                  name="motivo"
+                  defaultValue={filters.motivo === "all" ? "" : filters.motivo}
+                  className="h-9 pr-8"
+                >
+                  <option value="">Todos</option>
+                  {MOTIVOS.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </Select>
+                <ChevronDown className="pointer-events-none absolute right-2 top-2.5 h-4 w-4 text-slate-400" />
+              </div>
+            </div>
+            <Button variant="secondary" className="h-9">
+              Filtrar
+            </Button>
+            </form>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-9"
+                onClick={() => handleExport("csv")}
+                disabled={tickets.length === 0}
+              >
+                Exportar CSV
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-9"
+                onClick={() => handleExport("xlsx")}
+                disabled={tickets.length === 0}
+              >
+                Exportar XLSX
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {exportNotice ? (
+            <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-800">
+              {exportNotice}
+            </div>
+          ) : null}
+          <div className="overflow-x-auto">
+            <table className="min-w-full border-collapse text-sm">
+              <thead className="sticky top-0 bg-white">
+                <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
+                  <th className="px-3 py-2">ID</th>
+                  <th className="px-3 py-2">Data</th>
+                  <th className="px-3 py-2">Profissional</th>
+                  <th className="px-3 py-2">Motivo</th>
+                  <th className="px-3 py-2">Prioridade</th>
+                  <th className="px-3 py-2">Cliente</th>
+                  <th className="px-3 py-2">CPF</th>
+                  <th className="px-3 py-2">Unidade</th>
+                  <th className="px-3 py-2">Criado em</th>
+                  <th className="px-3 py-2"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {tickets.length === 0 ? (
+                  <tr>
+                    <td colSpan={10} className="px-6 py-14">
+                      <div className="flex flex-col items-center gap-3 text-slate-500">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
+                          <Inbox className="h-5 w-5" />
+                        </div>
+                        <div className="text-sm font-medium">
+                          Nenhum chamado encontrado
+                        </div>
+                        <div className="text-xs text-slate-400">
+                          Ajuste os filtros ou crie um novo chamado.
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  tickets.map((ticket) => (
+                    <tr
+                      key={ticket.id}
+                      className="border-b border-slate-100 text-slate-700 hover:bg-slate-50"
+                    >
+                      <td className="px-3 py-3 font-medium">#{ticket.id}</td>
+                      <td className="px-3 py-3">
+                        {formatDate(ticket.data_atendimento)}
+                      </td>
+                      <td className="px-3 py-3">{ticket.profissional_nome}</td>
+                      <td className="px-3 py-3">
+                        <Badge variant={motivoBadge(ticket.motivo)}>
+                          {ticket.motivo}
+                        </Badge>
+                      </td>
+                      <td className="px-3 py-3">
+                        <Badge variant={prioridadeBadge(ticket.prioridade)}>
+                          {ticket.prioridade}
+                        </Badge>
+                      </td>
+                      <td className="px-3 py-3">{ticket.client.nome}</td>
+                      <td className="px-3 py-3 font-mono text-xs">
+                        {maskCpf(ticket.client.cpf)}
+                      </td>
+                      <td className="px-3 py-3">{ticket.client.unidade}</td>
+                      <td className="px-3 py-3">
+                        {formatDateTime(ticket.created_at)}
+                      </td>
+                      <td className="px-3 py-3 text-right">
+                        <Button
+                          variant="ghost"
+                          className="h-8 px-3"
+                          type="button"
+                          onClick={() => openEdit(ticket)}
+                        >
+                          Editar
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
+            <div>
+              Página {pagination.page} de {pagination.totalPages}
+            </div>
+            <div className="flex items-center gap-2">
+              {pagination.prevHref ? (
+                <a
+                  className="rounded-lg border border-slate-200 px-3 py-1 hover:bg-slate-50"
+                  href={pagination.prevHref}
+                >
+                  Anterior
+                </a>
+              ) : (
+                <span className="rounded-lg border border-slate-100 px-3 py-1 text-slate-300">
+                  Anterior
+                </span>
+              )}
+              {pagination.nextHref ? (
+                <a
+                  className="rounded-lg border border-slate-200 px-3 py-1 hover:bg-slate-50"
+                  href={pagination.nextHref}
+                >
+                  Próxima
+                </a>
+              ) : (
+                <span className="rounded-lg border border-slate-100 px-3 py-1 text-slate-300">
+                  Próxima
+                </span>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {editTicket && editForm ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4 py-6">
+          <div className="w-full max-w-3xl overflow-hidden rounded-xl bg-white shadow-xl">
+            <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-4">
+              <div>
+                <h3 className="text-lg font-semibold">Editar chamado</h3>
+                <p className="text-sm text-slate-500">
+                  Atualize os dados do chamado e do cliente.
+                </p>
+              </div>
+              <Button variant="ghost" className="h-8 px-3" type="button" onClick={closeEdit}>
+                Fechar
+              </Button>
+            </div>
+
+            <div className="max-h-[80vh] overflow-y-auto px-6 py-5">
+              <form action={updateTicketAction} className="space-y-5">
+                <input type="hidden" name="ticket_id" value={editTicket.id} />
+                <input type="hidden" name="client_id" value={editTicket.client_id} />
+                <input
+                  type="hidden"
+                  name="cliente_cpf"
+                  value={editForm.clienteCpfDigits}
+                />
+                <input
+                  type="hidden"
+                  name="data_atendimento"
+                  value={editForm.dataAtendimentoIso}
+                />
+
+                <section className="space-y-3">
+                  <h4 className="text-sm font-semibold text-slate-700">
+                    Dados do Chamado
+                  </h4>
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-slate-600">
+                        Motivo
+                      </label>
+                      <Select
+                        name="motivo"
+                        value={editForm.motivo}
+                        onChange={(event) =>
+                          setEditForm((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  motivo: event.target.value,
+                                  motivoOutro:
+                                    event.target.value === "Outro"
+                                      ? prev.motivoOutro
+                                      : "",
+                                }
+                              : prev
+                          )
+                        }
+                        required
+                      >
+                        {MOTIVOS.map((item) => (
+                          <option key={item} value={item}>
+                            {item}
+                          </option>
+                        ))}
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-slate-600">
+                        Prioridade
+                      </label>
+                      <Select
+                        name="prioridade"
+                        value={editForm.prioridade}
+                        onChange={(event) =>
+                          setEditForm((prev) =>
+                            prev ? { ...prev, prioridade: event.target.value } : prev
+                          )
+                        }
+                        required
+                      >
+                        {PRIORIDADES.map((item) => (
+                          <option key={item} value={item}>
+                            {item}
+                          </option>
+                        ))}
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-slate-600">
+                        Data de atendimento
+                      </label>
+                      <Input
+                        value={editForm.dataAtendimentoBr}
+                        onChange={(event) => {
+                          const masked = maskDateInput(event.target.value);
+                          const isoValue = brToIso(masked);
+                          setEditForm((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  dataAtendimentoBr: masked,
+                                  dataAtendimentoIso: isoValue,
+                                }
+                              : prev
+                          );
+                        }}
+                        inputMode="numeric"
+                        placeholder="DD/MM/AAAA"
+                      />
+                    </div>
+                  </div>
+
+                  {editForm.motivo === "Outro" ? (
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-slate-600">
+                        Descrição do motivo (Outro)
+                      </label>
+                      <Textarea
+                        name="motivo_outro_descricao"
+                        value={editForm.motivoOutro}
+                        onChange={(event) =>
+                          setEditForm((prev) =>
+                            prev
+                              ? { ...prev, motivoOutro: event.target.value }
+                              : prev
+                          )
+                        }
+                        required
+                      />
+                    </div>
+                  ) : null}
+                </section>
+
+                <Separator />
+
+                <section className="space-y-3">
+                  <h4 className="text-sm font-semibold text-slate-700">
+                    Dados do Cliente
+                  </h4>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-slate-600">
+                        Nome
+                      </label>
+                      <Input
+                        name="cliente_nome"
+                        value={editForm.clienteNome}
+                        onChange={(event) =>
+                          setEditForm((prev) =>
+                            prev
+                              ? { ...prev, clienteNome: event.target.value }
+                              : prev
+                          )
+                        }
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-slate-600">
+                        CPF (não editável)
+                      </label>
+                      <Input
+                        value={formatCpf(editForm.clienteCpfDigits)}
+                        readOnly
+                        className="bg-slate-100"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-slate-600">
+                        Cidade
+                      </label>
+                      <Input
+                        name="cliente_cidade"
+                        value={editForm.clienteCidade}
+                        onChange={(event) =>
+                          setEditForm((prev) =>
+                            prev
+                              ? { ...prev, clienteCidade: event.target.value }
+                              : prev
+                          )
+                        }
+                        list={CIDADES_LIST_ID}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-slate-600">UF</label>
+                      <Input
+                        name="cliente_estado"
+                        value={editForm.clienteEstado || UF_PADRAO}
+                        readOnly
+                        className="bg-slate-100"
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-slate-600">
+                        Uso da plataforma
+                      </label>
+                      <Select
+                        name="cliente_uso_plataforma"
+                        value={editForm.clienteUsoPlataforma}
+                        onChange={(event) =>
+                          setEditForm((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  clienteUsoPlataforma: event.target.value,
+                                }
+                              : prev
+                          )
+                        }
+                      >
+                        <option value="">Selecione</option>
+                        {USO_PLATAFORMA.map((item) => (
+                          <option key={item} value={item}>
+                            {item}
+                          </option>
+                        ))}
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-slate-600">
+                        Unidade
+                      </label>
+                      <Input
+                        name="cliente_unidade"
+                        value={editForm.clienteUnidade}
+                        onChange={(event) =>
+                          setEditForm((prev) =>
+                            prev
+                              ? { ...prev, clienteUnidade: event.target.value }
+                              : prev
+                          )
+                        }
+                        required
+                      />
+                    </div>
+                  </div>
+                </section>
+
+                <Separator />
+
+                <section className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-semibold text-slate-700">Retroativo</h4>
+                    <Badge variant={editRetroativo ? "warning" : "muted"}>
+                      {editRetroativo ? "Retroativo" : "Normal"}
+                    </Badge>
+                  </div>
+                  {editRetroativo ? (
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-slate-600">
+                        Motivo do retroativo
+                      </label>
+                      <Textarea
+                        name="retroativo_motivo"
+                        value={editForm.retroativoMotivo}
+                        onChange={(event) =>
+                          setEditForm((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  retroativoMotivo: event.target.value,
+                                }
+                              : prev
+                          )
+                        }
+                        required
+                      />
+                    </div>
+                  ) : (
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                      Este chamado não é retroativo.
+                    </div>
+                  )}
+                </section>
+
+                <div className="sticky bottom-0 -mx-6 mt-6 border-t border-slate-200 bg-white px-6 py-4">
+                  <div className="flex items-center justify-end gap-2">
+                    <Button variant="outline" type="button" onClick={closeEdit}>
+                      Cancelar
+                    </Button>
+                    <UpdateButton />
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <datalist id={CIDADES_LIST_ID}>
+        {CIDADES_PI.map((cidade) => (
+          <option key={cidade} value={cidade} />
+        ))}
+      </datalist>
+    </div>
+  );
+}
