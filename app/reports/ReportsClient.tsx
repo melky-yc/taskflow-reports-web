@@ -281,7 +281,11 @@ export default function ReportsClient() {
       return;
     }
 
-    const tickets: ReportTicket[] = (data ?? []).map((ticket) => ({
+    const tickets: ReportTicket[] = (data ?? []).map((ticket) => {
+      const clientData = Array.isArray(ticket.clients)
+        ? ticket.clients[0]
+        : ticket.clients;
+      return {
       id: ticket.id,
       created_at: ticket.created_at,
       data_atendimento: ticket.data_atendimento,
@@ -290,14 +294,15 @@ export default function ReportsClient() {
       profissional_nome: ticket.profissional_nome,
       retroativo: Boolean(ticket.retroativo),
       client: {
-        nome: ticket.clients?.nome ?? "",
-        cpf: ticket.clients?.cpf ?? "",
-        cidade: ticket.clients?.cidade ?? "",
-        estado_uf: ticket.clients?.estado_uf ?? "",
-        uso_plataforma: ticket.clients?.uso_plataforma ?? null,
-        unidade: ticket.clients?.unidade ?? "",
+        nome: clientData?.nome ?? "",
+        cpf: clientData?.cpf ?? "",
+        cidade: clientData?.cidade ?? "",
+        estado_uf: clientData?.estado_uf ?? "",
+        uso_plataforma: clientData?.uso_plataforma ?? null,
+        unidade: clientData?.unidade ?? "",
       },
-    }));
+    };
+    });
 
     const summary = buildSummary(tickets, rangeLabel);
 

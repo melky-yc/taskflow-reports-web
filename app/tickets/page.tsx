@@ -84,26 +84,31 @@ export default async function TicketsPage({
 
   const { data, count } = await query;
 
-  const tickets: TicketClient[] = (data ?? []).map((ticket) => ({
-    id: ticket.id,
-    created_at: ticket.created_at,
-    data_atendimento: ticket.data_atendimento,
-    motivo: ticket.motivo,
-    motivo_outro_descricao: ticket.motivo_outro_descricao,
-    prioridade: ticket.prioridade,
-    profissional_nome: ticket.profissional_nome,
-    retroativo_motivo: ticket.retroativo_motivo,
-    client_id: ticket.client_id,
-    client: {
-      id: ticket.clients?.id ?? ticket.client_id,
-      nome: ticket.clients?.nome ?? "",
-      cpf: ticket.clients?.cpf ?? "",
-      cidade: ticket.clients?.cidade ?? "",
-      estado_uf: ticket.clients?.estado_uf ?? "",
-      uso_plataforma: ticket.clients?.uso_plataforma ?? null,
-      unidade: ticket.clients?.unidade ?? "",
-    },
-  }));
+  const tickets: TicketClient[] = (data ?? []).map((ticket) => {
+    const clientData = Array.isArray(ticket.clients)
+      ? ticket.clients[0]
+      : ticket.clients;
+    return {
+      id: ticket.id,
+      created_at: ticket.created_at,
+      data_atendimento: ticket.data_atendimento,
+      motivo: ticket.motivo,
+      motivo_outro_descricao: ticket.motivo_outro_descricao,
+      prioridade: ticket.prioridade,
+      profissional_nome: ticket.profissional_nome,
+      retroativo_motivo: ticket.retroativo_motivo,
+      client_id: ticket.client_id,
+      client: {
+        id: clientData?.id ?? ticket.client_id,
+        nome: clientData?.nome ?? "",
+        cpf: clientData?.cpf ?? "",
+        cidade: clientData?.cidade ?? "",
+        estado_uf: clientData?.estado_uf ?? "",
+        uso_plataforma: clientData?.uso_plataforma ?? null,
+        unidade: clientData?.unidade ?? "",
+      },
+    };
+  });
 
   const totalPages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
 

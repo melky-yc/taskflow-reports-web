@@ -6,16 +6,11 @@ import {
   Settings,
   Ticket,
 } from "lucide-react";
-import { signOutAction } from "@/app/actions";
-import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/server";
+import UserMenu from "@/components/UserMenu";
 
 const NAV_ITEMS = [
-  {
-    href: "/dashboard",
-    label: "Dashboard",
-    icon: LayoutDashboard,
-    key: "dashboard",
-  },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, key: "dashboard" },
   { href: "/tickets", label: "Tickets", icon: Ticket, key: "tickets" },
   { href: "/reports", label: "Relatórios", icon: BarChart3, key: "reports" },
   { href: "/config", label: "Configuração", icon: Settings, key: "config" },
@@ -27,7 +22,12 @@ type AppShellProps = {
   children: React.ReactNode;
 };
 
-export default function AppShell({ active, breadcrumb, children }: AppShellProps) {
+export default async function AppShell({ active, breadcrumb, children }: AppShellProps) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <header className="fixed left-0 top-0 z-40 w-full border-b border-slate-200 bg-white/90 backdrop-blur">
@@ -49,43 +49,28 @@ export default function AppShell({ active, breadcrumb, children }: AppShellProps
               ) : null}
             </div>
           </div>
-          <form action={signOutAction}>
-            <Button variant="outline" className="h-9">
-              Sair
-            </Button>
-          </form>
+          <UserMenu email={user?.email} />
         </div>
       </header>
 
       <div className="mx-auto flex w-full max-w-7xl gap-6 px-6 pb-10 pt-24">
         <aside className="w-60">
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <div className="sticky top-24 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
               Navegação
             </div>
-            <nav className="mt-4 flex flex-col gap-2 text-sm">
+            <nav className="mt-4 flex flex-col gap-1.5 text-sm">
               {NAV_ITEMS.map((item) => {
                 const isActive = active === item.key;
                 const Icon = item.icon;
-                if (item.disabled) {
-                  return (
-                    <div
-                      key={item.key}
-                      className="flex items-center gap-2 rounded-lg px-3 py-2 text-slate-400"
-                    >
-                      <Icon className="h-4 w-4" />
-                      {item.label} (em breve)
-                    </div>
-                  );
-                }
                 return (
                   <Link
                     key={item.key}
                     href={item.href}
-                    className={`flex items-center gap-2 rounded-lg px-3 py-2 font-medium transition ${
+                    className={`flex items-center gap-2 rounded-xl px-3 py-2 font-medium transition ${
                       isActive
-                        ? "bg-[color:var(--primary)] text-white"
-                        : "text-slate-700 hover:bg-slate-100"
+                        ? "bg-[color:var(--primary)] text-white shadow-sm"
+                        : "text-slate-600 hover:bg-slate-100"
                     }`}
                   >
                     <Icon className="h-4 w-4" />

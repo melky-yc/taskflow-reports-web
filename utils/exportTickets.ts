@@ -14,7 +14,7 @@ export const EXPORT_HEADERS = [
   "cliente_uso_plataforma",
   "cliente_unidade",
   "created_at",
-] as const;
+] as string[];
 
 export type ExportRow = string[];
 
@@ -124,7 +124,7 @@ export function exportToCSV(rows: ExportRow[], filename: string) {
 }
 
 export function exportToXLSX(rows: ExportRow[], filename: string) {
-  const data = [EXPORT_HEADERS, ...rows];
+  const data: string[][] = [EXPORT_HEADERS.slice(), ...rows];
   const worksheet = XLSX.utils.aoa_to_sheet(data);
 
   const colWidths = EXPORT_HEADERS.map((_, colIndex) => {
