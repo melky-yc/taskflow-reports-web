@@ -23,7 +23,7 @@ alter table public.clients
   add constraint clients_cpf_digits_chk check (cpf ~ '^[0-9]{11}$'),
   add constraint clients_estado_uf_len_chk check (char_length(estado_uf) = 2),
   add constraint clients_uso_plataforma_chk check (
-    uso_plataforma is null or uso_plataforma in ('Mobile', 'Web')
+    uso_plataforma is null or uso_plataforma in ('Mobile', 'Web', 'Ambos', 'Não informado')
   );
 
 create unique index if not exists clients_cpf_uidx on public.clients (cpf);
@@ -56,6 +56,7 @@ alter table public.tickets
       'Problema de cadastro',
       'Informações incorretas na plataforma',
       'Dificuldade de utilizar a plataforma',
+      'Alteração de Perfil',
       'Problema em área e atuação',
       'Outro'
     )
@@ -164,3 +165,4 @@ create policy "profiles_delete_auth" on public.profiles
   using (true);
 
 commit;
+

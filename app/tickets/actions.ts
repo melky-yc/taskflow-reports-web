@@ -21,6 +21,15 @@ function normalizeText(value: string) {
   return value.trim();
 }
 
+function normalizePrioridade(value: string) {
+  const trimmed = normalizeText(value);
+  return trimmed === "Média" ? "Media" : trimmed;
+}
+
+function normalizeMotivo(value: string) {
+  return normalizeText(value);
+}
+
 function getTodayIso() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -52,11 +61,11 @@ export async function createTicketAction(formData: FormData) {
     redirect("/login");
   }
 
-  const motivo = normalizeText(String(formData.get("motivo") || ""));
+  const motivo = normalizeMotivo(String(formData.get("motivo") || ""));
   const motivoOutro = normalizeText(
     String(formData.get("motivo_outro_descricao") || "")
   );
-  const prioridade = normalizeText(String(formData.get("prioridade") || ""));
+  const prioridade = normalizePrioridade(String(formData.get("prioridade") || ""));
   const dataAtendimento = normalizeText(
     String(formData.get("data_atendimento") || "")
   );
@@ -158,6 +167,7 @@ export async function createTicketAction(formData: FormData) {
   });
 
   if (ticketError) {
+    console.error("ticket_insert_error", ticketError);
     redirect("/tickets?error=ticket");
   }
 
@@ -178,11 +188,11 @@ export async function updateTicketAction(formData: FormData) {
   const ticketId = Number(formData.get("ticket_id"));
   const clientId = Number(formData.get("client_id"));
 
-  const motivo = normalizeText(String(formData.get("motivo") || ""));
+  const motivo = normalizeMotivo(String(formData.get("motivo") || ""));
   const motivoOutro = normalizeText(
     String(formData.get("motivo_outro_descricao") || "")
   );
-  const prioridade = normalizeText(String(formData.get("prioridade") || ""));
+  const prioridade = normalizePrioridade(String(formData.get("prioridade") || ""));
   const dataAtendimento = normalizeText(
     String(formData.get("data_atendimento") || "")
   );
@@ -253,9 +263,11 @@ export async function updateTicketAction(formData: FormData) {
     .eq("id", ticketId);
 
   if (ticketError) {
+    console.error("ticket_update_error", ticketError);
     redirect("/tickets?error=ticket");
   }
 
   revalidatePath("/tickets");
   redirect("/tickets?status=updated");
 }
+

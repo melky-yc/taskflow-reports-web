@@ -58,12 +58,13 @@ const MOTIVOS = [
   "Problema de cadastro",
   "Informações incorretas na plataforma",
   "Dificuldade de utilizar a plataforma",
+  "Alteração de Perfil",
   "Problema em área e atuação",
   "Outro",
 ];
 
 const PRIORIDADES = ["Baixa", "Media", "Alta"];
-const USO_PLATAFORMA = ["Mobile", "Web"];
+const USO_PLATAFORMA = ["Mobile", "Web", "Ambos", "Não informado"];
 const UF_PADRAO = "PI";
 const CIDADES_PI = cidadesPi.cidades;
 const CIDADES_LIST_ID = "cidades-dashboard";
@@ -774,3 +775,4 @@ export default function DashboardClient() {
     </div>
   );
 }
+

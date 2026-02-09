@@ -36,7 +36,7 @@ const MOTIVOS = [
 ];
 
 const PRIORIDADES = ["Baixa", "Media", "Alta"];
-const USO_PLATAFORMA = ["Mobile", "Web"];
+const USO_PLATAFORMA = ["Mobile", "Web", "Ambos", "Não informado"];
 const UF_PADRAO = "PI";
 const CIDADES_PI = cidadesPi.cidades;
 const CIDADES_LIST_ID = "cidades-pi";
@@ -1102,3 +1102,4 @@ export default function TicketsClient({
     </div>
   );
 }
+
