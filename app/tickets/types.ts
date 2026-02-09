@@ -15,6 +15,7 @@
     cidade: string;
     estado_uf: string;
     uso_plataforma: string | null;
+    area_atuacao: string | null;
     unidade: string;
   };
 };

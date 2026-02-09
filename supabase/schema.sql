@@ -11,19 +11,24 @@ create table if not exists public.clients (
   cidade text not null,
   estado_uf text not null,
   uso_plataforma text,
+  area_atuacao text not null,
   unidade text not null
 );
 
 alter table public.clients
   drop constraint if exists clients_cpf_digits_chk,
   drop constraint if exists clients_estado_uf_len_chk,
-  drop constraint if exists clients_uso_plataforma_chk;
+  drop constraint if exists clients_uso_plataforma_chk,
+  drop constraint if exists clients_area_atuacao_chk;
 
 alter table public.clients
   add constraint clients_cpf_digits_chk check (cpf ~ '^[0-9]{11}$'),
   add constraint clients_estado_uf_len_chk check (char_length(estado_uf) = 2),
   add constraint clients_uso_plataforma_chk check (
     uso_plataforma is null or uso_plataforma in ('Mobile', 'Web', 'Ambos', 'Não informado')
+  ),
+  add constraint clients_area_atuacao_chk check (
+    area_atuacao in ('Saúde', 'Educação', 'Assistência Social', 'Outro')
   );
 
 create unique index if not exists clients_cpf_uidx on public.clients (cpf);
@@ -57,7 +62,6 @@ alter table public.tickets
       'Informações incorretas na plataforma',
       'Dificuldade de utilizar a plataforma',
       'Alteração de Perfil',
-      'Problema em área e atuação',
       'Outro'
     )
   ),

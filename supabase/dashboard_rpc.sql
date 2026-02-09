@@ -57,6 +57,7 @@ begin
         c.cidade,
         c.estado_uf,
         c.uso_plataforma,
+        c.area_atuacao,
         c.unidade,
         coalesce(t.data_atendimento, t.created_at::date) as base_date
       from tickets t
@@ -81,6 +82,14 @@ begin
       group by motivo
       order by count(*) desc, motivo asc
       limit 1
+    ),
+    top_area_atuacao as (
+      select area_atuacao
+      from base
+      where area_atuacao is not null and btrim(area_atuacao) <> ''
+      group by area_atuacao
+      order by count(*) desc, area_atuacao asc
+      limit 1
     )
     select jsonb_build_object(
       'totals', jsonb_build_object(
@@ -90,7 +99,8 @@ begin
           else round((totals.retro_count::numeric / totals.total_count) * 100, 1)
         end,
         'today_count', coalesce(totals.today_count, 0),
-        'top_motivo', coalesce((select motivo from top_motivo), '')
+        'top_motivo', coalesce((select motivo from top_motivo), ''),
+        'top_area_atuacao', coalesce((select area_atuacao from top_area_atuacao), '')
       ),
       'timeseries', coalesce(
         (

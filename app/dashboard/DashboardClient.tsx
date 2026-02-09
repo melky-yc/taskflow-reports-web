@@ -59,7 +59,6 @@ const MOTIVOS = [
   "Informações incorretas na plataforma",
   "Dificuldade de utilizar a plataforma",
   "Alteração de Perfil",
-  "Problema em área e atuação",
   "Outro",
 ];
 
@@ -92,6 +91,7 @@ type DashboardMetrics = {
     retro_percent: number;
     today_count: number;
     top_motivo: string;
+    top_area_atuacao: string;
   };
   timeseries: Array<{ date: string; count: number }>;
   by_priority: Array<{ prioridade: string; count: number }>;
@@ -303,6 +303,7 @@ export default function DashboardClient() {
       : "Mobile";
   const usageLeaderCount = Math.max(webCount, mobileCount);
   const topMotivo = metrics?.totals.top_motivo || "Sem dados";
+  const topAreaAtuacao = metrics?.totals.top_area_atuacao || "Sem dados";
 
   const timeseriesData = (metrics?.timeseries ?? []).map((item) => ({
     date: formatDateBR(item.date),
@@ -547,13 +548,13 @@ export default function DashboardClient() {
       ) : null}
 
       {loading ? (
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {Array.from({ length: 6 }).map((_, index) => (
             <Skeleton key={index} className="h-28 w-full" />
           ))}
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <Card>
             <CardContent className="flex items-center gap-3 p-4">
               <div className="rounded-lg bg-[var(--color-primary-soft)] p-2 text-[var(--color-primary)]">
@@ -594,6 +595,23 @@ export default function DashboardClient() {
 
           <Card>
             <CardContent className="flex items-center gap-3 p-4">
+              <div className="rounded-lg bg-[var(--color-primary-soft)] p-2 text-[var(--color-primary)]">
+                <BarChart3 className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="text-xs text-[var(--color-muted)]">
+                  Área mais recorrente
+                </div>
+                <div className="text-2xl font-semibold text-[var(--color-text)]">
+                  {topAreaAtuacao}
+                </div>
+                <div className="text-xs text-[var(--color-muted)]">{periodLabel}</div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="flex items-center gap-3 p-4">
               <div className="rounded-lg bg-[var(--color-success-soft)] p-2 text-[var(--color-success)]">
                 <CalendarDays className="h-5 w-5" />
               </div>
@@ -607,7 +625,7 @@ export default function DashboardClient() {
             </CardContent>
           </Card>
 
-          <Card className="md:col-span-3">
+          <Card className="md:col-span-2 xl:col-span-4">
             <CardContent className="flex items-center gap-3 p-4">
               <div className="rounded-lg bg-[var(--color-primary-soft)] p-2 text-[var(--color-primary)]">
                 <TrendingUp className="h-5 w-5" />

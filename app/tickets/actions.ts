@@ -3,13 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { AREA_ATUACAO_OPTIONS } from "@/app/tickets/constants";
 
 const MOTIVOS = [
   "Problema de cadastro",
   "Informações incorretas na plataforma",
   "Dificuldade de utilizar a plataforma",
   "Alteração de Perfil",
-  "Problema em área e atuação",
   "Outro",
 ];
 
@@ -80,9 +80,22 @@ export async function createTicketAction(formData: FormData) {
   const usoPlataforma = normalizeText(
     String(formData.get("cliente_uso_plataforma") || "")
   );
+  const areaAtuacao = normalizeText(
+    String(formData.get("cliente_area_atuacao") || "")
+  );
   const unidade = normalizeText(String(formData.get("cliente_unidade") || ""));
 
-  if (!motivo || !MOTIVOS.includes(motivo) || !prioridade || !nome || !cpf || !cidade || !estadoUf || !unidade) {
+  if (
+    !motivo ||
+    !MOTIVOS.includes(motivo) ||
+    !prioridade ||
+    !nome ||
+    !cpf ||
+    !cidade ||
+    !estadoUf ||
+    !unidade ||
+    !AREA_ATUACAO_OPTIONS.includes(areaAtuacao as (typeof AREA_ATUACAO_OPTIONS)[number])
+  ) {
     redirect("/tickets?error=campos");
   }
 
@@ -124,6 +137,7 @@ export async function createTicketAction(formData: FormData) {
         cidade,
         estado_uf: estadoUf,
         uso_plataforma: usoPlataforma || null,
+        area_atuacao: areaAtuacao,
         unidade,
       })
       .eq("id", existingClient.id);
@@ -142,6 +156,7 @@ export async function createTicketAction(formData: FormData) {
         cidade,
         estado_uf: estadoUf,
         uso_plataforma: usoPlataforma || null,
+        area_atuacao: areaAtuacao,
         unidade,
       })
       .select("id")
@@ -207,13 +222,26 @@ export async function updateTicketAction(formData: FormData) {
   const usoPlataforma = normalizeText(
     String(formData.get("cliente_uso_plataforma") || "")
   );
+  const areaAtuacao = normalizeText(
+    String(formData.get("cliente_area_atuacao") || "")
+  );
   const unidade = normalizeText(String(formData.get("cliente_unidade") || ""));
 
   if (!ticketId || !clientId) {
     redirect("/tickets?error=editar");
   }
 
-  if (!motivo || !MOTIVOS.includes(motivo) || !prioridade || !nome || !cpf || !cidade || !estadoUf || !unidade) {
+  if (
+    !motivo ||
+    !MOTIVOS.includes(motivo) ||
+    !prioridade ||
+    !nome ||
+    !cpf ||
+    !cidade ||
+    !estadoUf ||
+    !unidade ||
+    !AREA_ATUACAO_OPTIONS.includes(areaAtuacao as (typeof AREA_ATUACAO_OPTIONS)[number])
+  ) {
     redirect("/tickets?error=campos");
   }
 
@@ -242,6 +270,7 @@ export async function updateTicketAction(formData: FormData) {
       cidade,
       estado_uf: estadoUf,
       uso_plataforma: usoPlataforma || null,
+      area_atuacao: areaAtuacao,
       unidade,
     })
     .eq("id", clientId);

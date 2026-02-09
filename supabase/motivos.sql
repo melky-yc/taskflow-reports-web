@@ -9,7 +9,6 @@ alter table public.tickets
       'Informações incorretas na plataforma',
       'Dificuldade de utilizar a plataforma',
       'Alteração de Perfil',
-      'Problema em área e atuação',
       'Outro'
     )
   );

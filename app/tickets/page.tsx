@@ -11,7 +11,6 @@ const MOTIVOS = [
   "Informações incorretas na plataforma",
   "Dificuldade de utilizar a plataforma",
   "Alteração de Perfil",
-  "Problema em área e atuação",
   "Outro",
 ];
 
@@ -72,7 +71,7 @@ export default async function TicketsPage({
   let query = supabase
     .from("tickets")
     .select(
-      "id, created_at, data_atendimento, motivo, motivo_outro_descricao, prioridade, profissional_nome, retroativo_motivo, client_id, clients(id, nome, cpf, cidade, estado_uf, uso_plataforma, unidade)",
+      "id, created_at, data_atendimento, motivo, motivo_outro_descricao, prioridade, profissional_nome, retroativo_motivo, client_id, clients(id, nome, cpf, cidade, estado_uf, uso_plataforma, area_atuacao, unidade)",
       { count: "exact" }
     )
     .order("created_at", { ascending: false })
@@ -106,6 +105,7 @@ export default async function TicketsPage({
         cidade: clientData?.cidade ?? "",
         estado_uf: clientData?.estado_uf ?? "",
         uso_plataforma: clientData?.uso_plataforma ?? null,
+        area_atuacao: clientData?.area_atuacao ?? null,
         unidade: clientData?.unidade ?? "",
       },
     };

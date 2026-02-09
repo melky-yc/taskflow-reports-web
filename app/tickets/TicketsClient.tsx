@@ -6,6 +6,7 @@ import { ChevronDown, Inbox } from "lucide-react";
 import cidadesPi from "@/data/cidades_pi.json";
 import { createTicketAction, updateTicketAction } from "@/app/tickets/actions";
 import type { TicketClient } from "@/app/tickets/types";
+import { AREA_ATUACAO_OPTIONS } from "@/app/tickets/constants";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,7 +32,6 @@ const MOTIVOS = [
   "Informações incorretas na plataforma",
   "Dificuldade de utilizar a plataforma",
   "Alteração de Perfil",
-  "Problema em área e atuação",
   "Outro",
 ];
 
@@ -67,6 +67,7 @@ type EditFormState = {
   clienteCidade: string;
   clienteEstado: string;
   clienteUsoPlataforma: string;
+  clienteAreaAtuacao: string;
   clienteUnidade: string;
 };
 
@@ -253,6 +254,7 @@ export default function TicketsClient({
       clienteCidade: ticket.client.cidade,
       clienteEstado: ticket.client.estado_uf || UF_PADRAO,
       clienteUsoPlataforma: ticket.client.uso_plataforma ?? "",
+      clienteAreaAtuacao: ticket.client.area_atuacao ?? "",
       clienteUnidade: ticket.client.unidade,
     });
   };
@@ -549,6 +551,20 @@ export default function TicketsClient({
                   <Select name="cliente_uso_plataforma">
                     <option value="">Selecione</option>
                     {USO_PLATAFORMA.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-[var(--color-muted-strong)]">
+                    Área de atuação
+                  </label>
+                  <Select name="cliente_area_atuacao" required>
+                    <option value="">Selecione</option>
+                    {AREA_ATUACAO_OPTIONS.map((item) => (
                       <option key={item} value={item}>
                         {item}
                       </option>
@@ -1016,6 +1032,31 @@ export default function TicketsClient({
                       >
                         <option value="">Selecione</option>
                         {USO_PLATAFORMA.map((item) => (
+                          <option key={item} value={item}>
+                            {item}
+                          </option>
+                        ))}
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-[var(--color-muted-strong)]">
+                        Área de atuação
+                      </label>
+                      <Select
+                        name="cliente_area_atuacao"
+                        value={editForm.clienteAreaAtuacao}
+                        onChange={(event) =>
+                          setEditForm((prev) =>
+                            prev
+                              ? { ...prev, clienteAreaAtuacao: event.target.value }
+                              : prev
+                          )
+                        }
+                        required
+                      >
+                        <option value="">Selecione</option>
+                        {AREA_ATUACAO_OPTIONS.map((item) => (
                           <option key={item} value={item}>
                             {item}
                           </option>
