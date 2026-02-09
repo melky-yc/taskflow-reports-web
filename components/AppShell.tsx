@@ -1,4 +1,4 @@
-ï»¿import Link from "next/link";
+import Link from "next/link";
 import {
   BarChart3,
   ChevronRight,
@@ -13,8 +13,8 @@ import UserMenu from "@/components/UserMenu";
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, key: "dashboard" },
   { href: "/tickets", label: "Tickets", icon: Ticket, key: "tickets" },
-  { href: "/reports", label: "RelatÃ³rios", icon: BarChart3, key: "reports" },
-  { href: "/config", label: "ConfiguraÃ§Ã£o", icon: Settings, key: "config" },
+  { href: "/reports", label: "Relatórios", icon: BarChart3, key: "reports" },
+  { href: "/config", label: "Configuração", icon: Settings, key: "config" },
 ] as const;
 
 type AppShellProps = {
@@ -30,12 +30,12 @@ export default async function AppShell({ active, breadcrumb, children }: AppShel
   } = await supabase.auth.getUser();
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)]">
-      <header className="fixed left-0 top-0 z-40 w-full border-b border-[var(--color-border)] bg-[var(--color-surface)] backdrop-blur">
+    <div className="min-h-screen bg-() text-()">
+      <header className="fixed left-0 top-0 z-40 w-full border-b border-() bg-() backdrop-blur">
         <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-3">
             <MobileNav active={active} />
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--color-surface)]">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-()">
               <img
                 src="/logotsf.svg"
                 alt="Taskflow Reports"
@@ -44,12 +44,12 @@ export default async function AppShell({ active, breadcrumb, children }: AppShel
               />
             </div>
             <div>
-              <div className="text-sm font-semibold text-[var(--color-text)]">
+              <div className="text-sm font-semibold text-()">
                 Taskflow Reports
               </div>
               {breadcrumb ? (
-                <div className="flex items-center gap-1 text-xs text-[var(--color-muted)]">
-                  <span>InÃ­cio</span>
+                <div className="flex items-center gap-1 text-xs text-()">
+                  <span>Início</span>
                   <ChevronRight className="h-3 w-3" />
                   <span>{breadcrumb}</span>
                 </div>
@@ -62,9 +62,9 @@ export default async function AppShell({ active, breadcrumb, children }: AppShel
 
       <div className="mx-auto flex w-full max-w-7xl gap-6 px-4 pb-10 pt-24 lg:px-6">
         <aside className="hidden w-64 lg:block">
-          <div className="sticky top-24 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-[var(--color-shadow)]">
-            <div className="text-xs font-semibold uppercase tracking-wide text-[var(--color-muted)]">
-              NavegaÃ§Ã£o
+          <div className="sticky top-24 rounded-2xl border border-() bg-() p-4 shadow-()">
+            <div className="text-xs font-semibold uppercase tracking-wide text-()">
+              Navegação
             </div>
             <nav className="mt-4 flex flex-col gap-1.5 text-sm">
               {NAV_ITEMS.map((item) => {
@@ -76,14 +76,14 @@ export default async function AppShell({ active, breadcrumb, children }: AppShel
                     href={item.href}
                     className={`flex items-center gap-2 rounded-xl px-3 py-2 font-medium transition ${
                       isActive
-                        ? "bg-[var(--color-primary-soft)] text-[var(--color-primary)]"
-                        : "text-[var(--color-muted-strong)] hover:bg-[var(--color-muted-soft)]"
+                        ? "bg-() text-()"
+                        : "text-() hover:bg-()"
                     }`}
                   >
                     <span
                       className={`h-4 w-1 rounded-full ${
                         isActive
-                          ? "bg-[var(--color-primary)]"
+                          ? "bg-()"
                           : "bg-transparent"
                       }`}
                     />
@@ -101,3 +101,4 @@ export default async function AppShell({ active, breadcrumb, children }: AppShel
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-ï»¿"use client";
+"use client";
 
 import { useMemo, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
@@ -28,15 +28,15 @@ import {
 
 const MOTIVOS = [
   "Problema de cadastro",
-  "InformaÃ§Ãµes incorretas na plataforma",
+  "Informações incorretas na plataforma",
   "Dificuldade de utilizar a plataforma",
-  "AlteraÃ§Ã£o de Perfil",
-  "Problema em Ã¡rea e atuaÃ§Ã£o",
+  "Alteração de Perfil",
+  "Problema em área e atuação",
   "Outro",
 ];
 
 const PRIORIDADES = ["Baixa", "Media", "Alta"];
-const USO_PLATAFORMA = ["Mobile", "Web", "Ambos", "NÃ£o informado"];
+const USO_PLATAFORMA = ["Mobile", "Web", "Ambos", "Não informado"];
 const UF_PADRAO = "PI";
 const CIDADES_PI = cidadesPi.cidades;
 const CIDADES_LIST_ID = "cidades-pi";
@@ -184,7 +184,7 @@ function prioridadeBadge(prioridade: string) {
 }
 
 function formatPrioridadeLabel(prioridade: string) {
-  return prioridade === "Media" ? "MÃ©dia" : prioridade;
+  return prioridade === "Media" ? "Média" : prioridade;
 }
 
 function motivoBadge(motivo: string) {
@@ -206,7 +206,7 @@ function UpdateButton() {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" disabled={pending}>
-      {pending ? "Salvando..." : "Salvar alteraÃ§Ãµes"}
+      {pending ? "Salvando..." : "Salvar alterações"}
     </Button>
   );
 }
@@ -277,9 +277,9 @@ export default function TicketsClient({
   const errorMessage = (() => {
     switch (error) {
       case "campos":
-        return "Preencha todos os campos obrigatÃ³rios.";
+        return "Preencha todos os campos obrigatórios.";
       case "cpf":
-        return "CPF deve conter 11 dÃ­gitos.";
+        return "CPF deve conter 11 dígitos.";
       case "estado":
         return "UF deve conter 2 letras.";
       case "motivo":
@@ -287,11 +287,11 @@ export default function TicketsClient({
       case "retroativo":
         return "Informe o motivo do retroativo.";
       case "cliente":
-        return "NÃ£o foi possÃ­vel salvar o cliente.";
+        return "Não foi possível salvar o cliente.";
       case "ticket":
-        return "NÃ£o foi possÃ­vel salvar o chamado.";
+        return "Não foi possível salvar o chamado.";
       case "editar":
-        return "NÃ£o foi possÃ­vel editar o chamado.";
+        return "Não foi possível editar o chamado.";
       default:
         return "";
     }
@@ -332,7 +332,7 @@ export default function TicketsClient({
     } else {
       exportToXLSX(rows, filename);
     }
-    setExportNotice("ExportaÃ§Ã£o gerada.");
+    setExportNotice("Exportação gerada.");
     window.setTimeout(() => setExportNotice(""), 3000);
   };
 
@@ -348,12 +348,12 @@ export default function TicketsClient({
         <CardContent>
           <div className="flex flex-col gap-3">
             {statusMessage ? (
-              <div className="rounded-lg border border-[var(--color-success)] bg-[var(--color-success-soft)] px-4 py-2 text-sm text-[var(--color-success)]">
+              <div className="rounded-lg border border-(--color-success) bg-(--color-success-soft) px-4 py-2 text-sm text-(--color-success)">
                 {statusMessage}
               </div>
             ) : null}
             {errorMessage ? (
-              <div className="rounded-lg border border-[var(--color-danger)] bg-[var(--color-danger-soft)] px-4 py-2 text-sm text-[var(--color-danger)]">
+              <div className="rounded-lg border border-(--color-danger) bg-(--color-danger-soft) px-4 py-2 text-sm text-(--color-danger)">
                 {errorMessage}
               </div>
             ) : null}
@@ -376,44 +376,44 @@ export default function TicketsClient({
             onInput={handleCreateInput}
             onChange={handleCreateInput}
           >
-            <section className="space-y-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-sm">
+            <section className="space-y-3 rounded-2xl border border-(--color-border) bg-(--color-surface) p-4 shadow-sm">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h3 className="text-sm font-semibold text-[var(--color-text)]">
+                  <h3 className="text-sm font-semibold text-(--color-text)">
                     Profissional
                   </h3>
-                  <p className="text-xs text-[var(--color-muted)]">
-                    UsuÃ¡rio responsÃ¡vel pelo atendimento registrado.
+                  <p className="text-xs text-(--color-muted)">
+                    Usuário responsável pelo atendimento registrado.
                   </p>
                 </div>
                 <Badge variant="muted">Autenticado</Badge>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-[var(--color-muted-strong)]">
+                  <label className="text-xs font-medium text-(--color-muted-strong)">
                     E-mail
                   </label>
                   <Input
                     readOnly
                     value={currentUserName}
-                    className="bg-[var(--color-muted-soft)]"
+                    className="bg-(--color-muted-soft)"
                   />
                 </div>
               </div>
             </section>
 
-            <section className="space-y-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-sm">
+            <section className="space-y-3 rounded-2xl border border-(--color-border) bg-(--color-surface) p-4 shadow-sm">
               <div>
-                <h3 className="text-sm font-semibold text-[var(--color-text)]">
+                <h3 className="text-sm font-semibold text-(--color-text)">
                   Dados do Chamado
                 </h3>
-                <p className="text-xs text-[var(--color-muted)]">
+                <p className="text-xs text-(--color-muted)">
                   Defina o motivo, a prioridade e a data do atendimento.
                 </p>
               </div>
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-[var(--color-muted-strong)]">
+                  <label className="text-xs font-medium text-(--color-muted-strong)">
                     Motivo
                   </label>
                   <Select
@@ -437,7 +437,7 @@ export default function TicketsClient({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-[var(--color-muted-strong)]">
+                  <label className="text-xs font-medium text-(--color-muted-strong)">
                     Prioridade
                   </label>
                   <Select name="prioridade" required>
@@ -451,7 +451,7 @@ export default function TicketsClient({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-[var(--color-muted-strong)]">
+                  <label className="text-xs font-medium text-(--color-muted-strong)">
                     Data de atendimento
                   </label>
                   <Input
@@ -470,8 +470,8 @@ export default function TicketsClient({
 
               {motivo === "Outro" ? (
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-                    DescriÃ§Ã£o do motivo (Outro)
+                  <label className="text-xs font-medium text-(--color-muted-strong)">
+                    Descrição do motivo (Outro)
                   </label>
                   <Textarea
                     name="motivo_outro_descricao"
@@ -483,25 +483,25 @@ export default function TicketsClient({
               ) : null}
             </section>
 
-            <section className="space-y-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-sm">
+            <section className="space-y-3 rounded-2xl border border-(--color-border) bg-(--color-surface) p-4 shadow-sm">
               <div>
-                <h3 className="text-sm font-semibold text-[var(--color-text)]">
+                <h3 className="text-sm font-semibold text-(--color-text)">
                   Dados do Cliente
                 </h3>
-                <p className="text-xs text-[var(--color-muted)]">
-                  InformaÃ§Ãµes cadastrais do cliente atendido.
+                <p className="text-xs text-(--color-muted)">
+                  Informações cadastrais do cliente atendido.
                 </p>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-[var(--color-muted-strong)]">
+                  <label className="text-xs font-medium text-(--color-muted-strong)">
                     Nome
                   </label>
                   <Input name="cliente_nome" required />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-[var(--color-muted-strong)]">
+                  <label className="text-xs font-medium text-(--color-muted-strong)">
                     CPF
                   </label>
                   <Input
@@ -520,7 +520,7 @@ export default function TicketsClient({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-[var(--color-muted-strong)]">
+                  <label className="text-xs font-medium text-(--color-muted-strong)">
                     Cidade
                   </label>
                   <Input
@@ -532,18 +532,18 @@ export default function TicketsClient({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-[var(--color-muted-strong)]">UF</label>
+                  <label className="text-xs font-medium text-(--color-muted-strong)">UF</label>
                   <Input
                     name="cliente_estado"
                     value={UF_PADRAO}
                     readOnly
-                    className="bg-[var(--color-muted-soft)]"
+                    className="bg-(--color-muted-soft)"
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-[var(--color-muted-strong)]">
+                  <label className="text-xs font-medium text-(--color-muted-strong)">
                     Uso da plataforma
                   </label>
                   <Select name="cliente_uso_plataforma">
@@ -557,7 +557,7 @@ export default function TicketsClient({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-[var(--color-muted-strong)]">
+                  <label className="text-xs font-medium text-(--color-muted-strong)">
                     Unidade
                   </label>
                   <Input name="cliente_unidade" required />
@@ -565,13 +565,13 @@ export default function TicketsClient({
               </div>
             </section>
 
-            <section className="space-y-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-sm">
+            <section className="space-y-3 rounded-2xl border border-(--color-border) bg-(--color-surface) p-4 shadow-sm">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h3 className="text-sm font-semibold text-[var(--color-text)]">
+                  <h3 className="text-sm font-semibold text-(--color-text)">
                     Retroativo
                   </h3>
-                  <p className="text-xs text-[var(--color-muted)]">
+                  <p className="text-xs text-(--color-muted)">
                     Chamados com data anterior a hoje exigem justificativa.
                   </p>
                 </div>
@@ -579,14 +579,14 @@ export default function TicketsClient({
                   {retroativo ? "Retroativo" : "Normal"}
                 </Badge>
               </div>
-              <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-muted-soft)] px-4 py-3 text-sm text-[var(--color-muted-strong)]">
-                A data de atendimento define automaticamente se o chamado Ã©
+              <div className="rounded-lg border border-(--color-border) bg-(--color-muted-soft) px-4 py-3 text-sm text-(--color-muted-strong)">
+                A data de atendimento define automaticamente se o chamado é
                 retroativo.
               </div>
 
               {retroativo ? (
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-[var(--color-muted-strong)]">
+                  <label className="text-xs font-medium text-(--color-muted-strong)">
                     Motivo do retroativo
                   </label>
                   <Textarea
@@ -609,15 +609,15 @@ export default function TicketsClient({
       <Card>
         <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <CardTitle>Ãšltimos Chamados</CardTitle>
+            <CardTitle>Últimos Chamados</CardTitle>
             <CardDescription>
               {tickets.length} registros encontrados
             </CardDescription>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <form method="get" className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2 text-sm text-[var(--color-muted-strong)]">
-                <span>PerÃ­odo</span>
+              <div className="flex items-center gap-2 text-sm text-(--color-muted-strong)">
+                <span>Período</span>
                 <div className="relative">
                   <Select
                     name="period"
@@ -628,10 +628,10 @@ export default function TicketsClient({
                     <option value="30">30 dias</option>
                     <option value="90">90 dias</option>
                   </Select>
-                  <ChevronDown className="pointer-events-none absolute right-2 top-2.5 h-4 w-4 text-[var(--color-muted)]" />
+                  <ChevronDown className="pointer-events-none absolute right-2 top-2.5 h-4 w-4 text-(--color-muted)" />
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-sm text-[var(--color-muted-strong)]">
+              <div className="flex items-center gap-2 text-sm text-(--color-muted-strong)">
                 <span>Motivo</span>
                 <div className="relative">
                   <Select
@@ -646,7 +646,7 @@ export default function TicketsClient({
                       </option>
                     ))}
                   </Select>
-                  <ChevronDown className="pointer-events-none absolute right-2 top-2.5 h-4 w-4 text-[var(--color-muted)]" />
+                  <ChevronDown className="pointer-events-none absolute right-2 top-2.5 h-4 w-4 text-(--color-muted)" />
                 </div>
               </div>
               <Button variant="secondary" className="h-9">
@@ -677,14 +677,14 @@ export default function TicketsClient({
         </CardHeader>
         <CardContent>
           {exportNotice ? (
-            <div className="mb-4 rounded-lg border border-[var(--color-success)] bg-[var(--color-success-soft)] px-4 py-2 text-sm text-[var(--color-success)]">
+            <div className="mb-4 rounded-lg border border-(--color-success) bg-(--color-success-soft) px-4 py-2 text-sm text-(--color-success)">
               {exportNotice}
             </div>
           ) : null}
           <div className="overflow-x-auto">
             <table className="min-w-full border-collapse text-sm">
-              <thead className="sticky top-0 bg-[var(--color-muted-soft)]">
-                <tr className="border-b border-[var(--color-border)] text-left text-xs uppercase tracking-wide text-[var(--color-muted)]">
+              <thead className="sticky top-0 bg-(--color-muted-soft)">
+                <tr className="border-b border-(--color-border) text-left text-xs uppercase tracking-wide text-(--color-muted)">
                   <th className="px-3 py-2">ID</th>
                   <th className="px-3 py-2">Data</th>
                   <th className="px-3 py-2">Profissional</th>
@@ -701,14 +701,14 @@ export default function TicketsClient({
                 {tickets.length === 0 ? (
                   <tr>
                     <td colSpan={10} className="px-6 py-14">
-                      <div className="flex flex-col items-center gap-3 text-[var(--color-muted)]">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-muted-soft)]">
+                      <div className="flex flex-col items-center gap-3 text-(--color-muted)">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-(--color-muted-soft)">
                           <Inbox className="h-5 w-5" />
                         </div>
                         <div className="text-sm font-medium">
                           Nenhum chamado encontrado
                         </div>
-                        <div className="text-xs text-[var(--color-muted)]">
+                        <div className="text-xs text-(--color-muted)">
                           Ajuste os filtros ou crie um novo chamado.
                         </div>
                       </div>
@@ -718,7 +718,7 @@ export default function TicketsClient({
                   tickets.map((ticket) => (
                     <tr
                       key={ticket.id}
-                      className="border-b border-[var(--color-border)] text-[var(--color-text)] hover:bg-[var(--color-muted-soft)]"
+                      className="border-b border-(--color-border) text-(--color-text) hover:bg-(--color-muted-soft)"
                     >
                       <td className="px-3 py-3 font-medium">#{ticket.id}</td>
                       <td className="px-3 py-3">
@@ -760,33 +760,33 @@ export default function TicketsClient({
             </table>
           </div>
 
-          <div className="mt-4 flex items-center justify-between text-sm text-[var(--color-muted-strong)]">
+          <div className="mt-4 flex items-center justify-between text-sm text-(--color-muted-strong)">
             <div>
-              PÃ¡gina {pagination.page} de {pagination.totalPages}
+              Página {pagination.page} de {pagination.totalPages}
             </div>
             <div className="flex items-center gap-2">
               {pagination.prevHref ? (
                 <a
-                  className="rounded-lg border border-[var(--color-border)] px-3 py-1 hover:bg-[var(--color-muted-soft)]"
+                  className="rounded-lg border border-(--color-border) px-3 py-1 hover:bg-(--color-muted-soft)"
                   href={pagination.prevHref}
                 >
                   Anterior
                 </a>
               ) : (
-                <span className="rounded-lg border border-[var(--color-border)] px-3 py-1 text-[var(--color-muted)] opacity-60">
+                <span className="rounded-lg border border-(--color-border) px-3 py-1 text-(--color-muted) opacity-60">
                   Anterior
                 </span>
               )}
               {pagination.nextHref ? (
                 <a
-                  className="rounded-lg border border-[var(--color-border)] px-3 py-1 hover:bg-[var(--color-muted-soft)]"
+                  className="rounded-lg border border-(--color-border) px-3 py-1 hover:bg-(--color-muted-soft)"
                   href={pagination.nextHref}
                 >
-                  PrÃ³xima
+                  Próxima
                 </a>
               ) : (
-                <span className="rounded-lg border border-[var(--color-border)] px-3 py-1 text-[var(--color-muted)] opacity-60">
-                  PrÃ³xima
+                <span className="rounded-lg border border-(--color-border) px-3 py-1 text-(--color-muted) opacity-60">
+                  Próxima
                 </span>
               )}
             </div>
@@ -796,13 +796,13 @@ export default function TicketsClient({
 
       {editTicket && editForm ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay px-4 py-6">
-          <div className="w-full max-w-3xl overflow-hidden rounded-xl bg-[var(--color-surface)] shadow-[var(--color-shadow)]">
-            <div className="flex items-start justify-between gap-4 border-b border-[var(--color-border)] px-6 py-4">
+          <div className="w-full max-w-3xl overflow-hidden rounded-xl bg-(--color-surface) shadow-(--color-shadow)">
+            <div className="flex items-start justify-between gap-4 border-b border-(--color-border) px-6 py-4">
               <div>
-                <h3 className="text-lg font-semibold text-[var(--color-text)]">
+                <h3 className="text-lg font-semibold text-(--color-text)">
                   Editar chamado
                 </h3>
-                <p className="text-sm text-[var(--color-muted)]">
+                <p className="text-sm text-(--color-muted)">
                   Atualize os dados do chamado e do cliente.
                 </p>
               </div>
@@ -827,12 +827,12 @@ export default function TicketsClient({
                 />
 
                 <section className="space-y-3">
-                  <h4 className="text-sm font-semibold text-[var(--color-text)]">
+                  <h4 className="text-sm font-semibold text-(--color-text)">
                     Dados do Chamado
                   </h4>
                   <div className="grid gap-4 md:grid-cols-3">
                     <div className="space-y-2">
-                      <label className="text-xs font-medium text-[var(--color-muted-strong)]">
+                      <label className="text-xs font-medium text-(--color-muted-strong)">
                         Motivo
                       </label>
                       <Select
@@ -863,7 +863,7 @@ export default function TicketsClient({
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-xs font-medium text-[var(--color-muted-strong)]">
+                      <label className="text-xs font-medium text-(--color-muted-strong)">
                         Prioridade
                       </label>
                       <Select
@@ -885,7 +885,7 @@ export default function TicketsClient({
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-xs font-medium text-[var(--color-muted-strong)]">
+                      <label className="text-xs font-medium text-(--color-muted-strong)">
                         Data de atendimento
                       </label>
                       <Input
@@ -911,8 +911,8 @@ export default function TicketsClient({
 
                   {editForm.motivo === "Outro" ? (
                     <div className="space-y-2">
-                      <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-                        DescriÃ§Ã£o do motivo (Outro)
+                      <label className="text-xs font-medium text-(--color-muted-strong)">
+                        Descrição do motivo (Outro)
                       </label>
                       <Textarea
                         name="motivo_outro_descricao"
@@ -933,12 +933,12 @@ export default function TicketsClient({
                 <Separator />
 
                 <section className="space-y-3">
-                  <h4 className="text-sm font-semibold text-[var(--color-text)]">
+                  <h4 className="text-sm font-semibold text-(--color-text)">
                     Dados do Cliente
                   </h4>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
-                      <label className="text-xs font-medium text-[var(--color-muted-strong)]">
+                      <label className="text-xs font-medium text-(--color-muted-strong)">
                         Nome
                       </label>
                       <Input
@@ -956,18 +956,18 @@ export default function TicketsClient({
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-                        CPF (nÃ£o editÃ¡vel)
+                      <label className="text-xs font-medium text-(--color-muted-strong)">
+                        CPF (não editável)
                       </label>
                       <Input
                         value={formatCpf(editForm.clienteCpfDigits)}
                         readOnly
-                        className="bg-[var(--color-muted-soft)]"
+                        className="bg-(--color-muted-soft)"
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-xs font-medium text-[var(--color-muted-strong)]">
+                      <label className="text-xs font-medium text-(--color-muted-strong)">
                         Cidade
                       </label>
                       <Input
@@ -986,18 +986,18 @@ export default function TicketsClient({
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-xs font-medium text-[var(--color-muted-strong)]">UF</label>
+                      <label className="text-xs font-medium text-(--color-muted-strong)">UF</label>
                       <Input
                         name="cliente_estado"
                         value={editForm.clienteEstado || UF_PADRAO}
                         readOnly
-                        className="bg-[var(--color-muted-soft)]"
+                        className="bg-(--color-muted-soft)"
                         required
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-xs font-medium text-[var(--color-muted-strong)]">
+                      <label className="text-xs font-medium text-(--color-muted-strong)">
                         Uso da plataforma
                       </label>
                       <Select
@@ -1024,7 +1024,7 @@ export default function TicketsClient({
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-xs font-medium text-[var(--color-muted-strong)]">
+                      <label className="text-xs font-medium text-(--color-muted-strong)">
                         Unidade
                       </label>
                       <Input
@@ -1047,14 +1047,14 @@ export default function TicketsClient({
 
                 <section className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-semibold text-[var(--color-text)]">Retroativo</h4>
+                    <h4 className="text-sm font-semibold text-(--color-text)">Retroativo</h4>
                     <Badge variant={editRetroativo ? "warning" : "muted"}>
                       {editRetroativo ? "Retroativo" : "Normal"}
                     </Badge>
                   </div>
                   {editRetroativo ? (
                     <div className="space-y-2">
-                      <label className="text-xs font-medium text-[var(--color-muted-strong)]">
+                      <label className="text-xs font-medium text-(--color-muted-strong)">
                         Motivo do retroativo
                       </label>
                       <Textarea
@@ -1074,13 +1074,13 @@ export default function TicketsClient({
                       />
                     </div>
                   ) : (
-                    <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-muted-soft)] px-4 py-3 text-sm text-[var(--color-muted-strong)]">
-                      Este chamado nÃ£o Ã© retroativo.
+                    <div className="rounded-lg border border-(--color-border) bg-(--color-muted-soft) px-4 py-3 text-sm text-(--color-muted-strong)">
+                      Este chamado não é retroativo.
                     </div>
                   )}
                 </section>
 
-                <div className="sticky bottom-0 -mx-6 mt-6 border-t border-[var(--color-border)] bg-[var(--color-surface)] px-6 py-4">
+                <div className="sticky bottom-0 -mx-6 mt-6 border-t border-(--color-border) bg-(--color-surface) px-6 py-4">
                   <div className="flex items-center justify-end gap-2">
                     <Button variant="outline" type="button" onClick={closeEdit}>
                       Cancelar
@@ -1102,4 +1102,5 @@ export default function TicketsClient({
     </div>
   );
 }
+
 

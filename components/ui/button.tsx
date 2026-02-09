@@ -1,4 +1,4 @@
-﻿import * as React from "react";
+import * as React from "react";
 import { cn } from "@/lib/utils";
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -9,16 +9,16 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", asChild, children, ...props }, ref) => {
     const base =
-      "inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-soft)] disabled:cursor-not-allowed disabled:opacity-60";
+      "inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-() disabled:cursor-not-allowed disabled:opacity-60";
     const variants: Record<typeof variant, string> = {
       primary:
-        "bg-[var(--color-primary)] text-[var(--color-on-primary)] shadow-sm hover:bg-[var(--color-primary-hover)]",
+        "bg-() text-() shadow-sm hover:bg-()",
       secondary:
-        "bg-[var(--color-muted-soft)] text-[var(--color-text)] hover:bg-[var(--color-border)]",
+        "bg-() text-() hover:bg-()",
       ghost:
-        "text-[var(--color-muted-strong)] hover:bg-[var(--color-muted-soft)]",
+        "text-() hover:bg-()",
       outline:
-        "border border-[var(--color-border)] text-[var(--color-text)] hover:bg-[var(--color-muted-soft)]",
+        "border border-() text-() hover:bg-()",
     } as const;
     if (asChild && React.isValidElement(children)) {
       const child = children as React.ReactElement<{ className?: string }>;
@@ -48,3 +48,4 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = "Button";
 
 export { Button };
+

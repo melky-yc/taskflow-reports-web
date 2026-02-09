@@ -1,4 +1,4 @@
-ï»¿"use client";
+"use client";
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -47,24 +47,24 @@ import { formatDateBR } from "@/utils/exportReports";
 type PeriodOption = "7" | "30" | "90" | "365" | "custom";
 
 const PERIOD_OPTIONS: { value: PeriodOption; label: string }[] = [
-  { value: "7", label: "Ãšltimos 7 dias" },
-  { value: "30", label: "Ãšltimos 30 dias" },
-  { value: "90", label: "Ãšltimos 90 dias" },
-  { value: "365", label: "Ãšltimos 365 dias" },
+  { value: "7", label: "Últimos 7 dias" },
+  { value: "30", label: "Últimos 30 dias" },
+  { value: "90", label: "Últimos 90 dias" },
+  { value: "365", label: "Últimos 365 dias" },
   { value: "custom", label: "Personalizado" },
 ];
 
 const MOTIVOS = [
   "Problema de cadastro",
-  "InformaÃ§Ãµes incorretas na plataforma",
+  "Informações incorretas na plataforma",
   "Dificuldade de utilizar a plataforma",
-  "AlteraÃ§Ã£o de Perfil",
-  "Problema em Ã¡rea e atuaÃ§Ã£o",
+  "Alteração de Perfil",
+  "Problema em área e atuação",
   "Outro",
 ];
 
 const PRIORIDADES = ["Baixa", "Media", "Alta"];
-const USO_PLATAFORMA = ["Mobile", "Web", "Ambos", "NÃ£o informado"];
+const USO_PLATAFORMA = ["Mobile", "Web", "Ambos", "Não informado"];
 const UF_PADRAO = "PI";
 const CIDADES_PI = cidadesPi.cidades;
 const CIDADES_LIST_ID = "cidades-dashboard";
@@ -167,8 +167,8 @@ function formatTime(date: Date | null) {
 
 function EmptyState({ label }: { label: string }) {
   return (
-    <div className="flex flex-col items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-muted-soft)] px-4 py-6 text-sm text-[var(--color-muted-strong)]">
-      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-surface)] text-[var(--color-muted)]">
+    <div className="flex flex-col items-center gap-2 rounded-lg border border-() bg-() px-4 py-6 text-sm text-()">
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-() text-()">
         <AlertTriangle className="h-5 w-5" />
       </div>
       <div className="text-sm font-medium">{label}</div>
@@ -222,7 +222,7 @@ export default function DashboardClient() {
       const endIso = brToIso(currentFilters.endDate);
       if (!startIso || !endIso) {
         setLoading(false);
-        setError("Informe um intervalo vÃ¡lido no formato DD/MM/AAAA.");
+        setError("Informe um intervalo válido no formato DD/MM/AAAA.");
         return;
       }
       payload.start_date = startIso;
@@ -238,7 +238,7 @@ export default function DashboardClient() {
 
     if (rpcError || !data) {
       setLoading(false);
-      setError("NÃ£o foi possÃ­vel carregar o dashboard. Tente novamente.");
+      setError("Não foi possível carregar o dashboard. Tente novamente.");
       return;
     }
 
@@ -277,8 +277,8 @@ export default function DashboardClient() {
 
   const periodLabel =
     appliedFilters.period === "custom"
-      ? "PerÃ­odo selecionado"
-      : `Ãšltimos ${appliedFilters.period} dias`;
+      ? "Período selecionado"
+      : `Últimos ${appliedFilters.period} dias`;
 
   const totalCount = metrics?.totals.total_count ?? 0;
   const todayCount = metrics?.totals.today_count ?? 0;
@@ -305,7 +305,7 @@ export default function DashboardClient() {
   }));
 
   const priorityData = PRIORIDADES.map((label) => ({
-    name: label === "Media" ? "MÃ©dia" : label,
+    name: label === "Media" ? "Média" : label,
     value: priorityMap[label] ?? 0,
     color: PRIORITY_COLORS[label as keyof typeof PRIORITY_COLORS],
   }));
@@ -333,9 +333,9 @@ export default function DashboardClient() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-[var(--color-text)]">Dashboard</h1>
-          <p className="text-sm text-[var(--color-muted)]">
-            VisÃ£o geral dos chamados de suporte de TI.
+          <h1 className="text-2xl font-semibold text-()">Dashboard</h1>
+          <p className="text-sm text-()">
+            Visão geral dos chamados de suporte de TI.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -350,20 +350,20 @@ export default function DashboardClient() {
 
       <Card>
         <CardHeader className="flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-          <div className="flex items-center gap-2 text-sm text-[var(--color-muted)]">
+          <div className="flex items-center gap-2 text-sm text-()">
             <Filter className="h-4 w-4" />
             <span>Filtros globais</span>
           </div>
-          <div className="flex flex-wrap items-center gap-4 text-xs text-[var(--color-muted)]">
-            <span>Ãšltima atualizaÃ§Ã£o: {formatTime(lastUpdated)}</span>
+          <div className="flex flex-wrap items-center gap-4 text-xs text-()">
+            <span>Última atualização: {formatTime(lastUpdated)}</span>
             <span>Registros encontrados: {recordLabel}</span>
           </div>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 xl:grid-cols-6">
             <div className="space-y-2">
-              <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-                PerÃ­odo
+              <label className="text-xs font-medium text-()">
+                Período
               </label>
               <Select
                 value={filters.period}
@@ -385,7 +385,7 @@ export default function DashboardClient() {
             {filters.period === "custom" ? (
               <div className="grid gap-3 md:grid-cols-2 xl:col-span-2">
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-[var(--color-muted-strong)]">
+                  <label className="text-xs font-medium text-()">
                     Data inicial
                   </label>
                   <Input
@@ -401,7 +401,7 @@ export default function DashboardClient() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-[var(--color-muted-strong)]">
+                  <label className="text-xs font-medium text-()">
                     Data final
                   </label>
                   <Input
@@ -420,7 +420,7 @@ export default function DashboardClient() {
             ) : null}
 
             <div className="space-y-2">
-              <label className="text-xs font-medium text-[var(--color-muted-strong)]">Motivo</label>
+              <label className="text-xs font-medium text-()">Motivo</label>
               <Select
                 value={filters.motivo}
                 onChange={(event) =>
@@ -440,7 +440,7 @@ export default function DashboardClient() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-medium text-[var(--color-muted-strong)]">
+              <label className="text-xs font-medium text-()">
                 Prioridade
               </label>
               <Select
@@ -455,14 +455,14 @@ export default function DashboardClient() {
                 <option value="">Todos</option>
                 {PRIORIDADES.map((item) => (
                   <option key={item} value={item}>
-                    {item === "Media" ? "MÃ©dia" : item}
+                    {item === "Media" ? "Média" : item}
                   </option>
                 ))}
               </Select>
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-medium text-[var(--color-muted-strong)]">
+              <label className="text-xs font-medium text-()">
                 Uso da plataforma
               </label>
               <Select
@@ -484,7 +484,7 @@ export default function DashboardClient() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-medium text-[var(--color-muted-strong)]">UF</label>
+              <label className="text-xs font-medium text-()">UF</label>
               <Select
                 value={filters.uf}
                 onChange={(event) =>
@@ -500,7 +500,7 @@ export default function DashboardClient() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-medium text-[var(--color-muted-strong)]">Cidade</label>
+              <label className="text-xs font-medium text-()">Cidade</label>
               <Input
                 value={filters.cidade}
                 onChange={(event) =>
@@ -524,8 +524,8 @@ export default function DashboardClient() {
       </Card>
 
       {error ? (
-        <Alert className="border-[var(--color-danger)] bg-[var(--color-danger-soft)]">
-          <AlertTitle>NÃ£o foi possÃ­vel carregar</AlertTitle>
+        <Alert className="border-() bg-()">
+          <AlertTitle>Não foi possível carregar</AlertTitle>
           <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
             <span>{error}</span>
             <Button variant="outline" onClick={() => applyFilters(filters)}>
@@ -545,37 +545,37 @@ export default function DashboardClient() {
         <div className="grid gap-4 md:grid-cols-3">
           <Card>
             <CardContent className="flex items-center gap-3 p-4">
-              <div className="rounded-lg bg-[var(--color-primary-soft)] p-2 text-[var(--color-primary)]">
+              <div className="rounded-lg bg-() p-2 text-()">
                 <Activity className="h-5 w-5" />
               </div>
               <div>
-                <div className="text-xs text-[var(--color-muted)]">Total de chamados</div>
-                <div className="text-2xl font-semibold text-[var(--color-text)]">
+                <div className="text-xs text-()">Total de chamados</div>
+                <div className="text-2xl font-semibold text-()">
                   {formatNumber(totalCount)}
                 </div>
-                <div className="text-xs text-[var(--color-muted)]">{periodLabel}</div>
+                <div className="text-xs text-()">{periodLabel}</div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardContent className="flex items-center gap-3 p-4">
-              <div className="rounded-lg bg-[var(--color-warning-soft)] p-2 text-[var(--color-warning)]">
+              <div className="rounded-lg bg-() p-2 text-()">
                 <Monitor className="h-5 w-5" />
               </div>
               <div>
-                <div className="text-xs text-[var(--color-muted)]">
+                <div className="text-xs text-()">
                   Canal com mais chamados
                 </div>
-                <div className="text-2xl font-semibold text-[var(--color-text)]">
+                <div className="text-2xl font-semibold text-()">
                   {usageLeader}
                 </div>
-                <div className="text-xs text-[var(--color-muted)]">
+                <div className="text-xs text-()">
                   {usageTotal === 0
-                    ? "Sem registros no perÃ­odo"
-                    : `${formatNumber(usageLeaderCount)} chamados â€¢ Web: ${formatNumber(
+                    ? "Sem registros no período"
+                    : `${formatNumber(usageLeaderCount)} chamados • Web: ${formatNumber(
                         webCount
-                      )} Â· Mobile: ${formatNumber(mobileCount)}`}
+                      )} · Mobile: ${formatNumber(mobileCount)}`}
                 </div>
               </div>
             </CardContent>
@@ -583,31 +583,31 @@ export default function DashboardClient() {
 
           <Card>
             <CardContent className="flex items-center gap-3 p-4">
-              <div className="rounded-lg bg-[var(--color-success-soft)] p-2 text-[var(--color-success)]">
+              <div className="rounded-lg bg-() p-2 text-()">
                 <CalendarDays className="h-5 w-5" />
               </div>
               <div>
-                <div className="text-xs text-[var(--color-muted)]">Chamados hoje</div>
-                <div className="text-2xl font-semibold text-[var(--color-text)]">
+                <div className="text-xs text-()">Chamados hoje</div>
+                <div className="text-2xl font-semibold text-()">
                   {formatNumber(todayCount)}
                 </div>
-                <div className="text-xs text-[var(--color-muted)]">{periodLabel}</div>
+                <div className="text-xs text-()">{periodLabel}</div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="md:col-span-3">
             <CardContent className="flex items-center gap-3 p-4">
-              <div className="rounded-lg bg-[var(--color-primary-soft)] p-2 text-[var(--color-primary)]">
+              <div className="rounded-lg bg-() p-2 text-()">
                 <TrendingUp className="h-5 w-5" />
               </div>
               <div>
-                <div className="text-xs text-[var(--color-muted)]">Motivo mais recorrente</div>
-                <div className="text-lg font-semibold text-[var(--color-text)]">
+                <div className="text-xs text-()">Motivo mais recorrente</div>
+                <div className="text-lg font-semibold text-()">
                   {topMotivo || "Sem dados"}
                 </div>
-                <div className="text-xs text-[var(--color-muted)]">
-                  {hasData ? "Baseado no perÃ­odo selecionado" : "Sem dados"}
+                <div className="text-xs text-()">
+                  {hasData ? "Baseado no período selecionado" : "Sem dados"}
                 </div>
               </div>
             </CardContent>
@@ -619,14 +619,14 @@ export default function DashboardClient() {
         <Card>
           <CardHeader className="flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
             <div>
-              <CardTitle>SÃ©rie temporal</CardTitle>
+              <CardTitle>Série temporal</CardTitle>
               <CardDescription>{periodLabel}</CardDescription>
             </div>
-            <LineChartIcon className="h-5 w-5 text-[var(--color-muted)]" />
+            <LineChartIcon className="h-5 w-5 text-()" />
           </CardHeader>
           <CardContent>
             {!hasData ? (
-              <EmptyState label="Sem dados para o perÃ­odo selecionado." />
+              <EmptyState label="Sem dados para o período selecionado." />
             ) : (
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
@@ -652,14 +652,14 @@ export default function DashboardClient() {
         <Card>
           <CardHeader className="flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
             <div>
-              <CardTitle>DistribuiÃ§Ã£o por prioridade</CardTitle>
-              <CardDescription>Chamados no perÃ­odo</CardDescription>
+              <CardTitle>Distribuição por prioridade</CardTitle>
+              <CardDescription>Chamados no período</CardDescription>
             </div>
-            <BarChart3 className="h-5 w-5 text-[var(--color-muted)]" />
+            <BarChart3 className="h-5 w-5 text-()" />
           </CardHeader>
           <CardContent>
             {!hasData ? (
-              <EmptyState label="Sem dados para o perÃ­odo selecionado." />
+              <EmptyState label="Sem dados para o período selecionado." />
             ) : (
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
@@ -679,7 +679,7 @@ export default function DashboardClient() {
                     <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
                   </PieChart>
                 </ResponsiveContainer>
-                <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-sm text-[var(--color-muted-strong)]">
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-sm text-()">
                   {priorityData.map((item) => (
                     <div key={item.name} className="flex items-center gap-2">
                       <span
@@ -687,7 +687,7 @@ export default function DashboardClient() {
                         style={{ backgroundColor: item.color }}
                       />
                       <span>{item.name}</span>
-                      <span className="font-medium text-[var(--color-text)]">
+                      <span className="font-medium text-()">
                         {formatNumber(item.value)}
                       </span>
                     </div>
@@ -707,7 +707,7 @@ export default function DashboardClient() {
           </CardHeader>
           <CardContent>
             {!hasData ? (
-              <EmptyState label="Sem dados para o perÃ­odo selecionado." />
+              <EmptyState label="Sem dados para o período selecionado." />
             ) : (
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
@@ -735,15 +735,15 @@ export default function DashboardClient() {
           </CardHeader>
           <CardContent>
             {(metrics?.top_unidades ?? []).length === 0 ? (
-              <EmptyState label="Sem dados para o perÃ­odo selecionado." />
+              <EmptyState label="Sem dados para o período selecionado." />
             ) : (
               <div className="space-y-2 text-sm">
                 {metrics?.top_unidades.map((item) => (
                   <div
                     key={item.unidade}
-                    className="flex items-center justify-between rounded-lg border border-[var(--color-border)] px-3 py-2"
+                    className="flex items-center justify-between rounded-lg border border-() px-3 py-2"
                   >
-                    <span className="text-[var(--color-muted-strong)]">{item.unidade}</span>
+                    <span className="text-()">{item.unidade}</span>
                     <Badge variant="muted">{formatNumber(item.count)}</Badge>
                   </div>
                 ))}
@@ -759,15 +759,15 @@ export default function DashboardClient() {
           </CardHeader>
           <CardContent>
             {(metrics?.top_cidades ?? []).length === 0 ? (
-              <EmptyState label="Sem dados para o perÃ­odo selecionado." />
+              <EmptyState label="Sem dados para o período selecionado." />
             ) : (
               <div className="space-y-2 text-sm">
                 {metrics?.top_cidades.map((item) => (
                   <div
                     key={item.cidade}
-                    className="flex items-center justify-between rounded-lg border border-[var(--color-border)] px-3 py-2"
+                    className="flex items-center justify-between rounded-lg border border-() px-3 py-2"
                   >
-                    <span className="text-[var(--color-muted-strong)]">{item.cidade}</span>
+                    <span className="text-()">{item.cidade}</span>
                     <Badge variant="muted">{formatNumber(item.count)}</Badge>
                   </div>
                 ))}
@@ -785,4 +785,5 @@ export default function DashboardClient() {
     </div>
   );
 }
+
 

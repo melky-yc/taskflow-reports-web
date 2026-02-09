@@ -1,4 +1,4 @@
-﻿import { redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { Mail, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
@@ -37,10 +37,10 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const hasError = params?.error === "1";
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)]">
+    <div className="min-h-screen bg-()">
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-16">
         <div className="mb-6 flex items-center justify-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--color-surface)]">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-()">
             <img
               src="/logotsf.svg"
               alt="Taskflow Reports"
@@ -59,9 +59,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           <CardContent>
             <form action={signIn} className="space-y-4">
               <div className="space-y-2">
-                <label className="text-xs font-medium text-[var(--color-muted)]">E-mail</label>
+                <label className="text-xs font-medium text-()">E-mail</label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-[var(--color-muted)]" />
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-()" />
                   <Input
                     className="pl-9"
                     name="email"
@@ -73,9 +73,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-medium text-[var(--color-muted)]">Senha</label>
+                <label className="text-xs font-medium text-()">Senha</label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-[var(--color-muted)]" />
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-()" />
                   <Input
                     className="pl-9"
                     name="password"
@@ -87,8 +87,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               </div>
 
               {hasError ? (
-                <div className="rounded-lg border border-[var(--color-danger)] bg-[var(--color-danger-soft)] px-3 py-2 text-xs text-[var(--color-danger)]">
-                  E-mail ou senha inválidos.
+                <div className="rounded-lg border border-() bg-() px-3 py-2 text-xs text-()">
+                  E-mail ou senha inv�lidos.
                 </div>
               ) : null}
 
@@ -98,10 +98,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             </form>
           </CardContent>
         </Card>
-        <p className="mt-6 text-center text-xs text-[var(--color-muted)]">
+        <p className="mt-6 text-center text-xs text-()">
           Suporte interno. Use apenas contas autorizadas.
         </p>
       </div>
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-﻿import * as React from "react";
+import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const Card = React.forwardRef<
@@ -8,7 +8,7 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--color-shadow)]",
+      "rounded-2xl border border-() bg-() shadow-()",
       className
     )}
     {...props}
@@ -30,7 +30,7 @@ const CardTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h3
     ref={ref}
-    className={cn("text-lg font-semibold text-[var(--color-text)]", className)}
+    className={cn("text-lg font-semibold text-()", className)}
     {...props}
   />
 ));
@@ -42,7 +42,7 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm text-[var(--color-muted)]", className)}
+    className={cn("text-sm text-()", className)}
     {...props}
   />
 ));
@@ -65,3 +65,4 @@ const CardFooter = React.forwardRef<
 CardFooter.displayName = "CardFooter";
 
 export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter };
+

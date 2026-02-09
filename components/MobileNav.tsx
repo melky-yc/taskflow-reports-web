@@ -1,4 +1,4 @@
-ï»¿"use client";
+"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, key: "dashboard" },
   { href: "/tickets", label: "Tickets", icon: Ticket, key: "tickets" },
-  { href: "/reports", label: "RelatÃ³rios", icon: BarChart3, key: "reports" },
-  { href: "/config", label: "ConfiguraÃ§Ã£o", icon: Settings, key: "config" },
+  { href: "/reports", label: "Relatórios", icon: BarChart3, key: "reports" },
+  { href: "/config", label: "Configuração", icon: Settings, key: "config" },
 ] as const;
 
 type MobileNavProps = {
@@ -44,9 +44,9 @@ export default function MobileNav({ active }: MobileNavProps) {
       {open ? (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-overlay" onClick={() => setOpen(false)} />
-          <div className="absolute left-0 top-0 h-full w-72 border-r border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[var(--color-shadow)]">
+          <div className="absolute left-0 top-0 h-full w-72 border-r border-() bg-() p-5 shadow-()">
             <div className="flex items-center justify-between">
-              <div className="text-sm font-semibold text-[var(--color-text)]">
+              <div className="text-sm font-semibold text-()">
                 Menu
               </div>
               <Button
@@ -70,14 +70,14 @@ export default function MobileNav({ active }: MobileNavProps) {
                     onClick={() => setOpen(false)}
                     className={`flex items-center gap-2 rounded-xl px-3 py-2 font-medium transition ${
                       isActive
-                        ? "bg-[var(--color-primary-soft)] text-[var(--color-primary)]"
-                        : "text-[var(--color-muted-strong)] hover:bg-[var(--color-muted-soft)]"
+                        ? "bg-() text-()"
+                        : "text-() hover:bg-()"
                     }`}
                   >
                     <span
                       className={`h-4 w-1 rounded-full ${
                         isActive
-                          ? "bg-[var(--color-primary)]"
+                          ? "bg-()"
                           : "bg-transparent"
                       }`}
                     />
@@ -93,3 +93,4 @@ export default function MobileNav({ active }: MobileNavProps) {
     </>
   );
 }
+
