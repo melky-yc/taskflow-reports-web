@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -180,16 +180,19 @@ export default function DashboardClient() {
   const supabase = useMemo(() => createClient(), []);
   const today = useMemo(() => new Date(), []);
 
-  const defaultFilters: FiltersState = {
-    period: "7",
-    motivo: "",
-    prioridade: "",
-    uso: "",
-    uf: UF_PADRAO,
-    cidade: "",
-    startDate: formatDateBrFromDate(today),
-    endDate: formatDateBrFromDate(today),
-  };
+  const defaultFilters = useMemo<FiltersState>(
+    () => ({
+      period: "7",
+      motivo: "",
+      prioridade: "",
+      uso: "",
+      uf: UF_PADRAO,
+      cidade: "",
+      startDate: formatDateBrFromDate(today),
+      endDate: formatDateBrFromDate(today),
+    }),
+    [today]
+  );
 
   const [filters, setFilters] = useState<FiltersState>(defaultFilters);
   const [appliedFilters, setAppliedFilters] =
@@ -199,7 +202,7 @@ export default function DashboardClient() {
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  const applyFilters = async (currentFilters: FiltersState) => {
+  const applyFilters = useCallback(async (currentFilters: FiltersState) => {
     setError("");
     setLoading(true);
 
@@ -243,7 +246,14 @@ export default function DashboardClient() {
     setAppliedFilters(currentFilters);
     setLastUpdated(new Date());
     setLoading(false);
-  };
+  }, [supabase]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      applyFilters(defaultFilters);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [applyFilters, defaultFilters]);
 
   const handleApply = () => {
     applyFilters(filters);
