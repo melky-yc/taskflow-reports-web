@@ -35,8 +35,13 @@ export default async function AppShell({ active, breadcrumb, children }: AppShel
         <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-3">
             <MobileNav active={active} />
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--color-primary)] text-[var(--color-on-primary)]">
-              <span className="text-sm font-semibold">TR</span>
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--color-surface)]">
+              <img
+                src="/logotsf.svg"
+                alt="Taskflow Reports"
+                className="h-6 w-6"
+                loading="eager"
+              />
             </div>
             <div>
               <div className="text-sm font-semibold text-[var(--color-text)]">
