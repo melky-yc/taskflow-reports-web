@@ -58,15 +58,6 @@
   --color-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
 }
 
-@theme inline {
-  --color-background: var(--color-bg);
-  --color-foreground: var(--color-text);
-  --color-primary: var(--color-primary);
-  --color-border: var(--color-border);
-  --color-muted: var(--color-muted);
-  --font-sans: var(--font-inter);
-}
-
 body {
   background: var(--color-bg);
   color: var(--color-text);
