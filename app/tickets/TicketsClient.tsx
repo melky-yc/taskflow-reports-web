@@ -182,6 +182,10 @@ function prioridadeBadge(prioridade: string) {
   return "muted";
 }
 
+function formatPrioridadeLabel(prioridade: string) {
+  return prioridade === "Media" ? "Média" : prioridade;
+}
+
 function motivoBadge(motivo: string) {
   if (motivo === "Outro") return "warning";
   if (motivo.includes("Problema")) return "muted";
@@ -343,12 +347,12 @@ export default function TicketsClient({
         <CardContent>
           <div className="flex flex-col gap-3">
             {statusMessage ? (
-              <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-800">
+              <div className="rounded-lg border border-[color:var(--color-success)] bg-[color:var(--color-success-soft)] px-4 py-2 text-sm text-[color:var(--color-success)]">
                 {statusMessage}
               </div>
             ) : null}
             {errorMessage ? (
-              <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-700">
+              <div className="rounded-lg border border-[color:var(--color-danger)] bg-[color:var(--color-danger-soft)] px-4 py-2 text-sm text-[color:var(--color-danger)]">
                 {errorMessage}
               </div>
             ) : null}
@@ -371,36 +375,44 @@ export default function TicketsClient({
             onInput={handleCreateInput}
             onChange={handleCreateInput}
           >
-            <section className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-slate-700">
-                  Profissional
-                </h3>
+            <section className="space-y-3 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 shadow-sm">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="text-sm font-semibold text-[color:var(--color-text)]">
+                    Profissional
+                  </h3>
+                  <p className="text-xs text-[color:var(--color-muted)]">
+                    Usuário responsável pelo atendimento registrado.
+                  </p>
+                </div>
                 <Badge variant="muted">Autenticado</Badge>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-slate-600">
+                  <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
                     E-mail
                   </label>
                   <Input
                     readOnly
                     value={currentUserName}
-                    className="bg-slate-100"
+                    className="bg-[color:var(--color-muted-soft)]"
                   />
                 </div>
               </div>
             </section>
 
-            <Separator />
-
-            <section className="space-y-3">
-              <h3 className="text-sm font-semibold text-slate-700">
-                Dados do Chamado
-              </h3>
+            <section className="space-y-3 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 shadow-sm">
+              <div>
+                <h3 className="text-sm font-semibold text-[color:var(--color-text)]">
+                  Dados do Chamado
+                </h3>
+                <p className="text-xs text-[color:var(--color-muted)]">
+                  Defina o motivo, a prioridade e a data do atendimento.
+                </p>
+              </div>
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-slate-600">
+                  <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
                     Motivo
                   </label>
                   <Select
@@ -424,21 +436,21 @@ export default function TicketsClient({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-slate-600">
+                  <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
                     Prioridade
                   </label>
                   <Select name="prioridade" required>
                     <option value="">Selecione</option>
                     {PRIORIDADES.map((item) => (
                       <option key={item} value={item}>
-                        {item}
+                        {formatPrioridadeLabel(item)}
                       </option>
                     ))}
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-slate-600">
+                  <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
                     Data de atendimento
                   </label>
                   <Input
@@ -457,7 +469,7 @@ export default function TicketsClient({
 
               {motivo === "Outro" ? (
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-slate-600">
+                  <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
                     Descrição do motivo (Outro)
                   </label>
                   <Textarea
@@ -470,22 +482,25 @@ export default function TicketsClient({
               ) : null}
             </section>
 
-            <Separator />
-
-            <section className="space-y-3">
-              <h3 className="text-sm font-semibold text-slate-700">
-                Dados do Cliente
-              </h3>
+            <section className="space-y-3 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 shadow-sm">
+              <div>
+                <h3 className="text-sm font-semibold text-[color:var(--color-text)]">
+                  Dados do Cliente
+                </h3>
+                <p className="text-xs text-[color:var(--color-muted)]">
+                  Informações cadastrais do cliente atendido.
+                </p>
+              </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-slate-600">
+                  <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
                     Nome
                   </label>
                   <Input name="cliente_nome" required />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-slate-600">
+                  <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
                     CPF
                   </label>
                   <Input
@@ -504,7 +519,7 @@ export default function TicketsClient({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-slate-600">
+                  <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
                     Cidade
                   </label>
                   <Input
@@ -516,18 +531,18 @@ export default function TicketsClient({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-slate-600">UF</label>
+                  <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">UF</label>
                   <Input
                     name="cliente_estado"
                     value={UF_PADRAO}
                     readOnly
-                    className="bg-slate-100"
+                    className="bg-[color:var(--color-muted-soft)]"
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-slate-600">
+                  <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
                     Uso da plataforma
                   </label>
                   <Select name="cliente_uso_plataforma">
@@ -541,7 +556,7 @@ export default function TicketsClient({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-slate-600">
+                  <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
                     Unidade
                   </label>
                   <Input name="cliente_unidade" required />
@@ -549,23 +564,28 @@ export default function TicketsClient({
               </div>
             </section>
 
-            <Separator />
-
-            <section className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-slate-700">Retroativo</h3>
+            <section className="space-y-3 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 shadow-sm">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="text-sm font-semibold text-[color:var(--color-text)]">
+                    Retroativo
+                  </h3>
+                  <p className="text-xs text-[color:var(--color-muted)]">
+                    Chamados com data anterior a hoje exigem justificativa.
+                  </p>
+                </div>
                 <Badge variant={retroativo ? "warning" : "muted"}>
                   {retroativo ? "Retroativo" : "Normal"}
                 </Badge>
               </div>
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+              <div className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-muted-soft)] px-4 py-3 text-sm text-[color:var(--color-muted-strong)]">
                 A data de atendimento define automaticamente se o chamado é
                 retroativo.
               </div>
 
               {retroativo ? (
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-slate-600">
+                  <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
                     Motivo do retroativo
                   </label>
                   <Textarea
@@ -595,42 +615,42 @@ export default function TicketsClient({
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <form method="get" className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 text-sm text-slate-600">
-              <span>Período</span>
-              <div className="relative">
-                <Select
-                  name="period"
-                  defaultValue={filters.period}
-                  className="h-9 pr-8"
-                >
-                  <option value="7">7 dias</option>
-                  <option value="30">30 dias</option>
-                  <option value="90">90 dias</option>
-                </Select>
-                <ChevronDown className="pointer-events-none absolute right-2 top-2.5 h-4 w-4 text-slate-400" />
+              <div className="flex items-center gap-2 text-sm text-[color:var(--color-muted-strong)]">
+                <span>Período</span>
+                <div className="relative">
+                  <Select
+                    name="period"
+                    defaultValue={filters.period}
+                    className="h-9 pr-8"
+                  >
+                    <option value="7">7 dias</option>
+                    <option value="30">30 dias</option>
+                    <option value="90">90 dias</option>
+                  </Select>
+                  <ChevronDown className="pointer-events-none absolute right-2 top-2.5 h-4 w-4 text-[color:var(--color-muted)]" />
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-slate-600">
-              <span>Motivo</span>
-              <div className="relative">
-                <Select
-                  name="motivo"
-                  defaultValue={filters.motivo === "all" ? "" : filters.motivo}
-                  className="h-9 pr-8"
-                >
-                  <option value="">Todos</option>
-                  {MOTIVOS.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-                </Select>
-                <ChevronDown className="pointer-events-none absolute right-2 top-2.5 h-4 w-4 text-slate-400" />
+              <div className="flex items-center gap-2 text-sm text-[color:var(--color-muted-strong)]">
+                <span>Motivo</span>
+                <div className="relative">
+                  <Select
+                    name="motivo"
+                    defaultValue={filters.motivo === "all" ? "" : filters.motivo}
+                    className="h-9 pr-8"
+                  >
+                    <option value="">Todos</option>
+                    {MOTIVOS.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </Select>
+                  <ChevronDown className="pointer-events-none absolute right-2 top-2.5 h-4 w-4 text-[color:var(--color-muted)]" />
+                </div>
               </div>
-            </div>
-            <Button variant="secondary" className="h-9">
-              Filtrar
-            </Button>
+              <Button variant="secondary" className="h-9">
+                Filtrar
+              </Button>
             </form>
             <div className="flex items-center gap-2">
               <Button
@@ -656,14 +676,14 @@ export default function TicketsClient({
         </CardHeader>
         <CardContent>
           {exportNotice ? (
-            <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-800">
+            <div className="mb-4 rounded-lg border border-[color:var(--color-success)] bg-[color:var(--color-success-soft)] px-4 py-2 text-sm text-[color:var(--color-success)]">
               {exportNotice}
             </div>
           ) : null}
           <div className="overflow-x-auto">
             <table className="min-w-full border-collapse text-sm">
-              <thead className="sticky top-0 bg-white">
-                <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
+              <thead className="sticky top-0 bg-[color:var(--color-muted-soft)]">
+                <tr className="border-b border-[color:var(--color-border)] text-left text-xs uppercase tracking-wide text-[color:var(--color-muted)]">
                   <th className="px-3 py-2">ID</th>
                   <th className="px-3 py-2">Data</th>
                   <th className="px-3 py-2">Profissional</th>
@@ -680,14 +700,14 @@ export default function TicketsClient({
                 {tickets.length === 0 ? (
                   <tr>
                     <td colSpan={10} className="px-6 py-14">
-                      <div className="flex flex-col items-center gap-3 text-slate-500">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
+                      <div className="flex flex-col items-center gap-3 text-[color:var(--color-muted)]">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[color:var(--color-muted-soft)]">
                           <Inbox className="h-5 w-5" />
                         </div>
                         <div className="text-sm font-medium">
                           Nenhum chamado encontrado
                         </div>
-                        <div className="text-xs text-slate-400">
+                        <div className="text-xs text-[color:var(--color-muted)]">
                           Ajuste os filtros ou crie um novo chamado.
                         </div>
                       </div>
@@ -697,7 +717,7 @@ export default function TicketsClient({
                   tickets.map((ticket) => (
                     <tr
                       key={ticket.id}
-                      className="border-b border-slate-100 text-slate-700 hover:bg-slate-50"
+                      className="border-b border-[color:var(--color-border)] text-[color:var(--color-text)] hover:bg-[color:var(--color-muted-soft)]"
                     >
                       <td className="px-3 py-3 font-medium">#{ticket.id}</td>
                       <td className="px-3 py-3">
@@ -711,7 +731,7 @@ export default function TicketsClient({
                       </td>
                       <td className="px-3 py-3">
                         <Badge variant={prioridadeBadge(ticket.prioridade)}>
-                          {ticket.prioridade}
+                          {formatPrioridadeLabel(ticket.prioridade)}
                         </Badge>
                       </td>
                       <td className="px-3 py-3">{ticket.client.nome}</td>
@@ -739,32 +759,32 @@ export default function TicketsClient({
             </table>
           </div>
 
-          <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
+          <div className="mt-4 flex items-center justify-between text-sm text-[color:var(--color-muted-strong)]">
             <div>
               Página {pagination.page} de {pagination.totalPages}
             </div>
             <div className="flex items-center gap-2">
               {pagination.prevHref ? (
                 <a
-                  className="rounded-lg border border-slate-200 px-3 py-1 hover:bg-slate-50"
+                  className="rounded-lg border border-[color:var(--color-border)] px-3 py-1 hover:bg-[color:var(--color-muted-soft)]"
                   href={pagination.prevHref}
                 >
                   Anterior
                 </a>
               ) : (
-                <span className="rounded-lg border border-slate-100 px-3 py-1 text-slate-300">
+                <span className="rounded-lg border border-[color:var(--color-border)] px-3 py-1 text-[color:var(--color-muted)] opacity-60">
                   Anterior
                 </span>
               )}
               {pagination.nextHref ? (
                 <a
-                  className="rounded-lg border border-slate-200 px-3 py-1 hover:bg-slate-50"
+                  className="rounded-lg border border-[color:var(--color-border)] px-3 py-1 hover:bg-[color:var(--color-muted-soft)]"
                   href={pagination.nextHref}
                 >
                   Próxima
                 </a>
               ) : (
-                <span className="rounded-lg border border-slate-100 px-3 py-1 text-slate-300">
+                <span className="rounded-lg border border-[color:var(--color-border)] px-3 py-1 text-[color:var(--color-muted)] opacity-60">
                   Próxima
                 </span>
               )}
@@ -774,12 +794,14 @@ export default function TicketsClient({
       </Card>
 
       {editTicket && editForm ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4 py-6">
-          <div className="w-full max-w-3xl overflow-hidden rounded-xl bg-white shadow-xl">
-            <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay px-4 py-6">
+          <div className="w-full max-w-3xl overflow-hidden rounded-xl bg-[color:var(--color-surface)] shadow-[var(--color-shadow)]">
+            <div className="flex items-start justify-between gap-4 border-b border-[color:var(--color-border)] px-6 py-4">
               <div>
-                <h3 className="text-lg font-semibold">Editar chamado</h3>
-                <p className="text-sm text-slate-500">
+                <h3 className="text-lg font-semibold text-[color:var(--color-text)]">
+                  Editar chamado
+                </h3>
+                <p className="text-sm text-[color:var(--color-muted)]">
                   Atualize os dados do chamado e do cliente.
                 </p>
               </div>
@@ -804,12 +826,12 @@ export default function TicketsClient({
                 />
 
                 <section className="space-y-3">
-                  <h4 className="text-sm font-semibold text-slate-700">
+                  <h4 className="text-sm font-semibold text-[color:var(--color-text)]">
                     Dados do Chamado
                   </h4>
                   <div className="grid gap-4 md:grid-cols-3">
                     <div className="space-y-2">
-                      <label className="text-xs font-medium text-slate-600">
+                      <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
                         Motivo
                       </label>
                       <Select
@@ -840,7 +862,7 @@ export default function TicketsClient({
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-xs font-medium text-slate-600">
+                      <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
                         Prioridade
                       </label>
                       <Select
@@ -855,14 +877,14 @@ export default function TicketsClient({
                       >
                         {PRIORIDADES.map((item) => (
                           <option key={item} value={item}>
-                            {item}
+                            {formatPrioridadeLabel(item)}
                           </option>
                         ))}
                       </Select>
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-xs font-medium text-slate-600">
+                      <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
                         Data de atendimento
                       </label>
                       <Input
@@ -888,7 +910,7 @@ export default function TicketsClient({
 
                   {editForm.motivo === "Outro" ? (
                     <div className="space-y-2">
-                      <label className="text-xs font-medium text-slate-600">
+                      <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
                         Descrição do motivo (Outro)
                       </label>
                       <Textarea
@@ -910,12 +932,12 @@ export default function TicketsClient({
                 <Separator />
 
                 <section className="space-y-3">
-                  <h4 className="text-sm font-semibold text-slate-700">
+                  <h4 className="text-sm font-semibold text-[color:var(--color-text)]">
                     Dados do Cliente
                   </h4>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
-                      <label className="text-xs font-medium text-slate-600">
+                      <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
                         Nome
                       </label>
                       <Input
@@ -933,18 +955,18 @@ export default function TicketsClient({
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-xs font-medium text-slate-600">
+                      <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
                         CPF (não editável)
                       </label>
                       <Input
                         value={formatCpf(editForm.clienteCpfDigits)}
                         readOnly
-                        className="bg-slate-100"
+                        className="bg-[color:var(--color-muted-soft)]"
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-xs font-medium text-slate-600">
+                      <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
                         Cidade
                       </label>
                       <Input
@@ -963,18 +985,18 @@ export default function TicketsClient({
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-xs font-medium text-slate-600">UF</label>
+                      <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">UF</label>
                       <Input
                         name="cliente_estado"
                         value={editForm.clienteEstado || UF_PADRAO}
                         readOnly
-                        className="bg-slate-100"
+                        className="bg-[color:var(--color-muted-soft)]"
                         required
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-xs font-medium text-slate-600">
+                      <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
                         Uso da plataforma
                       </label>
                       <Select
@@ -1001,7 +1023,7 @@ export default function TicketsClient({
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-xs font-medium text-slate-600">
+                      <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
                         Unidade
                       </label>
                       <Input
@@ -1024,14 +1046,14 @@ export default function TicketsClient({
 
                 <section className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-semibold text-slate-700">Retroativo</h4>
+                    <h4 className="text-sm font-semibold text-[color:var(--color-text)]">Retroativo</h4>
                     <Badge variant={editRetroativo ? "warning" : "muted"}>
                       {editRetroativo ? "Retroativo" : "Normal"}
                     </Badge>
                   </div>
                   {editRetroativo ? (
                     <div className="space-y-2">
-                      <label className="text-xs font-medium text-slate-600">
+                      <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
                         Motivo do retroativo
                       </label>
                       <Textarea
@@ -1051,13 +1073,13 @@ export default function TicketsClient({
                       />
                     </div>
                   ) : (
-                    <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                    <div className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-muted-soft)] px-4 py-3 text-sm text-[color:var(--color-muted-strong)]">
                       Este chamado não é retroativo.
                     </div>
                   )}
                 </section>
 
-                <div className="sticky bottom-0 -mx-6 mt-6 border-t border-slate-200 bg-white px-6 py-4">
+                <div className="sticky bottom-0 -mx-6 mt-6 border-t border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-6 py-4">
                   <div className="flex items-center justify-end gap-2">
                     <Button variant="outline" type="button" onClick={closeEdit}>
                       Cancelar

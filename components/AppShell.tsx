@@ -7,6 +7,7 @@ import {
   Ticket,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import MobileNav from "@/components/MobileNav";
 import UserMenu from "@/components/UserMenu";
 
 const NAV_ITEMS = [
@@ -29,19 +30,20 @@ export default async function AppShell({ active, breadcrumb, children }: AppShel
   } = await supabase.auth.getUser();
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <header className="fixed left-0 top-0 z-40 w-full border-b border-slate-200 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-6">
+    <div className="min-h-screen bg-[color:var(--color-bg)] text-[color:var(--color-text)]">
+      <header className="fixed left-0 top-0 z-40 w-full border-b border-[color:var(--color-border)] bg-[color:var(--color-surface)] backdrop-blur">
+        <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[color:var(--primary)] text-white">
+            <MobileNav active={active} />
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[color:var(--color-primary)] text-[color:var(--color-on-primary)]">
               <span className="text-sm font-semibold">TR</span>
             </div>
             <div>
-              <div className="text-sm font-semibold text-slate-900">
+              <div className="text-sm font-semibold text-[color:var(--color-text)]">
                 Taskflow Reports
               </div>
               {breadcrumb ? (
-                <div className="flex items-center gap-1 text-xs text-slate-500">
+                <div className="flex items-center gap-1 text-xs text-[color:var(--color-muted)]">
                   <span>Início</span>
                   <ChevronRight className="h-3 w-3" />
                   <span>{breadcrumb}</span>
@@ -53,10 +55,10 @@ export default async function AppShell({ active, breadcrumb, children }: AppShel
         </div>
       </header>
 
-      <div className="mx-auto flex w-full max-w-7xl gap-6 px-6 pb-10 pt-24">
-        <aside className="w-60">
-          <div className="sticky top-24 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+      <div className="mx-auto flex w-full max-w-7xl gap-6 px-4 pb-10 pt-24 lg:px-6">
+        <aside className="hidden w-64 lg:block">
+          <div className="sticky top-24 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 shadow-[var(--color-shadow)]">
+            <div className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-muted)]">
               Navegação
             </div>
             <nav className="mt-4 flex flex-col gap-1.5 text-sm">
@@ -69,10 +71,17 @@ export default async function AppShell({ active, breadcrumb, children }: AppShel
                     href={item.href}
                     className={`flex items-center gap-2 rounded-xl px-3 py-2 font-medium transition ${
                       isActive
-                        ? "bg-[color:var(--primary)] text-white shadow-sm"
-                        : "text-slate-600 hover:bg-slate-100"
+                        ? "bg-[color:var(--color-primary-soft)] text-[color:var(--color-primary)]"
+                        : "text-[color:var(--color-muted-strong)] hover:bg-[color:var(--color-muted-soft)]"
                     }`}
                   >
+                    <span
+                      className={`h-4 w-1 rounded-full ${
+                        isActive
+                          ? "bg-[color:var(--color-primary)]"
+                          : "bg-transparent"
+                      }`}
+                    />
                     <Icon className="h-4 w-4" />
                     {item.label}
                   </Link>

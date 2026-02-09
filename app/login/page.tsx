@@ -37,10 +37,10 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const hasError = params?.error === "1";
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[color:var(--color-bg)]">
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-16">
         <div className="mb-6 flex items-center justify-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[color:var(--primary)] text-white">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[color:var(--color-primary)] text-[color:var(--color-on-primary)]">
             <span className="text-base font-semibold">TR</span>
           </div>
         </div>
@@ -48,15 +48,15 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           <CardHeader>
             <CardTitle>Acesso ao sistema</CardTitle>
             <CardDescription>
-              Entre com suas credenciais do Supabase para continuar.
+              Entre com suas credenciais para continuar.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form action={signIn} className="space-y-4">
               <div className="space-y-2">
-                <label className="text-xs font-medium text-slate-600">E-mail</label>
+                <label className="text-xs font-medium text-[color:var(--color-muted)]">E-mail</label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-[color:var(--color-muted)]" />
                   <Input
                     className="pl-9"
                     name="email"
@@ -68,9 +68,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-medium text-slate-600">Senha</label>
+                <label className="text-xs font-medium text-[color:var(--color-muted)]">Senha</label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-[color:var(--color-muted)]" />
                   <Input
                     className="pl-9"
                     name="password"
@@ -82,7 +82,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               </div>
 
               {hasError ? (
-                <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+                <div className="rounded-lg border border-[color:var(--color-danger)] bg-[color:var(--color-danger-soft)] px-3 py-2 text-xs text-[color:var(--color-danger)]">
                   E-mail ou senha inválidos.
                 </div>
               ) : null}
@@ -93,7 +93,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             </form>
           </CardContent>
         </Card>
-        <p className="mt-6 text-center text-xs text-slate-500">
+        <p className="mt-6 text-center text-xs text-[color:var(--color-muted)]">
           Suporte interno. Use apenas contas autorizadas.
         </p>
       </div>

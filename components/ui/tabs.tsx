@@ -41,7 +41,7 @@ function TabsList({ className, ...props }: TabsListProps) {
   return (
     <div
       className={cn(
-        "inline-flex rounded-lg border border-slate-200 bg-slate-50 p-1",
+        "inline-flex rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-muted-soft)] p-1",
         className
       )}
       {...props}
@@ -63,7 +63,7 @@ function TabsTrigger({ className, value, ...props }: TabsTriggerProps) {
       data-state={active ? "active" : "inactive"}
       onClick={() => context.setValue(value)}
       className={cn(
-        "rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 transition data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm",
+        "rounded-md px-3 py-1.5 text-sm font-medium text-[color:var(--color-muted-strong)] transition data-[state=active]:bg-[color:var(--color-surface)] data-[state=active]:text-[color:var(--color-text)] data-[state=active]:shadow-sm",
         className
       )}
       {...props}

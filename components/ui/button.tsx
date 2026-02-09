@@ -9,24 +9,26 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", asChild, children, ...props }, ref) => {
     const base =
-      "inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-[color:var(--primary-soft)] disabled:cursor-not-allowed disabled:opacity-60";
+      "inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-[color:var(--color-primary-soft)] disabled:cursor-not-allowed disabled:opacity-60";
     const variants: Record<typeof variant, string> = {
       primary:
-        "bg-[color:var(--primary)] text-white shadow-sm hover:bg-[color:var(--primary-hover)]",
+        "bg-[color:var(--color-primary)] text-[color:var(--color-on-primary)] shadow-sm hover:bg-[color:var(--color-primary-hover)]",
       secondary:
-        "bg-slate-100 text-slate-800 hover:bg-slate-200",
-      ghost: "text-slate-600 hover:bg-slate-100",
+        "bg-[color:var(--color-muted-soft)] text-[color:var(--color-text)] hover:bg-[color:var(--color-border)]",
+      ghost:
+        "text-[color:var(--color-muted-strong)] hover:bg-[color:var(--color-muted-soft)]",
       outline:
-        "border border-slate-200 text-slate-700 hover:bg-slate-50",
+        "border border-[color:var(--color-border)] text-[color:var(--color-text)] hover:bg-[color:var(--color-muted-soft)]",
     } as const;
     if (asChild && React.isValidElement(children)) {
-      return React.cloneElement(children as React.ReactElement<any>, {
+      const child = children as React.ReactElement<{ className?: string }>;
+      return React.cloneElement(child, {
         className: cn(
           base,
           variants[variant],
           "h-11 px-4",
           className,
-          (children.props as { className?: string }).className
+          child.props.className
         ),
         ...props,
       });

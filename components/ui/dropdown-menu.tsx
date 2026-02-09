@@ -69,7 +69,7 @@ const DropdownMenuContent = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        "absolute right-0 top-12 z-50 min-w-[220px] rounded-lg border border-slate-200 bg-white p-2 shadow-lg",
+        "absolute right-0 top-12 z-50 min-w-[220px] rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-2 shadow-[var(--color-shadow)]",
         className
       )}
       {...props}
@@ -95,7 +95,7 @@ const DropdownMenuItem = React.forwardRef<
         context.setOpen(false);
       }}
       className={cn(
-        "flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-slate-100",
+        "flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[color:var(--color-text)] hover:bg-[color:var(--color-muted-soft)]",
         className
       )}
       {...props}
@@ -106,12 +106,23 @@ DropdownMenuItem.displayName = "DropdownMenuItem";
 
 function DropdownMenuLabel({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn("px-3 py-1 text-xs font-semibold uppercase text-slate-400", className)} {...props} />
+    <div
+      className={cn(
+        "px-3 py-1 text-xs font-semibold uppercase text-[color:var(--color-muted)]",
+        className
+      )}
+      {...props}
+    />
   );
 }
 
 function DropdownMenuSeparator({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("my-2 h-px bg-slate-100", className)} {...props} />;
+  return (
+    <div
+      className={cn("my-2 h-px bg-[color:var(--color-border)]", className)}
+      {...props}
+    />
+  );
 }
 
 export {

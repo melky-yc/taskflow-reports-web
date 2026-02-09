@@ -39,14 +39,14 @@ const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
         disabled={disabled}
         onClick={toggle}
         className={cn(
-          "relative inline-flex h-6 w-11 items-center rounded-full border border-slate-200 bg-slate-200 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--primary-soft)] disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-[color:var(--primary)] data-[state=checked]:bg-[color:var(--primary)]",
+          "relative inline-flex h-6 w-11 items-center rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-muted-soft)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-primary-soft)] disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-[color:var(--color-primary)] data-[state=checked]:bg-[color:var(--color-primary)]",
           className
         )}
         {...props}
       >
         <span
           className={cn(
-            "inline-block h-5 w-5 translate-x-0 rounded-full bg-white shadow transition",
+            "inline-block h-5 w-5 translate-x-0 rounded-full bg-[color:var(--color-surface)] shadow transition",
             isChecked && "translate-x-5"
           )}
         />

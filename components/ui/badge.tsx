@@ -8,11 +8,13 @@ type BadgeProps = React.HTMLAttributes<HTMLSpanElement> & {
 const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
   ({ className, variant = "default", ...props }, ref) => {
     const variants: Record<typeof variant, string> = {
-      default: "bg-slate-900 text-white",
-      muted: "bg-slate-100 text-slate-700",
-      success: "bg-emerald-100 text-emerald-700",
-      warning: "bg-amber-100 text-amber-700",
-      danger: "bg-rose-100 text-rose-700",
+      default:
+        "bg-[color:var(--color-primary-soft)] text-[color:var(--color-primary)]",
+      muted:
+        "bg-[color:var(--color-muted-soft)] text-[color:var(--color-muted-strong)]",
+      success: "bg-[color:var(--color-success-soft)] text-[color:var(--color-success)]",
+      warning: "bg-[color:var(--color-warning-soft)] text-[color:var(--color-warning)]",
+      danger: "bg-[color:var(--color-danger-soft)] text-[color:var(--color-danger)]",
     };
     return (
       <span

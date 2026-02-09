@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { LogOut, User } from "lucide-react";
 import { signOutAction } from "@/app/actions";
@@ -20,17 +20,19 @@ export default function UserMenu({ email }: UserMenuProps) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 shadow-sm hover:bg-slate-50">
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600">
+      <DropdownMenuTrigger className="flex items-center gap-2 rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-1.5 text-sm text-[color:var(--color-text)] shadow-sm hover:bg-[color:var(--color-muted-soft)]">
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--color-muted-soft)] text-[color:var(--color-muted-strong)]">
           <User className="h-4 w-4" />
         </span>
-        <span className="hidden text-sm font-medium text-slate-700 sm:inline">
+        <span className="hidden text-sm font-medium text-[color:var(--color-text)] sm:inline">
           {displayEmail}
         </span>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuLabel>Conta</DropdownMenuLabel>
-        <div className="px-3 py-2 text-xs text-slate-500">{displayEmail}</div>
+        <div className="px-3 py-2 text-xs text-[color:var(--color-muted)]">
+          {displayEmail}
+        </div>
         <DropdownMenuSeparator />
         <form action={signOutAction}>
           <DropdownMenuItem type="submit">

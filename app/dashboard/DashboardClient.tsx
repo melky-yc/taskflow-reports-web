@@ -50,7 +50,7 @@ const PERIOD_OPTIONS: { value: PeriodOption; label: string }[] = [
   { value: "30", label: "Últimos 30 dias" },
   { value: "90", label: "Últimos 90 dias" },
   { value: "365", label: "Últimos 365 dias" },
-  { value: "custom", label: "Customizado" },
+  { value: "custom", label: "Personalizado" },
 ];
 
 const MOTIVOS = [
@@ -68,12 +68,21 @@ const CIDADES_PI = cidadesPi.cidades;
 const CIDADES_LIST_ID = "cidades-dashboard";
 
 const PRIORITY_COLORS = {
-  Alta: "#ef4444",
-  Media: "#f59e0b",
-  Baixa: "#3b82f6",
+  Alta: "var(--color-danger)",
+  Media: "var(--color-warning)",
+  Baixa: "var(--color-success)",
 };
 
-const MOTIVO_COLOR = "#6366f1";
+const MOTIVO_COLOR = "var(--color-primary)";
+const CHART_GRID_COLOR = "var(--color-border)";
+const CHART_AXIS_COLOR = "var(--color-muted)";
+const CHART_TOOLTIP_STYLE = {
+  backgroundColor: "var(--color-surface)",
+  borderColor: "var(--color-border)",
+  color: "var(--color-text)",
+  borderRadius: 12,
+  boxShadow: "var(--color-shadow)",
+};
 
 type DashboardMetrics = {
   totals: {
@@ -158,6 +167,17 @@ function formatTime(date: Date | null) {
     hour: "2-digit",
     minute: "2-digit",
   }).format(date);
+}
+
+function EmptyState({ label }: { label: string }) {
+  return (
+    <div className="flex flex-col items-center gap-2 rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-muted-soft)] px-4 py-6 text-sm text-[color:var(--color-muted-strong)]">
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[color:var(--color-surface)] text-[color:var(--color-muted)]">
+        <AlertTriangle className="h-5 w-5" />
+      </div>
+      <div className="text-sm font-medium">{label}</div>
+    </div>
+  );
 }
 
 export default function DashboardClient() {
@@ -293,8 +313,8 @@ export default function DashboardClient() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Dashboard</h1>
-          <p className="text-sm text-slate-500">
+          <h1 className="text-2xl font-semibold text-[color:var(--color-text)]">Dashboard</h1>
+          <p className="text-sm text-[color:var(--color-muted)]">
             Visão geral dos chamados de suporte de TI.
           </p>
         </div>
@@ -309,12 +329,12 @@ export default function DashboardClient() {
       </div>
 
       <Card>
-        <CardHeader className="flex-row items-center justify-between space-y-0">
-          <div className="flex items-center gap-2 text-sm text-slate-500">
+        <CardHeader className="flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+          <div className="flex items-center gap-2 text-sm text-[color:var(--color-muted)]">
             <Filter className="h-4 w-4" />
             <span>Filtros globais</span>
           </div>
-          <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500">
+          <div className="flex flex-wrap items-center gap-4 text-xs text-[color:var(--color-muted)]">
             <span>Última atualização: {formatTime(lastUpdated)}</span>
             <span>Registros encontrados: {recordLabel}</span>
           </div>
@@ -322,7 +342,7 @@ export default function DashboardClient() {
         <CardContent>
           <div className="grid gap-4 xl:grid-cols-6">
             <div className="space-y-2">
-              <label className="text-xs font-medium text-slate-600">
+              <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
                 Período
               </label>
               <Select
@@ -345,7 +365,7 @@ export default function DashboardClient() {
             {filters.period === "custom" ? (
               <div className="grid gap-3 md:grid-cols-2 xl:col-span-2">
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-slate-600">
+                  <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
                     Data inicial
                   </label>
                   <Input
@@ -361,7 +381,7 @@ export default function DashboardClient() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-slate-600">
+                  <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
                     Data final
                   </label>
                   <Input
@@ -380,7 +400,7 @@ export default function DashboardClient() {
             ) : null}
 
             <div className="space-y-2">
-              <label className="text-xs font-medium text-slate-600">Motivo</label>
+              <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">Motivo</label>
               <Select
                 value={filters.motivo}
                 onChange={(event) =>
@@ -400,7 +420,7 @@ export default function DashboardClient() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-medium text-slate-600">
+              <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
                 Prioridade
               </label>
               <Select
@@ -422,7 +442,7 @@ export default function DashboardClient() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-medium text-slate-600">
+              <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
                 Uso da plataforma
               </label>
               <Select
@@ -444,7 +464,7 @@ export default function DashboardClient() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-medium text-slate-600">UF</label>
+              <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">UF</label>
               <Select
                 value={filters.uf}
                 onChange={(event) =>
@@ -460,7 +480,7 @@ export default function DashboardClient() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-medium text-slate-600">Cidade</label>
+              <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">Cidade</label>
               <Input
                 value={filters.cidade}
                 onChange={(event) =>
@@ -484,7 +504,7 @@ export default function DashboardClient() {
       </Card>
 
       {error ? (
-        <Alert className="border-rose-200 bg-rose-50">
+        <Alert className="border-[color:var(--color-danger)] bg-[color:var(--color-danger-soft)]">
           <AlertTitle>Não foi possível carregar</AlertTitle>
           <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
             <span>{error}</span>
@@ -505,30 +525,30 @@ export default function DashboardClient() {
         <div className="grid gap-4 md:grid-cols-3">
           <Card>
             <CardContent className="flex items-center gap-3 p-4">
-              <div className="rounded-lg bg-indigo-50 p-2 text-indigo-700">
+              <div className="rounded-lg bg-[color:var(--color-primary-soft)] p-2 text-[color:var(--color-primary)]">
                 <Activity className="h-5 w-5" />
               </div>
               <div>
-                <div className="text-xs text-slate-500">Total de chamados</div>
-                <div className="text-2xl font-semibold text-slate-900">
+                <div className="text-xs text-[color:var(--color-muted)]">Total de chamados</div>
+                <div className="text-2xl font-semibold text-[color:var(--color-text)]">
                   {formatNumber(totalCount)}
                 </div>
-                <div className="text-xs text-slate-500">{periodLabel}</div>
+                <div className="text-xs text-[color:var(--color-muted)]">{periodLabel}</div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardContent className="flex items-center gap-3 p-4">
-              <div className="rounded-lg bg-amber-50 p-2 text-amber-700">
+              <div className="rounded-lg bg-[color:var(--color-warning-soft)] p-2 text-[color:var(--color-warning)]">
                 <AlertTriangle className="h-5 w-5" />
               </div>
               <div>
-                <div className="text-xs text-slate-500">% Retroativos</div>
-                <div className="text-2xl font-semibold text-slate-900">
+                <div className="text-xs text-[color:var(--color-muted)]">% Retroativos</div>
+                <div className="text-2xl font-semibold text-[color:var(--color-text)]">
                   {formatPercent(retroPercent)}%
                 </div>
-                <div className="text-xs text-slate-500">
+                <div className="text-xs text-[color:var(--color-muted)]">
                   {formatNumber(totalCount)} chamados
                 </div>
               </div>
@@ -537,30 +557,30 @@ export default function DashboardClient() {
 
           <Card>
             <CardContent className="flex items-center gap-3 p-4">
-              <div className="rounded-lg bg-emerald-50 p-2 text-emerald-700">
+              <div className="rounded-lg bg-[color:var(--color-success-soft)] p-2 text-[color:var(--color-success)]">
                 <CalendarDays className="h-5 w-5" />
               </div>
               <div>
-                <div className="text-xs text-slate-500">Chamados hoje</div>
-                <div className="text-2xl font-semibold text-slate-900">
+                <div className="text-xs text-[color:var(--color-muted)]">Chamados hoje</div>
+                <div className="text-2xl font-semibold text-[color:var(--color-text)]">
                   {formatNumber(todayCount)}
                 </div>
-                <div className="text-xs text-slate-500">{periodLabel}</div>
+                <div className="text-xs text-[color:var(--color-muted)]">{periodLabel}</div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="md:col-span-3">
             <CardContent className="flex items-center gap-3 p-4">
-              <div className="rounded-lg bg-blue-50 p-2 text-blue-700">
+              <div className="rounded-lg bg-[color:var(--color-primary-soft)] p-2 text-[color:var(--color-primary)]">
                 <TrendingUp className="h-5 w-5" />
               </div>
               <div>
-                <div className="text-xs text-slate-500">Motivo mais recorrente</div>
-                <div className="text-lg font-semibold text-slate-900">
+                <div className="text-xs text-[color:var(--color-muted)]">Motivo mais recorrente</div>
+                <div className="text-lg font-semibold text-[color:var(--color-text)]">
                   {topMotivo || "Sem dados"}
                 </div>
-                <div className="text-xs text-slate-500">
+                <div className="text-xs text-[color:var(--color-muted)]">
                   {hasData ? "Baseado no período selecionado" : "Sem dados"}
                 </div>
               </div>
@@ -571,38 +591,30 @@ export default function DashboardClient() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader className="flex-row items-center justify-between space-y-0">
+          <CardHeader className="flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
             <div>
               <CardTitle>Série temporal</CardTitle>
               <CardDescription>{periodLabel}</CardDescription>
             </div>
-            <LineChartIcon className="h-5 w-5 text-slate-400" />
+            <LineChartIcon className="h-5 w-5 text-[color:var(--color-muted)]" />
           </CardHeader>
           <CardContent>
             {!hasData ? (
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-600">
-                Sem dados para o período selecionado.
-              </div>
+              <EmptyState label="Sem dados para o período selecionado." />
             ) : (
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={timeseriesData} margin={{ left: 0, right: 16 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                    <XAxis dataKey="date" stroke="#94a3b8" />
-                    <YAxis stroke="#94a3b8" />
-                    <Tooltip
-                      contentStyle={{
-                        borderRadius: 12,
-                        borderColor: "#e2e8f0",
-                        boxShadow: "0 10px 20px rgba(15,23,42,0.08)",
-                      }}
-                    />
+                    <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_COLOR} />
+                    <XAxis dataKey="date" stroke={CHART_AXIS_COLOR} />
+                    <YAxis stroke={CHART_AXIS_COLOR} />
+                    <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
                     <Line
                       type="monotone"
                       dataKey="count"
-                      stroke="#6366f1"
+                      stroke="var(--color-primary)"
                       strokeWidth={3}
-                      dot={{ r: 3, fill: "#6366f1" }}
+                      dot={{ r: 3, fill: "var(--color-primary)" }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -612,18 +624,16 @@ export default function DashboardClient() {
         </Card>
 
         <Card>
-          <CardHeader className="flex-row items-center justify-between space-y-0">
+          <CardHeader className="flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
             <div>
               <CardTitle>Distribuição por prioridade</CardTitle>
               <CardDescription>Chamados no período</CardDescription>
             </div>
-            <BarChart3 className="h-5 w-5 text-slate-400" />
+            <BarChart3 className="h-5 w-5 text-[color:var(--color-muted)]" />
           </CardHeader>
           <CardContent>
             {!hasData ? (
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-600">
-                Sem dados para o período selecionado.
-              </div>
+              <EmptyState label="Sem dados para o período selecionado." />
             ) : (
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
@@ -640,16 +650,10 @@ export default function DashboardClient() {
                         <Cell key={entry.name} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip
-                      contentStyle={{
-                        borderRadius: 12,
-                        borderColor: "#e2e8f0",
-                        boxShadow: "0 10px 20px rgba(15,23,42,0.08)",
-                      }}
-                    />
+                    <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
                   </PieChart>
                 </ResponsiveContainer>
-                <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-sm text-slate-600">
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-sm text-[color:var(--color-muted-strong)]">
                   {priorityData.map((item) => (
                     <div key={item.name} className="flex items-center gap-2">
                       <span
@@ -657,7 +661,7 @@ export default function DashboardClient() {
                         style={{ backgroundColor: item.color }}
                       />
                       <span>{item.name}</span>
-                      <span className="font-medium text-slate-700">
+                      <span className="font-medium text-[color:var(--color-text)]">
                         {formatNumber(item.value)}
                       </span>
                     </div>
@@ -677,25 +681,17 @@ export default function DashboardClient() {
           </CardHeader>
           <CardContent>
             {!hasData ? (
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-600">
-                Sem dados para o período selecionado.
-              </div>
+              <EmptyState label="Sem dados para o período selecionado." />
             ) : (
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={topMotivos} layout="vertical" margin={{ left: 32 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                    <XAxis type="number" stroke="#94a3b8" />
-                    <YAxis type="category" dataKey="name" stroke="#94a3b8" width={120} />
-                    <Tooltip
-                      contentStyle={{
-                        borderRadius: 12,
-                        borderColor: "#e2e8f0",
-                        boxShadow: "0 10px 20px rgba(15,23,42,0.08)",
-                      }}
-                    />
+                    <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_COLOR} />
+                    <XAxis type="number" stroke={CHART_AXIS_COLOR} />
+                    <YAxis type="category" dataKey="name" stroke={CHART_AXIS_COLOR} width={120} />
+                    <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
                     <Bar dataKey="value" fill={MOTIVO_COLOR} radius={[6, 6, 6, 6]}>
-                      <LabelList dataKey="value" position="right" />
+                      <LabelList dataKey="value" position="right" fill="var(--color-text)" />
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
@@ -713,17 +709,15 @@ export default function DashboardClient() {
           </CardHeader>
           <CardContent>
             {(metrics?.top_unidades ?? []).length === 0 ? (
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-600">
-                Sem dados para o período selecionado.
-              </div>
+              <EmptyState label="Sem dados para o período selecionado." />
             ) : (
               <div className="space-y-2 text-sm">
                 {metrics?.top_unidades.map((item) => (
                   <div
                     key={item.unidade}
-                    className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2"
+                    className="flex items-center justify-between rounded-lg border border-[color:var(--color-border)] px-3 py-2"
                   >
-                    <span className="text-slate-600">{item.unidade}</span>
+                    <span className="text-[color:var(--color-muted-strong)]">{item.unidade}</span>
                     <Badge variant="muted">{formatNumber(item.count)}</Badge>
                   </div>
                 ))}
@@ -739,17 +733,15 @@ export default function DashboardClient() {
           </CardHeader>
           <CardContent>
             {(metrics?.top_cidades ?? []).length === 0 ? (
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-600">
-                Sem dados para o período selecionado.
-              </div>
+              <EmptyState label="Sem dados para o período selecionado." />
             ) : (
               <div className="space-y-2 text-sm">
                 {metrics?.top_cidades.map((item) => (
                   <div
                     key={item.cidade}
-                    className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2"
+                    className="flex items-center justify-between rounded-lg border border-[color:var(--color-border)] px-3 py-2"
                   >
-                    <span className="text-slate-600">{item.cidade}</span>
+                    <span className="text-[color:var(--color-muted-strong)]">{item.cidade}</span>
                     <Badge variant="muted">{formatNumber(item.count)}</Badge>
                   </div>
                 ))}

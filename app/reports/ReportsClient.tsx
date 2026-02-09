@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -136,6 +136,10 @@ function prioridadeBadge(prioridade: string) {
   if (prioridade === "Alta") return "danger";
   if (prioridade === "Media") return "warning";
   return "muted";
+}
+
+function formatPrioridadeLabel(prioridade: string) {
+  return prioridade === "Media" ? "Média" : prioridade;
 }
 
 type ReportState = {
@@ -286,22 +290,22 @@ export default function ReportsClient() {
         ? ticket.clients[0]
         : ticket.clients;
       return {
-      id: ticket.id,
-      created_at: ticket.created_at,
-      data_atendimento: ticket.data_atendimento,
-      motivo: ticket.motivo,
-      prioridade: ticket.prioridade,
-      profissional_nome: ticket.profissional_nome,
-      retroativo: Boolean(ticket.retroativo),
-      client: {
-        nome: clientData?.nome ?? "",
-        cpf: clientData?.cpf ?? "",
-        cidade: clientData?.cidade ?? "",
-        estado_uf: clientData?.estado_uf ?? "",
-        uso_plataforma: clientData?.uso_plataforma ?? null,
-        unidade: clientData?.unidade ?? "",
-      },
-    };
+        id: ticket.id,
+        created_at: ticket.created_at,
+        data_atendimento: ticket.data_atendimento,
+        motivo: ticket.motivo,
+        prioridade: ticket.prioridade,
+        profissional_nome: ticket.profissional_nome,
+        retroativo: Boolean(ticket.retroativo),
+        client: {
+          nome: clientData?.nome ?? "",
+          cpf: clientData?.cpf ?? "",
+          cidade: clientData?.cidade ?? "",
+          estado_uf: clientData?.estado_uf ?? "",
+          uso_plataforma: clientData?.uso_plataforma ?? null,
+          unidade: clientData?.unidade ?? "",
+        },
+      };
     });
 
     const summary = buildSummary(tickets, rangeLabel);
@@ -334,7 +338,7 @@ export default function ReportsClient() {
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
-              <label className="text-xs font-medium text-slate-600">
+              <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
                 Período
               </label>
               <Select
@@ -351,7 +355,7 @@ export default function ReportsClient() {
 
             {(period === "daily" || period === "weekly") && (
               <div className="space-y-2">
-                <label className="text-xs font-medium text-slate-600">
+                <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
                   Data base
                 </label>
                 <Input
@@ -365,7 +369,7 @@ export default function ReportsClient() {
 
             {period === "monthly" && (
               <div className="space-y-2">
-                <label className="text-xs font-medium text-slate-600">
+                <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
                   Mês/Ano
                 </label>
                 <Input
@@ -381,7 +385,9 @@ export default function ReportsClient() {
 
             {period === "yearly" && (
               <div className="space-y-2">
-                <label className="text-xs font-medium text-slate-600">Ano</label>
+                <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
+                  Ano
+                </label>
                 <Input
                   value={yearValue}
                   onChange={(event) =>
@@ -403,7 +409,7 @@ export default function ReportsClient() {
       </Card>
 
       {error ? (
-        <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-700">
+        <div className="rounded-lg border border-[color:var(--color-danger)] bg-[color:var(--color-danger-soft)] px-4 py-2 text-sm text-[color:var(--color-danger)]">
           {error}
         </div>
       ) : null}
@@ -430,7 +436,7 @@ export default function ReportsClient() {
         </CardHeader>
         <CardContent className="space-y-6">
           {notice ? (
-            <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-800">
+            <div className="rounded-lg border border-[color:var(--color-success)] bg-[color:var(--color-success-soft)] px-4 py-2 text-sm text-[color:var(--color-success)]">
               {notice}
             </div>
           ) : null}
@@ -442,60 +448,60 @@ export default function ReportsClient() {
             </div>
           ) : report ? (
             report.tickets.length === 0 ? (
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-600">
+              <div className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-muted-soft)] px-4 py-6 text-sm text-[color:var(--color-muted-strong)]">
                 Nenhum chamado encontrado no período selecionado.
               </div>
             ) : (
               <>
                 {report.hasMore ? (
-                  <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-700">
+                  <div className="rounded-lg border border-[color:var(--color-warning)] bg-[color:var(--color-warning-soft)] px-4 py-2 text-sm text-[color:var(--color-warning)]">
                     Limite de {LIMIT} registros atingido. Refine o período para
                     ver todos os chamados.
                   </div>
                 ) : null}
 
                 <div className="grid gap-4 md:grid-cols-3">
-                  <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-                    <div className="text-xs font-medium text-slate-500">
+                  <div className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 shadow-sm">
+                    <div className="text-xs font-medium text-[color:var(--color-muted)]">
                       Total de chamados
                     </div>
-                    <div className="mt-2 text-2xl font-semibold text-slate-900">
+                    <div className="mt-2 text-2xl font-semibold text-[color:var(--color-text)]">
                       {report.summary.total}
                     </div>
                   </div>
-                  <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-                    <div className="text-xs font-medium text-slate-500">
+                  <div className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 shadow-sm">
+                    <div className="text-xs font-medium text-[color:var(--color-muted)]">
                       Retroativos
                     </div>
                     <div className="mt-2 flex items-baseline gap-2">
-                      <span className="text-2xl font-semibold text-slate-900">
+                      <span className="text-2xl font-semibold text-[color:var(--color-text)]">
                         {report.summary.retroativoPercent}
                       </span>
-                      <span className="text-sm text-slate-500">
+                      <span className="text-sm text-[color:var(--color-muted)]">
                         ({report.summary.retroativos})
                       </span>
                     </div>
                   </div>
-                  <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-                    <div className="text-xs font-medium text-slate-500">
+                  <div className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 shadow-sm">
+                    <div className="text-xs font-medium text-[color:var(--color-muted)]">
                       Período
                     </div>
-                    <div className="mt-2 text-sm font-semibold text-slate-900">
+                    <div className="mt-2 text-sm font-semibold text-[color:var(--color-text)]">
                       {report.summary.rangeLabel}
                     </div>
                   </div>
                 </div>
 
                 <div className="grid gap-4 lg:grid-cols-3">
-                  <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-                    <div className="text-sm font-semibold text-slate-700">
+                  <div className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 shadow-sm">
+                    <div className="text-sm font-semibold text-[color:var(--color-text)]">
                       Distribuição por prioridade
                     </div>
-                    <div className="mt-3 space-y-2 text-sm text-slate-600">
+                    <div className="mt-3 space-y-2 text-sm text-[color:var(--color-muted-strong)]">
                       {Object.entries(report.summary.prioridades).map(
                         ([label, count]) => (
                           <div key={label} className="flex items-center justify-between">
-                            <span>{label}</span>
+                            <span>{formatPrioridadeLabel(label)}</span>
                             <Badge variant={prioridadeBadge(label)}>
                               {count}
                             </Badge>
@@ -505,11 +511,11 @@ export default function ReportsClient() {
                     </div>
                   </div>
 
-                  <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-                    <div className="text-sm font-semibold text-slate-700">
+                  <div className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 shadow-sm">
+                    <div className="text-sm font-semibold text-[color:var(--color-text)]">
                       Top 5 motivos
                     </div>
-                    <div className="mt-3 space-y-2 text-sm text-slate-600">
+                    <div className="mt-3 space-y-2 text-sm text-[color:var(--color-muted-strong)]">
                       {report.summary.topMotivos.length === 0
                         ? "Sem dados"
                         : report.summary.topMotivos.map(([label, count]) => (
@@ -518,7 +524,7 @@ export default function ReportsClient() {
                               className="flex items-center justify-between"
                             >
                               <span>{label}</span>
-                              <span className="font-medium text-slate-700">
+                              <span className="font-medium text-[color:var(--color-text)]">
                                 {count}
                               </span>
                             </div>
@@ -526,11 +532,11 @@ export default function ReportsClient() {
                     </div>
                   </div>
 
-                  <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-                    <div className="text-sm font-semibold text-slate-700">
+                  <div className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 shadow-sm">
+                    <div className="text-sm font-semibold text-[color:var(--color-text)]">
                       Top 5 cidades
                     </div>
-                    <div className="mt-3 space-y-2 text-sm text-slate-600">
+                    <div className="mt-3 space-y-2 text-sm text-[color:var(--color-muted-strong)]">
                       {report.summary.topCidades.length === 0
                         ? "Sem dados"
                         : report.summary.topCidades.map(([label, count]) => (
@@ -539,7 +545,7 @@ export default function ReportsClient() {
                               className="flex items-center justify-between"
                             >
                               <span>{label}</span>
-                              <span className="font-medium text-slate-700">
+                              <span className="font-medium text-[color:var(--color-text)]">
                                 {count}
                               </span>
                             </div>
@@ -551,13 +557,13 @@ export default function ReportsClient() {
                 <Separator />
 
                 <div>
-                  <div className="mb-3 text-sm font-semibold text-slate-700">
+                  <div className="mb-3 text-sm font-semibold text-[color:var(--color-text)]">
                     Listagem resumida ({report.tickets.length})
                   </div>
                   <div className="overflow-x-auto">
                     <table className="min-w-full border-collapse text-sm">
-                      <thead className="sticky top-0 bg-white">
-                        <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
+                      <thead className="sticky top-0 bg-[color:var(--color-muted-soft)]">
+                        <tr className="border-b border-[color:var(--color-border)] text-left text-xs uppercase tracking-wide text-[color:var(--color-muted)]">
                           <th className="px-3 py-2">ID</th>
                           <th className="px-3 py-2">Data atendimento</th>
                           <th className="px-3 py-2">Profissional</th>
@@ -575,11 +581,9 @@ export default function ReportsClient() {
                         {report.tickets.map((ticket) => (
                           <tr
                             key={ticket.id}
-                            className="border-b border-slate-100 text-slate-700 hover:bg-slate-50"
+                            className="border-b border-[color:var(--color-border)] text-[color:var(--color-text)] hover:bg-[color:var(--color-muted-soft)]"
                           >
-                            <td className="px-3 py-3 font-medium">
-                              #{ticket.id}
-                            </td>
+                            <td className="px-3 py-3 font-medium">#{ticket.id}</td>
                             <td className="px-3 py-3">
                               {formatDateBR(ticket.data_atendimento)}
                             </td>
@@ -589,7 +593,7 @@ export default function ReportsClient() {
                             <td className="px-3 py-3">{ticket.motivo}</td>
                             <td className="px-3 py-3">
                               <Badge variant={prioridadeBadge(ticket.prioridade)}>
-                                {ticket.prioridade}
+                                {formatPrioridadeLabel(ticket.prioridade)}
                               </Badge>
                             </td>
                             <td className="px-3 py-3">{ticket.client.nome}</td>
@@ -611,7 +615,7 @@ export default function ReportsClient() {
               </>
             )
           ) : (
-            <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-600">
+            <div className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-muted-soft)] px-4 py-6 text-sm text-[color:var(--color-muted-strong)]">
               Selecione um período e clique em “Gerar relatório”.
             </div>
           )}
