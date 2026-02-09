@@ -47,24 +47,24 @@ import { formatDateBR } from "@/utils/exportReports";
 type PeriodOption = "7" | "30" | "90" | "365" | "custom";
 
 const PERIOD_OPTIONS: { value: PeriodOption; label: string }[] = [
-  { value: "7", label: "ï¿½ltimos 7 dias" },
-  { value: "30", label: "ï¿½ltimos 30 dias" },
-  { value: "90", label: "ï¿½ltimos 90 dias" },
-  { value: "365", label: "ï¿½ltimos 365 dias" },
+  { value: "7", label: "�ltimos 7 dias" },
+  { value: "30", label: "�ltimos 30 dias" },
+  { value: "90", label: "�ltimos 90 dias" },
+  { value: "365", label: "�ltimos 365 dias" },
   { value: "custom", label: "Personalizado" },
 ];
 
 const MOTIVOS = [
   "Problema de cadastro",
-  "Informaï¿½ï¿½es incorretas na plataforma",
+  "Informa��es incorretas na plataforma",
   "Dificuldade de utilizar a plataforma",
-  "Alteraï¿½ï¿½o de Perfil",
-  "Problema em ï¿½rea e atuaï¿½ï¿½o",
+  "Altera��o de Perfil",
+  "Problema em �rea e atua��o",
   "Outro",
 ];
 
 const PRIORIDADES = ["Baixa", "Media", "Alta"];
-const USO_PLATAFORMA = ["Mobile", "Web", "Ambos", "Nï¿½o informado"];
+const USO_PLATAFORMA = ["Mobile", "Web", "Ambos", "N�o informado"];
 const UF_PADRAO = "PI";
 const CIDADES_PI = cidadesPi.cidades;
 const CIDADES_LIST_ID = "cidades-dashboard";
@@ -222,7 +222,7 @@ export default function DashboardClient() {
       const endIso = brToIso(currentFilters.endDate);
       if (!startIso || !endIso) {
         setLoading(false);
-        setError("Informe um intervalo vï¿½lido no formato DD/MM/AAAA.");
+        setError("Informe um intervalo v�lido no formato DD/MM/AAAA.");
         return;
       }
       payload.start_date = startIso;
@@ -238,7 +238,7 @@ export default function DashboardClient() {
 
     if (rpcError || !data) {
       setLoading(false);
-      setError("Nï¿½o foi possï¿½vel carregar o dashboard. Tente novamente.");
+      setError("N�o foi poss�vel carregar o dashboard. Tente novamente.");
       return;
     }
 
@@ -277,8 +277,8 @@ export default function DashboardClient() {
 
   const periodLabel =
     appliedFilters.period === "custom"
-      ? "Perï¿½odo selecionado"
-      : `ï¿½ltimos ${appliedFilters.period} dias`;
+      ? "Per�odo selecionado"
+      : `�ltimos ${appliedFilters.period} dias`;
 
   const totalCount = metrics?.totals.total_count ?? 0;
   const todayCount = metrics?.totals.today_count ?? 0;
@@ -305,7 +305,7 @@ export default function DashboardClient() {
   }));
 
   const priorityData = PRIORIDADES.map((label) => ({
-    name: label === "Media" ? "Mï¿½dia" : label,
+    name: label === "Media" ? "M�dia" : label,
     value: priorityMap[label] ?? 0,
     color: PRIORITY_COLORS[label as keyof typeof PRIORITY_COLORS],
   }));
@@ -335,7 +335,7 @@ export default function DashboardClient() {
         <div>
           <h1 className="text-2xl font-semibold text-()">Dashboard</h1>
           <p className="text-sm text-()">
-            Visï¿½o geral dos chamados de suporte de TI.
+            Vis�o geral dos chamados de suporte de TI.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -355,7 +355,7 @@ export default function DashboardClient() {
             <span>Filtros globais</span>
           </div>
           <div className="flex flex-wrap items-center gap-4 text-xs text-()">
-            <span>ï¿½ltima atualizaï¿½ï¿½o: {formatTime(lastUpdated)}</span>
+            <span>�ltima atualiza��o: {formatTime(lastUpdated)}</span>
             <span>Registros encontrados: {recordLabel}</span>
           </div>
         </CardHeader>
@@ -363,7 +363,7 @@ export default function DashboardClient() {
           <div className="grid gap-4 xl:grid-cols-6">
             <div className="space-y-2">
               <label className="text-xs font-medium text-()">
-                Perï¿½odo
+                Per�odo
               </label>
               <Select
                 value={filters.period}
@@ -455,7 +455,7 @@ export default function DashboardClient() {
                 <option value="">Todos</option>
                 {PRIORIDADES.map((item) => (
                   <option key={item} value={item}>
-                    {item === "Media" ? "Mï¿½dia" : item}
+                    {item === "Media" ? "M�dia" : item}
                   </option>
                 ))}
               </Select>
@@ -525,7 +525,7 @@ export default function DashboardClient() {
 
       {error ? (
         <Alert className="border-() bg-()">
-          <AlertTitle>Nï¿½o foi possï¿½vel carregar</AlertTitle>
+          <AlertTitle>N�o foi poss�vel carregar</AlertTitle>
           <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
             <span>{error}</span>
             <Button variant="outline" onClick={() => applyFilters(filters)}>
@@ -572,10 +572,10 @@ export default function DashboardClient() {
                 </div>
                 <div className="text-xs text-()">
                   {usageTotal === 0
-                    ? "Sem registros no perï¿½odo"
-                    : `${formatNumber(usageLeaderCount)} chamados ï¿½ Web: ${formatNumber(
+                    ? "Sem registros no per�odo"
+                    : `${formatNumber(usageLeaderCount)} chamados � Web: ${formatNumber(
                         webCount
-                      )} ï¿½ Mobile: ${formatNumber(mobileCount)}`}
+                      )} � Mobile: ${formatNumber(mobileCount)}`}
                 </div>
               </div>
             </CardContent>
@@ -607,7 +607,7 @@ export default function DashboardClient() {
                   {topMotivo || "Sem dados"}
                 </div>
                 <div className="text-xs text-()">
-                  {hasData ? "Baseado no perï¿½odo selecionado" : "Sem dados"}
+                  {hasData ? "Baseado no per�odo selecionado" : "Sem dados"}
                 </div>
               </div>
             </CardContent>
@@ -619,14 +619,14 @@ export default function DashboardClient() {
         <Card>
           <CardHeader className="flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
             <div>
-              <CardTitle>Sï¿½rie temporal</CardTitle>
+              <CardTitle>S�rie temporal</CardTitle>
               <CardDescription>{periodLabel}</CardDescription>
             </div>
             <LineChartIcon className="h-5 w-5 text-()" />
           </CardHeader>
           <CardContent>
             {!hasData ? (
-              <EmptyState label="Sem dados para o perï¿½odo selecionado." />
+              <EmptyState label="Sem dados para o per�odo selecionado." />
             ) : (
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
@@ -652,14 +652,14 @@ export default function DashboardClient() {
         <Card>
           <CardHeader className="flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
             <div>
-              <CardTitle>Distribuiï¿½ï¿½o por prioridade</CardTitle>
-              <CardDescription>Chamados no perï¿½odo</CardDescription>
+              <CardTitle>Distribui��o por prioridade</CardTitle>
+              <CardDescription>Chamados no per�odo</CardDescription>
             </div>
             <BarChart3 className="h-5 w-5 text-()" />
           </CardHeader>
           <CardContent>
             {!hasData ? (
-              <EmptyState label="Sem dados para o perï¿½odo selecionado." />
+              <EmptyState label="Sem dados para o per�odo selecionado." />
             ) : (
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
@@ -707,7 +707,7 @@ export default function DashboardClient() {
           </CardHeader>
           <CardContent>
             {!hasData ? (
-              <EmptyState label="Sem dados para o perï¿½odo selecionado." />
+              <EmptyState label="Sem dados para o per�odo selecionado." />
             ) : (
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
@@ -735,7 +735,7 @@ export default function DashboardClient() {
           </CardHeader>
           <CardContent>
             {(metrics?.top_unidades ?? []).length === 0 ? (
-              <EmptyState label="Sem dados para o perï¿½odo selecionado." />
+              <EmptyState label="Sem dados para o per�odo selecionado." />
             ) : (
               <div className="space-y-2 text-sm">
                 {metrics?.top_unidades.map((item) => (
@@ -759,7 +759,7 @@ export default function DashboardClient() {
           </CardHeader>
           <CardContent>
             {(metrics?.top_cidades ?? []).length === 0 ? (
-              <EmptyState label="Sem dados para o perï¿½odo selecionado." />
+              <EmptyState label="Sem dados para o per�odo selecionado." />
             ) : (
               <div className="space-y-2 text-sm">
                 {metrics?.top_cidades.map((item) => (

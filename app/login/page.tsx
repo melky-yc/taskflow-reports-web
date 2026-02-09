@@ -88,7 +88,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
               {hasError ? (
                 <div className="rounded-lg border border-() bg-() px-3 py-2 text-xs text-()">
-                  E-mail ou senha invï¿½lidos.
+                  E-mail ou senha inv�lidos.
                 </div>
               ) : null}
 

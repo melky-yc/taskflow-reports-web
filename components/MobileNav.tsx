@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, key: "dashboard" },
   { href: "/tickets", label: "Tickets", icon: Ticket, key: "tickets" },
-  { href: "/reports", label: "Relatï¿½rios", icon: BarChart3, key: "reports" },
-  { href: "/config", label: "Configuraï¿½ï¿½o", icon: Settings, key: "config" },
+  { href: "/reports", label: "Relat�rios", icon: BarChart3, key: "reports" },
+  { href: "/config", label: "Configura��o", icon: Settings, key: "config" },
 ] as const;
 
 type MobileNavProps = {

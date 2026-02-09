@@ -79,7 +79,7 @@ export default function ConfigClient() {
     setTheme(nextTheme);
     applyTheme(nextTheme);
     localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
-    setNotice("Preferï¿½ncias salvas.");
+    setNotice("Prefer�ncias salvas.");
     window.setTimeout(() => setNotice(""), 2500);
   };
 
@@ -87,7 +87,7 @@ export default function ConfigClient() {
     const next = { ...prefs, [key]: value };
     setPrefs(next);
     localStorage.setItem(PREFS_STORAGE_KEY, JSON.stringify(next));
-    setNotice("Preferï¿½ncias salvas.");
+    setNotice("Prefer�ncias salvas.");
     window.setTimeout(() => setNotice(""), 2500);
   };
 
@@ -104,32 +104,32 @@ export default function ConfigClient() {
         </div>
         <div>
           <h1 className="text-2xl font-semibold text-(--color-text)">
-            Configuraï¿½ï¿½o
+            Configura��o
           </h1>
           <p className="text-sm text-(--color-muted)">
-            Preferï¿½ncias da plataforma e configuraï¿½ï¿½es de sessï¿½o.
+            Prefer�ncias da plataforma e configura��es de sess�o.
           </p>
         </div>
       </div>
 
       {notice ? (
         <Alert className="border-(--color-success) bg-(--color-success-soft)">
-          <AlertTitle>Configuraï¿½ï¿½es atualizadas</AlertTitle>
+          <AlertTitle>Configura��es atualizadas</AlertTitle>
           <AlertDescription>{notice}</AlertDescription>
         </Alert>
       ) : null}
 
       <Tabs defaultValue="themes">
         <TabsList>
-          <TabsTrigger value="themes">Aparï¿½ncia</TabsTrigger>
-          <TabsTrigger value="prefs">Preferï¿½ncias avanï¿½adas</TabsTrigger>
-          <TabsTrigger value="session">Sessï¿½o</TabsTrigger>
+          <TabsTrigger value="themes">Apar�ncia</TabsTrigger>
+          <TabsTrigger value="prefs">Prefer�ncias avan�adas</TabsTrigger>
+          <TabsTrigger value="session">Sess�o</TabsTrigger>
         </TabsList>
 
         <TabsContent value="themes">
           <Card>
             <CardHeader>
-              <CardTitle>Aparï¿½ncia</CardTitle>
+              <CardTitle>Apar�ncia</CardTitle>
               <CardDescription>
                 Defina o tema que melhor se adapta ao seu ambiente.
               </CardDescription>
@@ -150,7 +150,7 @@ export default function ConfigClient() {
                     Claro
                   </div>
                   <p className="mt-1 text-xs text-(--color-muted)">
-                    Tema padrï¿½o para ambientes corporativos.
+                    Tema padr�o para ambientes corporativos.
                   </p>
                 </button>
 
@@ -179,9 +179,9 @@ export default function ConfigClient() {
         <TabsContent value="prefs">
           <Card>
             <CardHeader>
-              <CardTitle>Preferï¿½ncias avanï¿½adas</CardTitle>
+              <CardTitle>Prefer�ncias avan�adas</CardTitle>
               <CardDescription>
-                Ajuste comportamentos e opï¿½ï¿½es de exibiï¿½ï¿½o da interface.
+                Ajuste comportamentos e op��es de exibi��o da interface.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -191,7 +191,7 @@ export default function ConfigClient() {
                     Idioma
                   </div>
                   <div className="mt-1 text-sm font-medium text-(--color-text)">
-                    Portuguï¿½s (Brasil)
+                    Portugu�s (Brasil)
                   </div>
                 </div>
                 <div className="rounded-lg border border-(--color-border) bg-(--color-surface) px-4 py-3">
@@ -210,7 +210,7 @@ export default function ConfigClient() {
                     Mostrar dicas na interface
                   </div>
                   <div className="text-xs text-(--color-muted)">
-                    Exibe sugestï¿½es rï¿½pidas nos formulï¿½rios.
+                    Exibe sugest�es r�pidas nos formul�rios.
                   </div>
                 </div>
                 <Switch
@@ -225,7 +225,7 @@ export default function ConfigClient() {
                     Confirmar antes de excluir registros
                   </div>
                   <div className="text-xs text-(--color-muted)">
-                    Exibe confirmaï¿½ï¿½o antes de aï¿½ï¿½es crï¿½ticas.
+                    Exibe confirma��o antes de a��es cr�ticas.
                   </div>
                 </div>
                 <Switch
@@ -240,7 +240,7 @@ export default function ConfigClient() {
                     Abrir dashboard ao fazer login
                   </div>
                   <div className="text-xs text-(--color-muted)">
-                    Mantï¿½m a home no painel de mï¿½tricas.
+                    Mant�m a home no painel de m�tricas.
                   </div>
                 </div>
                 <Switch
@@ -250,8 +250,8 @@ export default function ConfigClient() {
               </div>
 
               <div className="rounded-lg border border-dashed border-(--color-border) bg-(--color-muted-soft) px-4 py-3 text-xs text-(--color-muted)">
-                Em breve: notificaï¿½ï¿½es por e-mail, preferï¿½ncias de exportaï¿½ï¿½o e
-                regras de aprovaï¿½ï¿½o.
+                Em breve: notifica��es por e-mail, prefer�ncias de exporta��o e
+                regras de aprova��o.
               </div>
             </CardContent>
           </Card>
@@ -260,8 +260,8 @@ export default function ConfigClient() {
         <TabsContent value="session">
           <Card>
             <CardHeader>
-              <CardTitle>Sessï¿½o</CardTitle>
-              <CardDescription>Informaï¿½ï¿½es da conta autenticada.</CardDescription>
+              <CardTitle>Sess�o</CardTitle>
+              <CardDescription>Informa��es da conta autenticada.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center gap-3 rounded-lg border border-(--color-border) bg-(--color-surface) px-4 py-3">
@@ -270,7 +270,7 @@ export default function ConfigClient() {
                 </div>
                 <div>
                   <div className="text-xs text-(--color-muted)">
-                    Usuï¿½rio logado
+                    Usu�rio logado
                   </div>
                   <div className="text-sm font-medium text-(--color-text)">
                     {email}
@@ -280,7 +280,7 @@ export default function ConfigClient() {
 
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="text-xs text-(--color-muted)">
-                  Encerre a sessï¿½o para trocar de conta.
+                  Encerre a sess�o para trocar de conta.
                 </div>
                 <Button variant="secondary" onClick={handleLogout}>
                   Logout
