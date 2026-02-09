@@ -1,43 +1,114 @@
-﻿# Taskflow Reports (Web)
+# 📌 Sistema Interno de Chamados de Suporte
 
-Projeto Next.js com autenticacao via Supabase (email/senha) e protecao de rotas.
+## Visão geral
 
-## Requisitos
-- Node.js 18+
-- Projeto Supabase com Auth (Email/Password) habilitado
+Este repositório documenta um **sistema interno de chamados de Suporte**, desenvolvido para **organizar, centralizar e analisar** os atendimentos da empresa, que antes **não possuía controle estruturado sobre os chamados**.
 
-## Setup local (copy/paste)
-```bash
-npm install
-cp .env.local.example .env.local
-npm run dev
-```
+O sistema foi criado com foco em:
+- padronização dos registros  
+- histórico confiável  
+- geração de relatórios  
+- visualização clara dos dados  
 
-Se estiver no Windows PowerShell:
-```powershell
-Copy-Item .env.local.example .env.local
-```
+🔒 **Projeto fechado**  
+Este sistema é de **uso exclusivo da empresa** e não foi desenvolvido para uso público ou comercial.
 
-Depois:
-1. Preencha `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` em `.env.local`.
-2. No Supabase, crie os usuarios manualmente em **Authentication** -> **Users**.
-3. Acesse `http://localhost:3000/login` e teste o login.
+---
 
-Obs: o app tambem aceita `SUPABASE_URL` e `SUPABASE_ANON_KEY` como fallback, se ja existir `.env` local.
+## 🎯 Contexto e motivação
 
-## Rotas
-- `GET /login` publica
-- `GET /` privada (Dashboard em breve)
-- `GET /tickets` privada (cadastro e listagem de chamados)
+Antes do sistema:
 
-## Fluxo Tickets
-1. Acesse `/tickets` e preencha o formulario de novo chamado.
-2. O cliente e criado ou atualizado por CPF (upsert).
-3. O ticket e registrado com o cliente associado.
-4. A tabela de Ultimos Chamados permite filtrar por periodo e motivo, com paginacao simples.
+- Chamados eram registrados de forma informal
+- Não existia histórico centralizado
+- Não havia métricas ou relatórios
+- Dificuldade em responder perguntas simples como:
+  - Quantos chamados existem por período?
+  - Quais são os principais motivos?
+  - Onde estão os maiores problemas?
 
-## Deploy na Vercel (passos)
-1. Crie um novo projeto na Vercel e importe este repositorio.
-2. Defina as variaveis de ambiente: `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-3. Use o build padrao do Next.js (`npm run build`) e finalize o deploy.
-4. Teste o login em `/login` no dominio publicado.
+Após a implementação:
+
+- Todos os chamados são registrados em um único sistema
+- Dados padronizados e validados
+- Relatórios e exportações disponíveis
+- Dashboard com indicadores claros para acompanhamento
+
+---
+
+## 🧱 Funcionalidades principais
+
+- Cadastro de chamados de suporte
+- Cadastro de clientes vinculados aos chamados
+- Controle por:
+  - motivo
+  - prioridade
+  - área de atuação
+  - uso da plataforma
+  - data de atendimento
+- Dashboard com indicadores e gráficos
+- Relatórios:
+  - diário
+  - semanal
+  - mensal
+  - anual
+- Exportação de dados:
+  - CSV
+  - XLSX (Excel)
+- Autenticação de usuários (uso interno)
+- Interface web responsiva e corporativa
+
+> Dados sensíveis não são exibidos em dashboards ou relatórios visuais.
+
+---
+
+## 🖥️ Tecnologias utilizadas
+
+### Frontend
+- Next.js  
+- React  
+- Tailwind CSS  
+- shadcn/ui  
+- Recharts  
+
+### Backend / Dados
+- Supabase (PostgreSQL)
+- RPCs SQL para métricas
+- Row Level Security (RLS)
+
+---
+
+## 🎨 Interface
+
+- Design limpo e corporativo
+- Foco em clareza e usabilidade
+- Responsivo para desktop e mobile
+- Estrutura preparada para evolução futura (ex: novos dashboards)
+
+---
+
+## 📸 Demonstração
+
+> As imagens abaixo mostram o sistema em funcionamento em ambiente interno.
+
+_(imagens serão adicionadas aqui)_
+
+---
+
+## 👤 Autor
+
+Sistema idealizado, arquitetado e desenvolvido **individualmente** por:
+
+**Melchisedek Lima**
+
+O projeto foi criado **por iniciativa própria**, com o objetivo de **ajudar a empresa a resolver a falta de controle sobre os chamados de suporte**, trazendo organização, visibilidade e dados confiáveis para o dia a dia operacional.
+
+---
+
+## 🔒 Uso e licença
+
+Este é um **projeto proprietário**.
+
+- Uso restrito à empresa  
+- Não é open source  
+- Não é permitido reutilizar ou redistribuir  
