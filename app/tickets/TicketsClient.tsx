@@ -29,9 +29,18 @@ import {
 
 const MOTIVOS = [
   "Problema de cadastro",
-  "Informações incorretas na plataforma",
-  "Dificuldade de utilizar a plataforma",
+  "Problema de acesso",
+  "Recuperação de senha",
+  "Cadastro não localizado",
+  "Dados divergentes",
+  "Atualização de dados cadastrais",
   "Alteração de Perfil",
+  "Erro no sistema",
+  "Funcionalidade indisponível",
+  "Sistema lento ou instável",
+  "Erro ao salvar informações",
+  "Dúvida sobre uso do sistema",
+  "Solicitação de informação",
   "Outro",
 ];
 
