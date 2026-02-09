@@ -7,7 +7,7 @@ const Alert = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivEleme
       ref={ref}
       role="alert"
       className={cn(
-        "w-full rounded-xl border border-() bg-() px-4 py-3 text-sm text-() shadow-()",
+        "w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm text-[var(--color-text)] shadow-[var(--color-shadow)]",
         className
       )}
       {...props}
@@ -22,7 +22,7 @@ const AlertTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm font-semibold text-()", className)}
+    className={cn("text-sm font-semibold text-[var(--color-text)]", className)}
     {...props}
   />
 ));
@@ -34,11 +34,10 @@ const AlertDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("mt-1 text-sm text-()", className)}
+    className={cn("mt-1 text-sm text-[var(--color-muted)]", className)}
     {...props}
   />
 ));
 AlertDescription.displayName = "AlertDescription";
 
 export { Alert, AlertTitle, AlertDescription };
-

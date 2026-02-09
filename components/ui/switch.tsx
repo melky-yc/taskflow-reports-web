@@ -39,14 +39,14 @@ const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
         disabled={disabled}
         onClick={toggle}
         className={cn(
-          "relative inline-flex h-6 w-11 items-center rounded-full border border-() bg-() transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-() disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-() data-[state=checked]:bg-()",
+          "relative inline-flex h-6 w-11 items-center rounded-full border border-[var(--color-border)] bg-[var(--color-muted-soft)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-soft)] disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-[var(--color-primary)] data-[state=checked]:bg-[var(--color-primary)]",
           className
         )}
         {...props}
       >
         <span
           className={cn(
-            "inline-block h-5 w-5 translate-x-0 rounded-full bg-() shadow transition",
+            "inline-block h-5 w-5 translate-x-0 rounded-full bg-[var(--color-surface)] shadow transition",
             isChecked && "translate-x-5"
           )}
         />
@@ -57,4 +57,3 @@ const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
 Switch.displayName = "Switch";
 
 export { Switch };
-

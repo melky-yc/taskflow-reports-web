@@ -1,4 +1,4 @@
-"use client";
+ï»¿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -79,7 +79,7 @@ export default function ConfigClient() {
     setTheme(nextTheme);
     applyTheme(nextTheme);
     localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
-    setNotice("Preferências salvas.");
+    setNotice("PreferÃªncias salvas.");
     window.setTimeout(() => setNotice(""), 2500);
   };
 
@@ -87,7 +87,7 @@ export default function ConfigClient() {
     const next = { ...prefs, [key]: value };
     setPrefs(next);
     localStorage.setItem(PREFS_STORAGE_KEY, JSON.stringify(next));
-    setNotice("Preferências salvas.");
+    setNotice("PreferÃªncias salvas.");
     window.setTimeout(() => setNotice(""), 2500);
   };
 
@@ -99,37 +99,37 @@ export default function ConfigClient() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <div className="rounded-lg bg-(--color-muted-soft) p-2 text-(--color-muted-strong)">
+        <div className="rounded-lg bg-[var(--color-muted-soft)] p-2 text-[var(--color-muted-strong)]">
           <Settings className="h-5 w-5" />
         </div>
         <div>
-          <h1 className="text-2xl font-semibold text-(--color-text)">
-            Configuração
+          <h1 className="text-2xl font-semibold text-[var(--color-text)]">
+            ConfiguraÃ§Ã£o
           </h1>
-          <p className="text-sm text-(--color-muted)">
-            Preferências da plataforma e configurações de sessão.
+          <p className="text-sm text-[var(--color-muted)]">
+            PreferÃªncias da plataforma e configuraÃ§Ãµes de sessÃ£o.
           </p>
         </div>
       </div>
 
       {notice ? (
-        <Alert className="border-(--color-success) bg-(--color-success-soft)">
-          <AlertTitle>Configurações atualizadas</AlertTitle>
+        <Alert className="border-[var(--color-success)] bg-[var(--color-success-soft)]">
+          <AlertTitle>ConfiguraÃ§Ãµes atualizadas</AlertTitle>
           <AlertDescription>{notice}</AlertDescription>
         </Alert>
       ) : null}
 
       <Tabs defaultValue="themes">
         <TabsList>
-          <TabsTrigger value="themes">Aparência</TabsTrigger>
-          <TabsTrigger value="prefs">Preferências avançadas</TabsTrigger>
-          <TabsTrigger value="session">Sessão</TabsTrigger>
+          <TabsTrigger value="themes">AparÃªncia</TabsTrigger>
+          <TabsTrigger value="prefs">PreferÃªncias avanÃ§adas</TabsTrigger>
+          <TabsTrigger value="session">SessÃ£o</TabsTrigger>
         </TabsList>
 
         <TabsContent value="themes">
           <Card>
             <CardHeader>
-              <CardTitle>Aparência</CardTitle>
+              <CardTitle>AparÃªncia</CardTitle>
               <CardDescription>
                 Defina o tema que melhor se adapta ao seu ambiente.
               </CardDescription>
@@ -141,16 +141,16 @@ export default function ConfigClient() {
                   onClick={() => handleThemeChange("light")}
                   className={`rounded-xl border px-4 py-4 text-left transition ${
                     theme === "light"
-                      ? "border-(--color-primary) bg-(--color-primary-soft)"
-                      : "border-(--color-border) bg-(--color-surface) hover:border-(--color-primary)"
+                      ? "border-[var(--color-primary)] bg-[var(--color-primary-soft)]"
+                      : "border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-primary)]"
                   }`}
                 >
-                  <div className="flex items-center gap-2 text-sm font-semibold text-(--color-text)">
-                    <Sun className="h-4 w-4 text-(--color-warning)" />
+                  <div className="flex items-center gap-2 text-sm font-semibold text-[var(--color-text)]">
+                    <Sun className="h-4 w-4 text-[var(--color-warning)]" />
                     Claro
                   </div>
-                  <p className="mt-1 text-xs text-(--color-muted)">
-                    Tema padrão para ambientes corporativos.
+                  <p className="mt-1 text-xs text-[var(--color-muted)]">
+                    Tema padrÃ£o para ambientes corporativos.
                   </p>
                 </button>
 
@@ -159,15 +159,15 @@ export default function ConfigClient() {
                   onClick={() => handleThemeChange("dark")}
                   className={`rounded-xl border px-4 py-4 text-left transition ${
                     theme === "dark"
-                      ? "border-(--color-primary) bg-(--color-surface)"
-                      : "border-(--color-border) bg-(--color-surface) hover:border-(--color-primary)"
+                      ? "border-[var(--color-primary)] bg-[var(--color-surface)]"
+                      : "border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-primary)]"
                   }`}
                 >
-                  <div className="flex items-center gap-2 text-sm font-semibold text-(--color-text)">
-                    <Moon className="h-4 w-4 text-(--color-primary)" />
+                  <div className="flex items-center gap-2 text-sm font-semibold text-[var(--color-text)]">
+                    <Moon className="h-4 w-4 text-[var(--color-primary)]" />
                     Escuro
                   </div>
-                  <p className="mt-1 text-xs text-(--color-muted)">
+                  <p className="mt-1 text-xs text-[var(--color-muted)]">
                     Interface otimizada para uso noturno.
                   </p>
                 </button>
@@ -179,38 +179,38 @@ export default function ConfigClient() {
         <TabsContent value="prefs">
           <Card>
             <CardHeader>
-              <CardTitle>Preferências avançadas</CardTitle>
+              <CardTitle>PreferÃªncias avanÃ§adas</CardTitle>
               <CardDescription>
-                Ajuste comportamentos e opções de exibição da interface.
+                Ajuste comportamentos e opÃ§Ãµes de exibiÃ§Ã£o da interface.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
-                <div className="rounded-lg border border-(--color-border) bg-(--color-surface) px-4 py-3">
-                  <div className="text-xs text-(--color-muted)">
+                <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3">
+                  <div className="text-xs text-[var(--color-muted)]">
                     Idioma
                   </div>
-                  <div className="mt-1 text-sm font-medium text-(--color-text)">
-                    Português (Brasil)
+                  <div className="mt-1 text-sm font-medium text-[var(--color-text)]">
+                    PortuguÃªs (Brasil)
                   </div>
                 </div>
-                <div className="rounded-lg border border-(--color-border) bg-(--color-surface) px-4 py-3">
-                  <div className="text-xs text-(--color-muted)">
+                <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3">
+                  <div className="text-xs text-[var(--color-muted)]">
                     Formato de data
                   </div>
-                  <div className="mt-1 text-sm font-medium text-(--color-text)">
+                  <div className="mt-1 text-sm font-medium text-[var(--color-text)]">
                     DD/MM/AAAA
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between rounded-lg border border-(--color-border) bg-(--color-surface) px-4 py-3">
+              <div className="flex items-center justify-between rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3">
                 <div>
-                  <div className="text-sm font-medium text-(--color-text)">
+                  <div className="text-sm font-medium text-[var(--color-text)]">
                     Mostrar dicas na interface
                   </div>
-                  <div className="text-xs text-(--color-muted)">
-                    Exibe sugestões rápidas nos formulários.
+                  <div className="text-xs text-[var(--color-muted)]">
+                    Exibe sugestÃµes rÃ¡pidas nos formulÃ¡rios.
                   </div>
                 </div>
                 <Switch
@@ -219,13 +219,13 @@ export default function ConfigClient() {
                 />
               </div>
 
-              <div className="flex items-center justify-between rounded-lg border border-(--color-border) bg-(--color-surface) px-4 py-3">
+              <div className="flex items-center justify-between rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3">
                 <div>
-                  <div className="text-sm font-medium text-(--color-text)">
+                  <div className="text-sm font-medium text-[var(--color-text)]">
                     Confirmar antes de excluir registros
                   </div>
-                  <div className="text-xs text-(--color-muted)">
-                    Exibe confirmação antes de ações críticas.
+                  <div className="text-xs text-[var(--color-muted)]">
+                    Exibe confirmaÃ§Ã£o antes de aÃ§Ãµes crÃ­ticas.
                   </div>
                 </div>
                 <Switch
@@ -234,13 +234,13 @@ export default function ConfigClient() {
                 />
               </div>
 
-              <div className="flex items-center justify-between rounded-lg border border-(--color-border) bg-(--color-surface) px-4 py-3">
+              <div className="flex items-center justify-between rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3">
                 <div>
-                  <div className="text-sm font-medium text-(--color-text)">
+                  <div className="text-sm font-medium text-[var(--color-text)]">
                     Abrir dashboard ao fazer login
                   </div>
-                  <div className="text-xs text-(--color-muted)">
-                    Mantém a home no painel de métricas.
+                  <div className="text-xs text-[var(--color-muted)]">
+                    MantÃ©m a home no painel de mÃ©tricas.
                   </div>
                 </div>
                 <Switch
@@ -249,9 +249,9 @@ export default function ConfigClient() {
                 />
               </div>
 
-              <div className="rounded-lg border border-dashed border-(--color-border) bg-(--color-muted-soft) px-4 py-3 text-xs text-(--color-muted)">
-                Em breve: notificações por e-mail, preferências de exportação e
-                regras de aprovação.
+              <div className="rounded-lg border border-dashed border-[var(--color-border)] bg-[var(--color-muted-soft)] px-4 py-3 text-xs text-[var(--color-muted)]">
+                Em breve: notificaÃ§Ãµes por e-mail, preferÃªncias de exportaÃ§Ã£o e
+                regras de aprovaÃ§Ã£o.
               </div>
             </CardContent>
           </Card>
@@ -260,27 +260,27 @@ export default function ConfigClient() {
         <TabsContent value="session">
           <Card>
             <CardHeader>
-              <CardTitle>Sessão</CardTitle>
-              <CardDescription>Informações da conta autenticada.</CardDescription>
+              <CardTitle>SessÃ£o</CardTitle>
+              <CardDescription>InformaÃ§Ãµes da conta autenticada.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center gap-3 rounded-lg border border-(--color-border) bg-(--color-surface) px-4 py-3">
-                <div className="rounded-full bg-(--color-muted-soft) p-2 text-(--color-muted-strong)">
+              <div className="flex items-center gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3">
+                <div className="rounded-full bg-[var(--color-muted-soft)] p-2 text-[var(--color-muted-strong)]">
                   <User className="h-4 w-4" />
                 </div>
                 <div>
-                  <div className="text-xs text-(--color-muted)">
-                    Usuário logado
+                  <div className="text-xs text-[var(--color-muted)]">
+                    UsuÃ¡rio logado
                   </div>
-                  <div className="text-sm font-medium text-(--color-text)">
+                  <div className="text-sm font-medium text-[var(--color-text)]">
                     {email}
                   </div>
                 </div>
               </div>
 
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="text-xs text-(--color-muted)">
-                  Encerre a sessão para trocar de conta.
+                <div className="text-xs text-[var(--color-muted)]">
+                  Encerre a sessÃ£o para trocar de conta.
                 </div>
                 <Button variant="secondary" onClick={handleLogout}>
                   Logout
@@ -293,4 +293,3 @@ export default function ConfigClient() {
     </div>
   );
 }
-

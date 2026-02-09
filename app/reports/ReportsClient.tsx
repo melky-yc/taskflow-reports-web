@@ -1,4 +1,4 @@
-"use client";
+Ôªø"use client";
 
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -28,8 +28,8 @@ const LIMIT = 2000;
 type Period = "daily" | "weekly" | "monthly" | "yearly";
 
 const PERIOD_OPTIONS: { value: Period; label: string }[] = [
-  { value: "daily", label: "Di·rio" },
-  { value: "weekly", label: "Semanal (˙ltimos 7 dias)" },
+  { value: "daily", label: "Di√°rio" },
+  { value: "weekly", label: "Semanal (√∫ltimos 7 dias)" },
   { value: "monthly", label: "Mensal" },
   { value: "yearly", label: "Anual" },
 ];
@@ -139,7 +139,7 @@ function prioridadeBadge(prioridade: string) {
 }
 
 function formatPrioridadeLabel(prioridade: string) {
-  return prioridade === "Media" ? "MÈdia" : prioridade;
+  return prioridade === "Media" ? "M√©dia" : prioridade;
 }
 
 type ReportState = {
@@ -162,7 +162,7 @@ export default function ReportsClient() {
   const [report, setReport] = useState<ReportState | null>(null);
 
   const periodLabel = useMemo(() => {
-    return PERIOD_OPTIONS.find((item) => item.value === period)?.label ?? "Di·rio";
+    return PERIOD_OPTIONS.find((item) => item.value === period)?.label ?? "Di√°rio";
   }, [period]);
 
   const getRange = () => {
@@ -248,7 +248,7 @@ export default function ReportsClient() {
     const range = getRange();
     if (!range) {
       setLoading(false);
-      setError("Informe um perÌodo v·lido para gerar o relatÛrio.");
+      setError("Informe um per√≠odo v√°lido para gerar o relat√≥rio.");
       return;
     }
 
@@ -281,7 +281,7 @@ export default function ReportsClient() {
 
     if (queryError) {
       setLoading(false);
-      setError("N„o foi possÌvel gerar o relatÛrio. Tente novamente.");
+      setError("N√£o foi poss√≠vel gerar o relat√≥rio. Tente novamente.");
       return;
     }
 
@@ -322,7 +322,7 @@ export default function ReportsClient() {
     if (!report) return;
     const rows = report.tickets.map(mapReportRow);
     exportReportCSV(rows, report.summary, buildFilename(periodLabel));
-    setNotice("ExportaÁ„o gerada.");
+    setNotice("Exporta√ß√£o gerada.");
     window.setTimeout(() => setNotice(""), 3000);
   };
 
@@ -330,16 +330,16 @@ export default function ReportsClient() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>RelatÛrios</CardTitle>
+          <CardTitle>Relat√≥rios</CardTitle>
           <CardDescription>
-            Gere relatÛrios por perÌodo e acompanhe as principais mÈtricas.
+            Gere relat√≥rios por per√≠odo e acompanhe as principais m√©tricas.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
-              <label className="text-xs font-medium text-()">
-                PerÌodo
+              <label className="text-xs font-medium text-[var(--color-muted-strong)]">
+                Per√≠odo
               </label>
               <Select
                 value={period}
@@ -355,7 +355,7 @@ export default function ReportsClient() {
 
             {(period === "daily" || period === "weekly") && (
               <div className="space-y-2">
-                <label className="text-xs font-medium text-()">
+                <label className="text-xs font-medium text-[var(--color-muted-strong)]">
                   Data base
                 </label>
                 <Input
@@ -369,8 +369,8 @@ export default function ReportsClient() {
 
             {period === "monthly" && (
               <div className="space-y-2">
-                <label className="text-xs font-medium text-()">
-                  MÍs/Ano
+                <label className="text-xs font-medium text-[var(--color-muted-strong)]">
+                  M√™s/Ano
                 </label>
                 <Input
                   value={monthValue}
@@ -385,7 +385,7 @@ export default function ReportsClient() {
 
             {period === "yearly" && (
               <div className="space-y-2">
-                <label className="text-xs font-medium text-()">
+                <label className="text-xs font-medium text-[var(--color-muted-strong)]">
                   Ano
                 </label>
                 <Input
@@ -402,14 +402,14 @@ export default function ReportsClient() {
 
           <div className="mt-4 flex justify-end">
             <Button onClick={handleGenerate} disabled={loading}>
-              {loading ? "Gerando..." : "Gerar relatÛrio"}
+              {loading ? "Gerando..." : "Gerar relat√≥rio"}
             </Button>
           </div>
         </CardContent>
       </Card>
 
       {error ? (
-        <div className="rounded-lg border border-() bg-() px-4 py-2 text-sm text-()">
+        <div className="rounded-lg border border-[var(--color-danger)] bg-[var(--color-danger-soft)] px-4 py-2 text-sm text-[var(--color-danger)]">
           {error}
         </div>
       ) : null}
@@ -420,8 +420,8 @@ export default function ReportsClient() {
             <CardTitle>Resultados</CardTitle>
             <CardDescription>
               {report
-                ? `${report.summary.periodLabel} ï ${report.summary.rangeLabel}`
-                : "Selecione um perÌodo para gerar o relatÛrio."}
+                ? `${report.summary.periodLabel} ‚Ä¢ ${report.summary.rangeLabel}`
+                : "Selecione um per√≠odo para gerar o relat√≥rio."}
             </CardDescription>
           </div>
           <Button
@@ -436,7 +436,7 @@ export default function ReportsClient() {
         </CardHeader>
         <CardContent className="space-y-6">
           {notice ? (
-            <div className="rounded-lg border border-() bg-() px-4 py-2 text-sm text-()">
+            <div className="rounded-lg border border-[var(--color-success)] bg-[var(--color-success-soft)] px-4 py-2 text-sm text-[var(--color-success)]">
               {notice}
             </div>
           ) : null}
@@ -448,56 +448,56 @@ export default function ReportsClient() {
             </div>
           ) : report ? (
             report.tickets.length === 0 ? (
-              <div className="rounded-lg border border-() bg-() px-4 py-6 text-sm text-()">
-                Nenhum chamado encontrado no perÌodo selecionado.
+              <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-muted-soft)] px-4 py-6 text-sm text-[var(--color-muted-strong)]">
+                Nenhum chamado encontrado no per√≠odo selecionado.
               </div>
             ) : (
               <>
                 {report.hasMore ? (
-                  <div className="rounded-lg border border-() bg-() px-4 py-2 text-sm text-()">
-                    Limite de {LIMIT} registros atingido. Refine o perÌodo para
+                  <div className="rounded-lg border border-[var(--color-warning)] bg-[var(--color-warning-soft)] px-4 py-2 text-sm text-[var(--color-warning)]">
+                    Limite de {LIMIT} registros atingido. Refine o per√≠odo para
                     ver todos os chamados.
                   </div>
                 ) : null}
 
                 <div className="grid gap-4 md:grid-cols-3">
-                  <div className="rounded-lg border border-() bg-() p-4 shadow-sm">
-                    <div className="text-xs font-medium text-()">
+                  <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-sm">
+                    <div className="text-xs font-medium text-[var(--color-muted)]">
                       Total de chamados
                     </div>
-                    <div className="mt-2 text-2xl font-semibold text-()">
+                    <div className="mt-2 text-2xl font-semibold text-[var(--color-text)]">
                       {report.summary.total}
                     </div>
                   </div>
-                  <div className="rounded-lg border border-() bg-() p-4 shadow-sm">
-                    <div className="text-xs font-medium text-()">
+                  <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-sm">
+                    <div className="text-xs font-medium text-[var(--color-muted)]">
                       Retroativos
                     </div>
                     <div className="mt-2 flex items-baseline gap-2">
-                      <span className="text-2xl font-semibold text-()">
+                      <span className="text-2xl font-semibold text-[var(--color-text)]">
                         {report.summary.retroativoPercent}
                       </span>
-                      <span className="text-sm text-()">
+                      <span className="text-sm text-[var(--color-muted)]">
                         ({report.summary.retroativos})
                       </span>
                     </div>
                   </div>
-                  <div className="rounded-lg border border-() bg-() p-4 shadow-sm">
-                    <div className="text-xs font-medium text-()">
-                      PerÌodo
+                  <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-sm">
+                    <div className="text-xs font-medium text-[var(--color-muted)]">
+                      Per√≠odo
                     </div>
-                    <div className="mt-2 text-sm font-semibold text-()">
+                    <div className="mt-2 text-sm font-semibold text-[var(--color-text)]">
                       {report.summary.rangeLabel}
                     </div>
                   </div>
                 </div>
 
                 <div className="grid gap-4 lg:grid-cols-3">
-                  <div className="rounded-lg border border-() bg-() p-4 shadow-sm">
-                    <div className="text-sm font-semibold text-()">
-                      DistribuiÁ„o por prioridade
+                  <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-sm">
+                    <div className="text-sm font-semibold text-[var(--color-text)]">
+                      Distribui√ß√£o por prioridade
                     </div>
-                    <div className="mt-3 space-y-2 text-sm text-()">
+                    <div className="mt-3 space-y-2 text-sm text-[var(--color-muted-strong)]">
                       {Object.entries(report.summary.prioridades).map(
                         ([label, count]) => (
                           <div key={label} className="flex items-center justify-between">
@@ -511,11 +511,11 @@ export default function ReportsClient() {
                     </div>
                   </div>
 
-                  <div className="rounded-lg border border-() bg-() p-4 shadow-sm">
-                    <div className="text-sm font-semibold text-()">
+                  <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-sm">
+                    <div className="text-sm font-semibold text-[var(--color-text)]">
                       Top 5 motivos
                     </div>
-                    <div className="mt-3 space-y-2 text-sm text-()">
+                    <div className="mt-3 space-y-2 text-sm text-[var(--color-muted-strong)]">
                       {report.summary.topMotivos.length === 0
                         ? "Sem dados"
                         : report.summary.topMotivos.map(([label, count]) => (
@@ -524,7 +524,7 @@ export default function ReportsClient() {
                               className="flex items-center justify-between"
                             >
                               <span>{label}</span>
-                              <span className="font-medium text-()">
+                              <span className="font-medium text-[var(--color-text)]">
                                 {count}
                               </span>
                             </div>
@@ -532,11 +532,11 @@ export default function ReportsClient() {
                     </div>
                   </div>
 
-                  <div className="rounded-lg border border-() bg-() p-4 shadow-sm">
-                    <div className="text-sm font-semibold text-()">
+                  <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-sm">
+                    <div className="text-sm font-semibold text-[var(--color-text)]">
                       Top 5 cidades
                     </div>
-                    <div className="mt-3 space-y-2 text-sm text-()">
+                    <div className="mt-3 space-y-2 text-sm text-[var(--color-muted-strong)]">
                       {report.summary.topCidades.length === 0
                         ? "Sem dados"
                         : report.summary.topCidades.map(([label, count]) => (
@@ -545,7 +545,7 @@ export default function ReportsClient() {
                               className="flex items-center justify-between"
                             >
                               <span>{label}</span>
-                              <span className="font-medium text-()">
+                              <span className="font-medium text-[var(--color-text)]">
                                 {count}
                               </span>
                             </div>
@@ -557,13 +557,13 @@ export default function ReportsClient() {
                 <Separator />
 
                 <div>
-                  <div className="mb-3 text-sm font-semibold text-()">
+                  <div className="mb-3 text-sm font-semibold text-[var(--color-text)]">
                     Listagem resumida ({report.tickets.length})
                   </div>
                   <div className="overflow-x-auto">
                     <table className="min-w-full border-collapse text-sm">
-                      <thead className="sticky top-0 bg-()">
-                        <tr className="border-b border-() text-left text-xs uppercase tracking-wide text-()">
+                      <thead className="sticky top-0 bg-[var(--color-muted-soft)]">
+                        <tr className="border-b border-[var(--color-border)] text-left text-xs uppercase tracking-wide text-[var(--color-muted)]">
                           <th className="px-3 py-2">ID</th>
                           <th className="px-3 py-2">Data atendimento</th>
                           <th className="px-3 py-2">Profissional</th>
@@ -581,7 +581,7 @@ export default function ReportsClient() {
                         {report.tickets.map((ticket) => (
                           <tr
                             key={ticket.id}
-                            className="border-b border-() text-() hover:bg-()"
+                            className="border-b border-[var(--color-border)] text-[var(--color-text)] hover:bg-[var(--color-muted-soft)]"
                           >
                             <td className="px-3 py-3 font-medium">#{ticket.id}</td>
                             <td className="px-3 py-3">
@@ -601,7 +601,7 @@ export default function ReportsClient() {
                             <td className="px-3 py-3">{ticket.client.estado_uf}</td>
                             <td className="px-3 py-3">{ticket.client.unidade}</td>
                             <td className="px-3 py-3">
-                              {ticket.retroativo ? "Sim" : "N„o"}
+                              {ticket.retroativo ? "Sim" : "N√£o"}
                             </td>
                             <td className="px-3 py-3">
                               {formatDateBR(ticket.created_at)}
@@ -615,8 +615,8 @@ export default function ReportsClient() {
               </>
             )
           ) : (
-            <div className="rounded-lg border border-() bg-() px-4 py-6 text-sm text-()">
-              Selecione um perÌodo e clique em ìGerar relatÛrioî.
+            <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-muted-soft)] px-4 py-6 text-sm text-[var(--color-muted-strong)]">
+              Selecione um per√≠odo e clique em ‚ÄúGerar relat√≥rio‚Äù.
             </div>
           )}
         </CardContent>
@@ -624,4 +624,3 @@ export default function ReportsClient() {
     </div>
   );
 }
-
