@@ -30,20 +30,20 @@ export default async function AppShell({ active, breadcrumb, children }: AppShel
   } = await supabase.auth.getUser();
 
   return (
-    <div className="min-h-screen bg-[color:var(--color-bg)] text-[color:var(--color-text)]">
-      <header className="fixed left-0 top-0 z-40 w-full border-b border-[color:var(--color-border)] bg-[color:var(--color-surface)] backdrop-blur">
+    <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)]">
+      <header className="fixed left-0 top-0 z-40 w-full border-b border-[var(--color-border)] bg-[var(--color-surface)] backdrop-blur">
         <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-3">
             <MobileNav active={active} />
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[color:var(--color-primary)] text-[color:var(--color-on-primary)]">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--color-primary)] text-[var(--color-on-primary)]">
               <span className="text-sm font-semibold">TR</span>
             </div>
             <div>
-              <div className="text-sm font-semibold text-[color:var(--color-text)]">
+              <div className="text-sm font-semibold text-[var(--color-text)]">
                 Taskflow Reports
               </div>
               {breadcrumb ? (
-                <div className="flex items-center gap-1 text-xs text-[color:var(--color-muted)]">
+                <div className="flex items-center gap-1 text-xs text-[var(--color-muted)]">
                   <span>Início</span>
                   <ChevronRight className="h-3 w-3" />
                   <span>{breadcrumb}</span>
@@ -57,8 +57,8 @@ export default async function AppShell({ active, breadcrumb, children }: AppShel
 
       <div className="mx-auto flex w-full max-w-7xl gap-6 px-4 pb-10 pt-24 lg:px-6">
         <aside className="hidden w-64 lg:block">
-          <div className="sticky top-24 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 shadow-[var(--color-shadow)]">
-            <div className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-muted)]">
+          <div className="sticky top-24 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-[var(--color-shadow)]">
+            <div className="text-xs font-semibold uppercase tracking-wide text-[var(--color-muted)]">
               Navegação
             </div>
             <nav className="mt-4 flex flex-col gap-1.5 text-sm">
@@ -71,14 +71,14 @@ export default async function AppShell({ active, breadcrumb, children }: AppShel
                     href={item.href}
                     className={`flex items-center gap-2 rounded-xl px-3 py-2 font-medium transition ${
                       isActive
-                        ? "bg-[color:var(--color-primary-soft)] text-[color:var(--color-primary)]"
-                        : "text-[color:var(--color-muted-strong)] hover:bg-[color:var(--color-muted-soft)]"
+                        ? "bg-[var(--color-primary-soft)] text-[var(--color-primary)]"
+                        : "text-[var(--color-muted-strong)] hover:bg-[var(--color-muted-soft)]"
                     }`}
                   >
                     <span
                       className={`h-4 w-1 rounded-full ${
                         isActive
-                          ? "bg-[color:var(--color-primary)]"
+                          ? "bg-[var(--color-primary)]"
                           : "bg-transparent"
                       }`}
                     />

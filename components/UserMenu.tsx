@@ -20,17 +20,17 @@ export default function UserMenu({ email }: UserMenuProps) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center gap-2 rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-1.5 text-sm text-[color:var(--color-text)] shadow-sm hover:bg-[color:var(--color-muted-soft)]">
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--color-muted-soft)] text-[color:var(--color-muted-strong)]">
+      <DropdownMenuTrigger className="flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1.5 text-sm text-[var(--color-text)] shadow-sm hover:bg-[var(--color-muted-soft)]">
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-muted-soft)] text-[var(--color-muted-strong)]">
           <User className="h-4 w-4" />
         </span>
-        <span className="hidden text-sm font-medium text-[color:var(--color-text)] sm:inline">
+        <span className="hidden text-sm font-medium text-[var(--color-text)] sm:inline">
           {displayEmail}
         </span>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuLabel>Conta</DropdownMenuLabel>
-        <div className="px-3 py-2 text-xs text-[color:var(--color-muted)]">
+        <div className="px-3 py-2 text-xs text-[var(--color-muted)]">
           {displayEmail}
         </div>
         <DropdownMenuSeparator />

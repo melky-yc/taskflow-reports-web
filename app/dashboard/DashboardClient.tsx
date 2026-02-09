@@ -166,8 +166,8 @@ function formatTime(date: Date | null) {
 
 function EmptyState({ label }: { label: string }) {
   return (
-    <div className="flex flex-col items-center gap-2 rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-muted-soft)] px-4 py-6 text-sm text-[color:var(--color-muted-strong)]">
-      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[color:var(--color-surface)] text-[color:var(--color-muted)]">
+    <div className="flex flex-col items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-muted-soft)] px-4 py-6 text-sm text-[var(--color-muted-strong)]">
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-surface)] text-[var(--color-muted)]">
         <AlertTriangle className="h-5 w-5" />
       </div>
       <div className="text-sm font-medium">{label}</div>
@@ -322,8 +322,8 @@ export default function DashboardClient() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-[color:var(--color-text)]">Dashboard</h1>
-          <p className="text-sm text-[color:var(--color-muted)]">
+          <h1 className="text-2xl font-semibold text-[var(--color-text)]">Dashboard</h1>
+          <p className="text-sm text-[var(--color-muted)]">
             Visão geral dos chamados de suporte de TI.
           </p>
         </div>
@@ -339,11 +339,11 @@ export default function DashboardClient() {
 
       <Card>
         <CardHeader className="flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-          <div className="flex items-center gap-2 text-sm text-[color:var(--color-muted)]">
+          <div className="flex items-center gap-2 text-sm text-[var(--color-muted)]">
             <Filter className="h-4 w-4" />
             <span>Filtros globais</span>
           </div>
-          <div className="flex flex-wrap items-center gap-4 text-xs text-[color:var(--color-muted)]">
+          <div className="flex flex-wrap items-center gap-4 text-xs text-[var(--color-muted)]">
             <span>Última atualização: {formatTime(lastUpdated)}</span>
             <span>Registros encontrados: {recordLabel}</span>
           </div>
@@ -351,7 +351,7 @@ export default function DashboardClient() {
         <CardContent>
           <div className="grid gap-4 xl:grid-cols-6">
             <div className="space-y-2">
-              <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
+              <label className="text-xs font-medium text-[var(--color-muted-strong)]">
                 Período
               </label>
               <Select
@@ -374,7 +374,7 @@ export default function DashboardClient() {
             {filters.period === "custom" ? (
               <div className="grid gap-3 md:grid-cols-2 xl:col-span-2">
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
+                  <label className="text-xs font-medium text-[var(--color-muted-strong)]">
                     Data inicial
                   </label>
                   <Input
@@ -390,7 +390,7 @@ export default function DashboardClient() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
+                  <label className="text-xs font-medium text-[var(--color-muted-strong)]">
                     Data final
                   </label>
                   <Input
@@ -409,7 +409,7 @@ export default function DashboardClient() {
             ) : null}
 
             <div className="space-y-2">
-              <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">Motivo</label>
+              <label className="text-xs font-medium text-[var(--color-muted-strong)]">Motivo</label>
               <Select
                 value={filters.motivo}
                 onChange={(event) =>
@@ -429,7 +429,7 @@ export default function DashboardClient() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
+              <label className="text-xs font-medium text-[var(--color-muted-strong)]">
                 Prioridade
               </label>
               <Select
@@ -451,7 +451,7 @@ export default function DashboardClient() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">
+              <label className="text-xs font-medium text-[var(--color-muted-strong)]">
                 Uso da plataforma
               </label>
               <Select
@@ -473,7 +473,7 @@ export default function DashboardClient() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">UF</label>
+              <label className="text-xs font-medium text-[var(--color-muted-strong)]">UF</label>
               <Select
                 value={filters.uf}
                 onChange={(event) =>
@@ -489,7 +489,7 @@ export default function DashboardClient() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-medium text-[color:var(--color-muted-strong)]">Cidade</label>
+              <label className="text-xs font-medium text-[var(--color-muted-strong)]">Cidade</label>
               <Input
                 value={filters.cidade}
                 onChange={(event) =>
@@ -513,7 +513,7 @@ export default function DashboardClient() {
       </Card>
 
       {error ? (
-        <Alert className="border-[color:var(--color-danger)] bg-[color:var(--color-danger-soft)]">
+        <Alert className="border-[var(--color-danger)] bg-[var(--color-danger-soft)]">
           <AlertTitle>Não foi possível carregar</AlertTitle>
           <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
             <span>{error}</span>
@@ -534,32 +534,32 @@ export default function DashboardClient() {
         <div className="grid gap-4 md:grid-cols-3">
           <Card>
             <CardContent className="flex items-center gap-3 p-4">
-              <div className="rounded-lg bg-[color:var(--color-primary-soft)] p-2 text-[color:var(--color-primary)]">
+              <div className="rounded-lg bg-[var(--color-primary-soft)] p-2 text-[var(--color-primary)]">
                 <Activity className="h-5 w-5" />
               </div>
               <div>
-                <div className="text-xs text-[color:var(--color-muted)]">Total de chamados</div>
-                <div className="text-2xl font-semibold text-[color:var(--color-text)]">
+                <div className="text-xs text-[var(--color-muted)]">Total de chamados</div>
+                <div className="text-2xl font-semibold text-[var(--color-text)]">
                   {formatNumber(totalCount)}
                 </div>
-                <div className="text-xs text-[color:var(--color-muted)]">{periodLabel}</div>
+                <div className="text-xs text-[var(--color-muted)]">{periodLabel}</div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardContent className="flex items-center gap-3 p-4">
-              <div className="rounded-lg bg-[color:var(--color-warning-soft)] p-2 text-[color:var(--color-warning)]">
+              <div className="rounded-lg bg-[var(--color-warning-soft)] p-2 text-[var(--color-warning)]">
                 <Monitor className="h-5 w-5" />
               </div>
               <div>
-                <div className="text-xs text-[color:var(--color-muted)]">
+                <div className="text-xs text-[var(--color-muted)]">
                   Canal com mais chamados
                 </div>
-                <div className="text-2xl font-semibold text-[color:var(--color-text)]">
+                <div className="text-2xl font-semibold text-[var(--color-text)]">
                   {usageLeader}
                 </div>
-                <div className="text-xs text-[color:var(--color-muted)]">
+                <div className="text-xs text-[var(--color-muted)]">
                   {usageTotal === 0
                     ? "Sem registros no período"
                     : `${formatNumber(usageLeaderCount)} chamados • Web: ${formatNumber(
@@ -572,30 +572,30 @@ export default function DashboardClient() {
 
           <Card>
             <CardContent className="flex items-center gap-3 p-4">
-              <div className="rounded-lg bg-[color:var(--color-success-soft)] p-2 text-[color:var(--color-success)]">
+              <div className="rounded-lg bg-[var(--color-success-soft)] p-2 text-[var(--color-success)]">
                 <CalendarDays className="h-5 w-5" />
               </div>
               <div>
-                <div className="text-xs text-[color:var(--color-muted)]">Chamados hoje</div>
-                <div className="text-2xl font-semibold text-[color:var(--color-text)]">
+                <div className="text-xs text-[var(--color-muted)]">Chamados hoje</div>
+                <div className="text-2xl font-semibold text-[var(--color-text)]">
                   {formatNumber(todayCount)}
                 </div>
-                <div className="text-xs text-[color:var(--color-muted)]">{periodLabel}</div>
+                <div className="text-xs text-[var(--color-muted)]">{periodLabel}</div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="md:col-span-3">
             <CardContent className="flex items-center gap-3 p-4">
-              <div className="rounded-lg bg-[color:var(--color-primary-soft)] p-2 text-[color:var(--color-primary)]">
+              <div className="rounded-lg bg-[var(--color-primary-soft)] p-2 text-[var(--color-primary)]">
                 <TrendingUp className="h-5 w-5" />
               </div>
               <div>
-                <div className="text-xs text-[color:var(--color-muted)]">Motivo mais recorrente</div>
-                <div className="text-lg font-semibold text-[color:var(--color-text)]">
+                <div className="text-xs text-[var(--color-muted)]">Motivo mais recorrente</div>
+                <div className="text-lg font-semibold text-[var(--color-text)]">
                   {topMotivo || "Sem dados"}
                 </div>
-                <div className="text-xs text-[color:var(--color-muted)]">
+                <div className="text-xs text-[var(--color-muted)]">
                   {hasData ? "Baseado no período selecionado" : "Sem dados"}
                 </div>
               </div>
@@ -611,7 +611,7 @@ export default function DashboardClient() {
               <CardTitle>Série temporal</CardTitle>
               <CardDescription>{periodLabel}</CardDescription>
             </div>
-            <LineChartIcon className="h-5 w-5 text-[color:var(--color-muted)]" />
+            <LineChartIcon className="h-5 w-5 text-[var(--color-muted)]" />
           </CardHeader>
           <CardContent>
             {!hasData ? (
@@ -644,7 +644,7 @@ export default function DashboardClient() {
               <CardTitle>Distribuição por prioridade</CardTitle>
               <CardDescription>Chamados no período</CardDescription>
             </div>
-            <BarChart3 className="h-5 w-5 text-[color:var(--color-muted)]" />
+            <BarChart3 className="h-5 w-5 text-[var(--color-muted)]" />
           </CardHeader>
           <CardContent>
             {!hasData ? (
@@ -668,7 +668,7 @@ export default function DashboardClient() {
                     <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
                   </PieChart>
                 </ResponsiveContainer>
-                <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-sm text-[color:var(--color-muted-strong)]">
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-sm text-[var(--color-muted-strong)]">
                   {priorityData.map((item) => (
                     <div key={item.name} className="flex items-center gap-2">
                       <span
@@ -676,7 +676,7 @@ export default function DashboardClient() {
                         style={{ backgroundColor: item.color }}
                       />
                       <span>{item.name}</span>
-                      <span className="font-medium text-[color:var(--color-text)]">
+                      <span className="font-medium text-[var(--color-text)]">
                         {formatNumber(item.value)}
                       </span>
                     </div>
@@ -730,9 +730,9 @@ export default function DashboardClient() {
                 {metrics?.top_unidades.map((item) => (
                   <div
                     key={item.unidade}
-                    className="flex items-center justify-between rounded-lg border border-[color:var(--color-border)] px-3 py-2"
+                    className="flex items-center justify-between rounded-lg border border-[var(--color-border)] px-3 py-2"
                   >
-                    <span className="text-[color:var(--color-muted-strong)]">{item.unidade}</span>
+                    <span className="text-[var(--color-muted-strong)]">{item.unidade}</span>
                     <Badge variant="muted">{formatNumber(item.count)}</Badge>
                   </div>
                 ))}
@@ -754,9 +754,9 @@ export default function DashboardClient() {
                 {metrics?.top_cidades.map((item) => (
                   <div
                     key={item.cidade}
-                    className="flex items-center justify-between rounded-lg border border-[color:var(--color-border)] px-3 py-2"
+                    className="flex items-center justify-between rounded-lg border border-[var(--color-border)] px-3 py-2"
                   >
-                    <span className="text-[color:var(--color-muted-strong)]">{item.cidade}</span>
+                    <span className="text-[var(--color-muted-strong)]">{item.cidade}</span>
                     <Badge variant="muted">{formatNumber(item.count)}</Badge>
                   </div>
                 ))}

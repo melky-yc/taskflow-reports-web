@@ -7,7 +7,7 @@ const Alert = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivEleme
       ref={ref}
       role="alert"
       className={cn(
-        "w-full rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3 text-sm text-[color:var(--color-text)] shadow-[var(--color-shadow)]",
+        "w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm text-[var(--color-text)] shadow-[var(--color-shadow)]",
         className
       )}
       {...props}
@@ -22,7 +22,7 @@ const AlertTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm font-semibold text-[color:var(--color-text)]", className)}
+    className={cn("text-sm font-semibold text-[var(--color-text)]", className)}
     {...props}
   />
 ));
@@ -34,7 +34,7 @@ const AlertDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("mt-1 text-sm text-[color:var(--color-muted)]", className)}
+    className={cn("mt-1 text-sm text-[var(--color-muted)]", className)}
     {...props}
   />
 ));

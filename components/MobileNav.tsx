@@ -44,9 +44,9 @@ export default function MobileNav({ active }: MobileNavProps) {
       {open ? (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-overlay" onClick={() => setOpen(false)} />
-          <div className="absolute left-0 top-0 h-full w-72 border-r border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 shadow-[var(--color-shadow)]">
+          <div className="absolute left-0 top-0 h-full w-72 border-r border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[var(--color-shadow)]">
             <div className="flex items-center justify-between">
-              <div className="text-sm font-semibold text-[color:var(--color-text)]">
+              <div className="text-sm font-semibold text-[var(--color-text)]">
                 Menu
               </div>
               <Button
@@ -70,14 +70,14 @@ export default function MobileNav({ active }: MobileNavProps) {
                     onClick={() => setOpen(false)}
                     className={`flex items-center gap-2 rounded-xl px-3 py-2 font-medium transition ${
                       isActive
-                        ? "bg-[color:var(--color-primary-soft)] text-[color:var(--color-primary)]"
-                        : "text-[color:var(--color-muted-strong)] hover:bg-[color:var(--color-muted-soft)]"
+                        ? "bg-[var(--color-primary-soft)] text-[var(--color-primary)]"
+                        : "text-[var(--color-muted-strong)] hover:bg-[var(--color-muted-soft)]"
                     }`}
                   >
                     <span
                       className={`h-4 w-1 rounded-full ${
                         isActive
-                          ? "bg-[color:var(--color-primary)]"
+                          ? "bg-[var(--color-primary)]"
                           : "bg-transparent"
                       }`}
                     />

@@ -9,12 +9,12 @@ const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
   ({ className, variant = "default", ...props }, ref) => {
     const variants: Record<typeof variant, string> = {
       default:
-        "bg-[color:var(--color-primary-soft)] text-[color:var(--color-primary)]",
+        "bg-[var(--color-primary-soft)] text-[var(--color-primary)]",
       muted:
-        "bg-[color:var(--color-muted-soft)] text-[color:var(--color-muted-strong)]",
-      success: "bg-[color:var(--color-success-soft)] text-[color:var(--color-success)]",
-      warning: "bg-[color:var(--color-warning-soft)] text-[color:var(--color-warning)]",
-      danger: "bg-[color:var(--color-danger-soft)] text-[color:var(--color-danger)]",
+        "bg-[var(--color-muted-soft)] text-[var(--color-muted-strong)]",
+      success: "bg-[var(--color-success-soft)] text-[var(--color-success)]",
+      warning: "bg-[var(--color-warning-soft)] text-[var(--color-warning)]",
+      danger: "bg-[var(--color-danger-soft)] text-[var(--color-danger)]",
     };
     return (
       <span

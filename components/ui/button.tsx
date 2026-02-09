@@ -9,16 +9,16 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", asChild, children, ...props }, ref) => {
     const base =
-      "inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-[color:var(--color-primary-soft)] disabled:cursor-not-allowed disabled:opacity-60";
+      "inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-soft)] disabled:cursor-not-allowed disabled:opacity-60";
     const variants: Record<typeof variant, string> = {
       primary:
-        "bg-[color:var(--color-primary)] text-[color:var(--color-on-primary)] shadow-sm hover:bg-[color:var(--color-primary-hover)]",
+        "bg-[var(--color-primary)] text-[var(--color-on-primary)] shadow-sm hover:bg-[var(--color-primary-hover)]",
       secondary:
-        "bg-[color:var(--color-muted-soft)] text-[color:var(--color-text)] hover:bg-[color:var(--color-border)]",
+        "bg-[var(--color-muted-soft)] text-[var(--color-text)] hover:bg-[var(--color-border)]",
       ghost:
-        "text-[color:var(--color-muted-strong)] hover:bg-[color:var(--color-muted-soft)]",
+        "text-[var(--color-muted-strong)] hover:bg-[var(--color-muted-soft)]",
       outline:
-        "border border-[color:var(--color-border)] text-[color:var(--color-text)] hover:bg-[color:var(--color-muted-soft)]",
+        "border border-[var(--color-border)] text-[var(--color-text)] hover:bg-[var(--color-muted-soft)]",
     } as const;
     if (asChild && React.isValidElement(children)) {
       const child = children as React.ReactElement<{ className?: string }>;
