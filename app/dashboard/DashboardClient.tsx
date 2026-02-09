@@ -165,6 +165,11 @@ function formatTime(date: Date | null) {
   }).format(date);
 }
 
+function truncateLabel(value: string, max = 24) {
+  if (value.length <= max) return value;
+  return `${value.slice(0, max - 1)}…`;
+}
+
 function EmptyState({ label }: { label: string }) {
   return (
     <div className="flex flex-col items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-muted-soft)] px-4 py-6 text-sm text-[var(--color-muted-strong)]">
@@ -303,17 +308,23 @@ export default function DashboardClient() {
     date: formatDateBR(item.date),
     count: item.count,
   }));
+  const hasTimeseriesData = timeseriesData.length > 0;
 
   const priorityData = PRIORIDADES.map((label) => ({
     name: label === "Media" ? "Média" : label,
     value: priorityMap[label] ?? 0,
     color: PRIORITY_COLORS[label as keyof typeof PRIORITY_COLORS],
   }));
+  const priorityChartData = priorityData.filter((item) => item.value > 0);
+  const hasPriorityChartData = priorityChartData.length > 0;
+  const isSinglePriority = priorityChartData.length === 1;
 
   const topMotivos = (metrics?.by_motivo ?? []).slice(0, 5).map((item) => ({
     name: item.motivo,
     value: item.count,
   }));
+  const motivosChartData = topMotivos.filter((item) => item.value > 0);
+  const hasMotivosChartData = motivosChartData.length > 0;
 
   const hasData = totalCount > 0;
   const recordLabel = formatNumber(totalCount);
@@ -625,7 +636,7 @@ export default function DashboardClient() {
             <LineChartIcon className="h-5 w-5 text-[var(--color-muted)]" />
           </CardHeader>
           <CardContent>
-            {!hasData ? (
+            {!hasTimeseriesData ? (
               <EmptyState label="Sem dados para o período selecionado." />
             ) : (
               <div className="h-72">
@@ -658,29 +669,44 @@ export default function DashboardClient() {
             <BarChart3 className="h-5 w-5 text-[var(--color-muted)]" />
           </CardHeader>
           <CardContent>
-            {!hasData ? (
+            {!hasPriorityChartData ? (
               <EmptyState label="Sem dados para o período selecionado." />
+            ) : isSinglePriority ? (
+              <div className="rounded-lg border border-[var(--color-border)] p-4">
+                <div className="text-sm text-[var(--color-muted)]">Prioridade dominante</div>
+                <div className="mt-1 text-xl font-semibold text-[var(--color-text)]">
+                  {priorityChartData[0].name}
+                </div>
+                <div className="mt-2 flex items-center gap-2 text-sm">
+                  <span className="font-medium text-[var(--color-text)]">
+                    {formatNumber(priorityChartData[0].value)}
+                  </span>
+                  <span className="text-[var(--color-muted)]">• 100%</span>
+                </div>
+              </div>
             ) : (
-              <div className="h-72">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={priorityData}
-                      dataKey="value"
-                      nameKey="name"
-                      innerRadius={55}
-                      outerRadius={90}
-                      paddingAngle={3}
-                    >
-                      {priorityData.map((entry) => (
-                        <Cell key={entry.name} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
-                  </PieChart>
-                </ResponsiveContainer>
+              <>
+                <div className="h-72">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={priorityChartData}
+                        dataKey="value"
+                        nameKey="name"
+                        innerRadius={55}
+                        outerRadius={90}
+                        paddingAngle={1}
+                      >
+                        {priorityChartData.map((entry) => (
+                          <Cell key={entry.name} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
                 <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-sm text-[var(--color-muted-strong)]">
-                  {priorityData.map((item) => (
+                  {priorityChartData.map((item) => (
                     <div key={item.name} className="flex items-center gap-2">
                       <span
                         className="h-2.5 w-2.5 rounded-full"
@@ -693,7 +719,7 @@ export default function DashboardClient() {
                     </div>
                   ))}
                 </div>
-              </div>
+              </>
             )}
           </CardContent>
         </Card>
@@ -706,17 +732,36 @@ export default function DashboardClient() {
             <CardDescription>Chamados mais recorrentes</CardDescription>
           </CardHeader>
           <CardContent>
-            {!hasData ? (
+            {!hasMotivosChartData ? (
               <EmptyState label="Sem dados para o período selecionado." />
             ) : (
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={topMotivos} layout="vertical" margin={{ left: 32 }}>
+                  <BarChart
+                    data={motivosChartData}
+                    layout="vertical"
+                    margin={{ left: 48, right: 24, top: 8, bottom: 8 }}
+                  >
                     <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_COLOR} />
-                    <XAxis type="number" stroke={CHART_AXIS_COLOR} />
-                    <YAxis type="category" dataKey="name" stroke={CHART_AXIS_COLOR} width={120} />
+                    <XAxis
+                      type="number"
+                      stroke={CHART_AXIS_COLOR}
+                      domain={[0, (dataMax: number) => dataMax + 1]}
+                    />
+                    <YAxis
+                      type="category"
+                      dataKey="name"
+                      stroke={CHART_AXIS_COLOR}
+                      width={180}
+                      tickFormatter={(value) => truncateLabel(String(value))}
+                    />
                     <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
-                    <Bar dataKey="value" fill={MOTIVO_COLOR} radius={[6, 6, 6, 6]}>
+                    <Bar
+                      dataKey="value"
+                      fill={MOTIVO_COLOR}
+                      radius={[6, 6, 6, 6]}
+                      barSize={24}
+                    >
                       <LabelList dataKey="value" position="right" fill="var(--color-text)" />
                     </Bar>
                   </BarChart>
