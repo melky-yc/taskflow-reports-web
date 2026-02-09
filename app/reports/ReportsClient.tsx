@@ -28,8 +28,8 @@ const LIMIT = 2000;
 type Period = "daily" | "weekly" | "monthly" | "yearly";
 
 const PERIOD_OPTIONS: { value: Period; label: string }[] = [
-  { value: "daily", label: "Di�rio" },
-  { value: "weekly", label: "Semanal (�ltimos 7 dias)" },
+  { value: "daily", label: "Diï¿½rio" },
+  { value: "weekly", label: "Semanal (ï¿½ltimos 7 dias)" },
   { value: "monthly", label: "Mensal" },
   { value: "yearly", label: "Anual" },
 ];
@@ -139,7 +139,7 @@ function prioridadeBadge(prioridade: string) {
 }
 
 function formatPrioridadeLabel(prioridade: string) {
-  return prioridade === "Media" ? "M�dia" : prioridade;
+  return prioridade === "Media" ? "Mï¿½dia" : prioridade;
 }
 
 type ReportState = {
@@ -162,7 +162,7 @@ export default function ReportsClient() {
   const [report, setReport] = useState<ReportState | null>(null);
 
   const periodLabel = useMemo(() => {
-    return PERIOD_OPTIONS.find((item) => item.value === period)?.label ?? "Di�rio";
+    return PERIOD_OPTIONS.find((item) => item.value === period)?.label ?? "Diï¿½rio";
   }, [period]);
 
   const getRange = () => {
@@ -248,7 +248,7 @@ export default function ReportsClient() {
     const range = getRange();
     if (!range) {
       setLoading(false);
-      setError("Informe um per�odo v�lido para gerar o relat�rio.");
+      setError("Informe um perï¿½odo vï¿½lido para gerar o relatï¿½rio.");
       return;
     }
 
@@ -281,7 +281,7 @@ export default function ReportsClient() {
 
     if (queryError) {
       setLoading(false);
-      setError("N�o foi poss�vel gerar o relat�rio. Tente novamente.");
+      setError("Nï¿½o foi possï¿½vel gerar o relatï¿½rio. Tente novamente.");
       return;
     }
 
@@ -322,7 +322,7 @@ export default function ReportsClient() {
     if (!report) return;
     const rows = report.tickets.map(mapReportRow);
     exportReportCSV(rows, report.summary, buildFilename(periodLabel));
-    setNotice("Exporta��o gerada.");
+    setNotice("Exportaï¿½ï¿½o gerada.");
     window.setTimeout(() => setNotice(""), 3000);
   };
 
@@ -330,16 +330,16 @@ export default function ReportsClient() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Relat�rios</CardTitle>
+          <CardTitle>Relatï¿½rios</CardTitle>
           <CardDescription>
-            Gere relat�rios por per�odo e acompanhe as principais m�tricas.
+            Gere relatï¿½rios por perï¿½odo e acompanhe as principais mï¿½tricas.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
               <label className="text-xs font-medium text-()">
-                Per�odo
+                Perï¿½odo
               </label>
               <Select
                 value={period}
@@ -370,7 +370,7 @@ export default function ReportsClient() {
             {period === "monthly" && (
               <div className="space-y-2">
                 <label className="text-xs font-medium text-()">
-                  M�s/Ano
+                  Mï¿½s/Ano
                 </label>
                 <Input
                   value={monthValue}
@@ -402,7 +402,7 @@ export default function ReportsClient() {
 
           <div className="mt-4 flex justify-end">
             <Button onClick={handleGenerate} disabled={loading}>
-              {loading ? "Gerando..." : "Gerar relat�rio"}
+              {loading ? "Gerando..." : "Gerar relatï¿½rio"}
             </Button>
           </div>
         </CardContent>
@@ -420,8 +420,8 @@ export default function ReportsClient() {
             <CardTitle>Resultados</CardTitle>
             <CardDescription>
               {report
-                ? `${report.summary.periodLabel} � ${report.summary.rangeLabel}`
-                : "Selecione um per�odo para gerar o relat�rio."}
+                ? `${report.summary.periodLabel} ï¿½ ${report.summary.rangeLabel}`
+                : "Selecione um perï¿½odo para gerar o relatï¿½rio."}
             </CardDescription>
           </div>
           <Button
@@ -449,13 +449,13 @@ export default function ReportsClient() {
           ) : report ? (
             report.tickets.length === 0 ? (
               <div className="rounded-lg border border-() bg-() px-4 py-6 text-sm text-()">
-                Nenhum chamado encontrado no per�odo selecionado.
+                Nenhum chamado encontrado no perï¿½odo selecionado.
               </div>
             ) : (
               <>
                 {report.hasMore ? (
                   <div className="rounded-lg border border-() bg-() px-4 py-2 text-sm text-()">
-                    Limite de {LIMIT} registros atingido. Refine o per�odo para
+                    Limite de {LIMIT} registros atingido. Refine o perï¿½odo para
                     ver todos os chamados.
                   </div>
                 ) : null}
@@ -484,7 +484,7 @@ export default function ReportsClient() {
                   </div>
                   <div className="rounded-lg border border-() bg-() p-4 shadow-sm">
                     <div className="text-xs font-medium text-()">
-                      Per�odo
+                      Perï¿½odo
                     </div>
                     <div className="mt-2 text-sm font-semibold text-()">
                       {report.summary.rangeLabel}
@@ -495,7 +495,7 @@ export default function ReportsClient() {
                 <div className="grid gap-4 lg:grid-cols-3">
                   <div className="rounded-lg border border-() bg-() p-4 shadow-sm">
                     <div className="text-sm font-semibold text-()">
-                      Distribui��o por prioridade
+                      Distribuiï¿½ï¿½o por prioridade
                     </div>
                     <div className="mt-3 space-y-2 text-sm text-()">
                       {Object.entries(report.summary.prioridades).map(
@@ -601,7 +601,7 @@ export default function ReportsClient() {
                             <td className="px-3 py-3">{ticket.client.estado_uf}</td>
                             <td className="px-3 py-3">{ticket.client.unidade}</td>
                             <td className="px-3 py-3">
-                              {ticket.retroativo ? "Sim" : "N�o"}
+                              {ticket.retroativo ? "Sim" : "Nï¿½o"}
                             </td>
                             <td className="px-3 py-3">
                               {formatDateBR(ticket.created_at)}
@@ -616,7 +616,7 @@ export default function ReportsClient() {
             )
           ) : (
             <div className="rounded-lg border border-() bg-() px-4 py-6 text-sm text-()">
-              Selecione um per�odo e clique em �Gerar relat�rio�.
+              Selecione um perï¿½odo e clique em ï¿½Gerar relatï¿½rioï¿½.
             </div>
           )}
         </CardContent>

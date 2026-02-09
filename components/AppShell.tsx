@@ -13,8 +13,8 @@ import UserMenu from "@/components/UserMenu";
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, key: "dashboard" },
   { href: "/tickets", label: "Tickets", icon: Ticket, key: "tickets" },
-  { href: "/reports", label: "Relat�rios", icon: BarChart3, key: "reports" },
-  { href: "/config", label: "Configura��o", icon: Settings, key: "config" },
+  { href: "/reports", label: "Relatï¿½rios", icon: BarChart3, key: "reports" },
+  { href: "/config", label: "Configuraï¿½ï¿½o", icon: Settings, key: "config" },
 ] as const;
 
 type AppShellProps = {
@@ -49,7 +49,7 @@ export default async function AppShell({ active, breadcrumb, children }: AppShel
               </div>
               {breadcrumb ? (
                 <div className="flex items-center gap-1 text-xs text-()">
-                  <span>In�cio</span>
+                  <span>Inï¿½cio</span>
                   <ChevronRight className="h-3 w-3" />
                   <span>{breadcrumb}</span>
                 </div>
@@ -64,7 +64,7 @@ export default async function AppShell({ active, breadcrumb, children }: AppShel
         <aside className="hidden w-64 lg:block">
           <div className="sticky top-24 rounded-2xl border border-() bg-() p-4 shadow-()">
             <div className="text-xs font-semibold uppercase tracking-wide text-()">
-              Navega��o
+              Navegaï¿½ï¿½o
             </div>
             <nav className="mt-4 flex flex-col gap-1.5 text-sm">
               {NAV_ITEMS.map((item) => {

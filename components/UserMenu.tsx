@@ -16,7 +16,7 @@ type UserMenuProps = {
 };
 
 export default function UserMenu({ email }: UserMenuProps) {
-  const displayEmail = email ?? "Usu�rio";
+  const displayEmail = email ?? "Usuï¿½rio";
 
   return (
     <DropdownMenu>

@@ -28,15 +28,15 @@ import {
 
 const MOTIVOS = [
   "Problema de cadastro",
-  "Informa��es incorretas na plataforma",
+  "Informaï¿½ï¿½es incorretas na plataforma",
   "Dificuldade de utilizar a plataforma",
-  "Altera��o de Perfil",
-  "Problema em �rea e atua��o",
+  "Alteraï¿½ï¿½o de Perfil",
+  "Problema em ï¿½rea e atuaï¿½ï¿½o",
   "Outro",
 ];
 
 const PRIORIDADES = ["Baixa", "Media", "Alta"];
-const USO_PLATAFORMA = ["Mobile", "Web", "Ambos", "N�o informado"];
+const USO_PLATAFORMA = ["Mobile", "Web", "Ambos", "Nï¿½o informado"];
 const UF_PADRAO = "PI";
 const CIDADES_PI = cidadesPi.cidades;
 const CIDADES_LIST_ID = "cidades-pi";
@@ -184,7 +184,7 @@ function prioridadeBadge(prioridade: string) {
 }
 
 function formatPrioridadeLabel(prioridade: string) {
-  return prioridade === "Media" ? "M�dia" : prioridade;
+  return prioridade === "Media" ? "Mï¿½dia" : prioridade;
 }
 
 function motivoBadge(motivo: string) {
@@ -206,7 +206,7 @@ function UpdateButton() {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" disabled={pending}>
-      {pending ? "Salvando..." : "Salvar altera��es"}
+      {pending ? "Salvando..." : "Salvar alteraï¿½ï¿½es"}
     </Button>
   );
 }
@@ -277,9 +277,9 @@ export default function TicketsClient({
   const errorMessage = (() => {
     switch (error) {
       case "campos":
-        return "Preencha todos os campos obrigat�rios.";
+        return "Preencha todos os campos obrigatï¿½rios.";
       case "cpf":
-        return "CPF deve conter 11 d�gitos.";
+        return "CPF deve conter 11 dï¿½gitos.";
       case "estado":
         return "UF deve conter 2 letras.";
       case "motivo":
@@ -287,11 +287,11 @@ export default function TicketsClient({
       case "retroativo":
         return "Informe o motivo do retroativo.";
       case "cliente":
-        return "N�o foi poss�vel salvar o cliente.";
+        return "Nï¿½o foi possï¿½vel salvar o cliente.";
       case "ticket":
-        return "N�o foi poss�vel salvar o chamado.";
+        return "Nï¿½o foi possï¿½vel salvar o chamado.";
       case "editar":
-        return "N�o foi poss�vel editar o chamado.";
+        return "Nï¿½o foi possï¿½vel editar o chamado.";
       default:
         return "";
     }
@@ -332,7 +332,7 @@ export default function TicketsClient({
     } else {
       exportToXLSX(rows, filename);
     }
-    setExportNotice("Exporta��o gerada.");
+    setExportNotice("Exportaï¿½ï¿½o gerada.");
     window.setTimeout(() => setExportNotice(""), 3000);
   };
 
@@ -383,7 +383,7 @@ export default function TicketsClient({
                     Profissional
                   </h3>
                   <p className="text-xs text-(--color-muted)">
-                    Usu�rio respons�vel pelo atendimento registrado.
+                    Usuï¿½rio responsï¿½vel pelo atendimento registrado.
                   </p>
                 </div>
                 <Badge variant="muted">Autenticado</Badge>
@@ -471,7 +471,7 @@ export default function TicketsClient({
               {motivo === "Outro" ? (
                 <div className="space-y-2">
                   <label className="text-xs font-medium text-(--color-muted-strong)">
-                    Descri��o do motivo (Outro)
+                    Descriï¿½ï¿½o do motivo (Outro)
                   </label>
                   <Textarea
                     name="motivo_outro_descricao"
@@ -489,7 +489,7 @@ export default function TicketsClient({
                   Dados do Cliente
                 </h3>
                 <p className="text-xs text-(--color-muted)">
-                  Informa��es cadastrais do cliente atendido.
+                  Informaï¿½ï¿½es cadastrais do cliente atendido.
                 </p>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
@@ -580,7 +580,7 @@ export default function TicketsClient({
                 </Badge>
               </div>
               <div className="rounded-lg border border-(--color-border) bg-(--color-muted-soft) px-4 py-3 text-sm text-(--color-muted-strong)">
-                A data de atendimento define automaticamente se o chamado �
+                A data de atendimento define automaticamente se o chamado ï¿½
                 retroativo.
               </div>
 
@@ -609,7 +609,7 @@ export default function TicketsClient({
       <Card>
         <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <CardTitle>�ltimos Chamados</CardTitle>
+            <CardTitle>ï¿½ltimos Chamados</CardTitle>
             <CardDescription>
               {tickets.length} registros encontrados
             </CardDescription>
@@ -617,7 +617,7 @@ export default function TicketsClient({
           <div className="flex flex-wrap items-center gap-3">
             <form method="get" className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-2 text-sm text-(--color-muted-strong)">
-                <span>Per�odo</span>
+                <span>Perï¿½odo</span>
                 <div className="relative">
                   <Select
                     name="period"
@@ -762,7 +762,7 @@ export default function TicketsClient({
 
           <div className="mt-4 flex items-center justify-between text-sm text-(--color-muted-strong)">
             <div>
-              P�gina {pagination.page} de {pagination.totalPages}
+              Pï¿½gina {pagination.page} de {pagination.totalPages}
             </div>
             <div className="flex items-center gap-2">
               {pagination.prevHref ? (
@@ -782,11 +782,11 @@ export default function TicketsClient({
                   className="rounded-lg border border-(--color-border) px-3 py-1 hover:bg-(--color-muted-soft)"
                   href={pagination.nextHref}
                 >
-                  Pr�xima
+                  Prï¿½xima
                 </a>
               ) : (
                 <span className="rounded-lg border border-(--color-border) px-3 py-1 text-(--color-muted) opacity-60">
-                  Pr�xima
+                  Prï¿½xima
                 </span>
               )}
             </div>
@@ -912,7 +912,7 @@ export default function TicketsClient({
                   {editForm.motivo === "Outro" ? (
                     <div className="space-y-2">
                       <label className="text-xs font-medium text-(--color-muted-strong)">
-                        Descri��o do motivo (Outro)
+                        Descriï¿½ï¿½o do motivo (Outro)
                       </label>
                       <Textarea
                         name="motivo_outro_descricao"
@@ -957,7 +957,7 @@ export default function TicketsClient({
 
                     <div className="space-y-2">
                       <label className="text-xs font-medium text-(--color-muted-strong)">
-                        CPF (n�o edit�vel)
+                        CPF (nï¿½o editï¿½vel)
                       </label>
                       <Input
                         value={formatCpf(editForm.clienteCpfDigits)}
@@ -1075,7 +1075,7 @@ export default function TicketsClient({
                     </div>
                   ) : (
                     <div className="rounded-lg border border-(--color-border) bg-(--color-muted-soft) px-4 py-3 text-sm text-(--color-muted-strong)">
-                      Este chamado n�o � retroativo.
+                      Este chamado nï¿½o ï¿½ retroativo.
                     </div>
                   )}
                 </section>
