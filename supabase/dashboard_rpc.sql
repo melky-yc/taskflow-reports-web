@@ -122,6 +122,17 @@ begin
       ),
       '[]'::jsonb
     ),
+    'by_uso_plataforma', coalesce(
+      (
+        select jsonb_agg(item) from (
+          select jsonb_build_object('uso_plataforma', uso_plataforma, 'count', count(*)) as item
+          from base
+          group by uso_plataforma
+          order by count(*) desc, uso_plataforma asc
+        ) s
+      ),
+      '[]'::jsonb
+    ),
     'top_unidades', coalesce(
       (
         select jsonb_agg(item) from (

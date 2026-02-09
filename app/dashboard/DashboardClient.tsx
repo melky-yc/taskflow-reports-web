@@ -9,6 +9,7 @@ import {
   CalendarDays,
   Filter,
   LineChart as LineChartIcon,
+  Monitor,
   TrendingUp,
 } from "lucide-react";
 import {
@@ -94,6 +95,7 @@ type DashboardMetrics = {
   timeseries: Array<{ date: string; count: number }>;
   by_priority: Array<{ prioridade: string; count: number }>;
   by_motivo: Array<{ motivo: string; count: number }>;
+  by_uso_plataforma: Array<{ uso_plataforma: string | null; count: number }>;
   top_unidades: Array<{ unidade: string; count: number }>;
   top_cidades: Array<{ cidade: string; count: number }>;
 };
@@ -152,13 +154,6 @@ function brToIso(value: string) {
 
 function formatNumber(value: number) {
   return new Intl.NumberFormat("pt-BR").format(value);
-}
-
-function formatPercent(value: number) {
-  return new Intl.NumberFormat("pt-BR", {
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
-  }).format(value);
 }
 
 function formatTime(date: Date | null) {
@@ -276,7 +271,21 @@ export default function DashboardClient() {
 
   const totalCount = metrics?.totals.total_count ?? 0;
   const todayCount = metrics?.totals.today_count ?? 0;
-  const retroPercent = metrics?.totals.retro_percent ?? 0;
+  const usoPlataforma = metrics?.by_uso_plataforma ?? [];
+  const webCount =
+    usoPlataforma.find((item) => item.uso_plataforma === "Web")?.count ?? 0;
+  const mobileCount =
+    usoPlataforma.find((item) => item.uso_plataforma === "Mobile")?.count ?? 0;
+  const usageTotal = webCount + mobileCount;
+  const usageLeader =
+    usageTotal === 0
+      ? "Sem dados"
+      : webCount === mobileCount
+      ? "Empate"
+      : webCount > mobileCount
+      ? "Web"
+      : "Mobile";
+  const usageLeaderCount = Math.max(webCount, mobileCount);
   const topMotivo = metrics?.totals.top_motivo || "Sem dados";
 
   const timeseriesData = (metrics?.timeseries ?? []).map((item) => ({
@@ -541,15 +550,21 @@ export default function DashboardClient() {
           <Card>
             <CardContent className="flex items-center gap-3 p-4">
               <div className="rounded-lg bg-[color:var(--color-warning-soft)] p-2 text-[color:var(--color-warning)]">
-                <AlertTriangle className="h-5 w-5" />
+                <Monitor className="h-5 w-5" />
               </div>
               <div>
-                <div className="text-xs text-[color:var(--color-muted)]">% Retroativos</div>
+                <div className="text-xs text-[color:var(--color-muted)]">
+                  Canal com mais chamados
+                </div>
                 <div className="text-2xl font-semibold text-[color:var(--color-text)]">
-                  {formatPercent(retroPercent)}%
+                  {usageLeader}
                 </div>
                 <div className="text-xs text-[color:var(--color-muted)]">
-                  {formatNumber(totalCount)} chamados
+                  {usageTotal === 0
+                    ? "Sem registros no período"
+                    : `${formatNumber(usageLeaderCount)} chamados • Web: ${formatNumber(
+                        webCount
+                      )} · Mobile: ${formatNumber(mobileCount)}`}
                 </div>
               </div>
             </CardContent>
