@@ -67,6 +67,7 @@ type EditFormState = {
   clienteEstado: string;
   clienteUsoPlataforma: string;
   clienteAreaAtuacao: string;
+  clienteAreaAtuacaoOutro: string;
   clienteUnidade: string;
 };
 
@@ -187,6 +188,7 @@ export default function TicketsClient({
   const [clienteCidade, setClienteCidade] = useState("");
   const [clienteUsoPlataforma, setClienteUsoPlataforma] = useState("");
   const [clienteAreaAtuacao, setClienteAreaAtuacao] = useState("");
+  const [clienteAreaAtuacaoOutro, setClienteAreaAtuacaoOutro] = useState("");
   const [clienteUnidade, setClienteUnidade] = useState("");
   const [isClientLocked, setIsClientLocked] = useState(false);
   const [cpfLookupState, setCpfLookupState] = useState<
@@ -227,6 +229,7 @@ export default function TicketsClient({
       clienteUsoPlataforma:
         ticket.uso_plataforma ?? ticket.client.uso_plataforma ?? "",
       clienteAreaAtuacao: ticket.client.area_atuacao ?? "",
+      clienteAreaAtuacaoOutro: "",
       clienteUnidade: ticket.client.unidade,
     });
   };
@@ -296,6 +299,7 @@ export default function TicketsClient({
     setClienteCidade("");
     setClienteUsoPlataforma("");
     setClienteAreaAtuacao("");
+    setClienteAreaAtuacaoOutro("");
     setClienteUnidade("");
   }, []);
 
@@ -310,6 +314,7 @@ export default function TicketsClient({
     setClienteCidade(client.cidade ?? "");
     setClienteUsoPlataforma(client.uso_plataforma ?? "");
     setClienteAreaAtuacao(client.area_atuacao ?? "");
+    setClienteAreaAtuacaoOutro("");
     setClienteUnidade(client.unidade ?? "");
   }, []);
 
@@ -678,7 +683,13 @@ export default function TicketsClient({
                   <Select
                     name="cliente_area_atuacao"
                     value={clienteAreaAtuacao}
-                    onChange={(event) => setClienteAreaAtuacao(event.target.value)}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      setClienteAreaAtuacao(value);
+                      if (value !== "Outro") {
+                        setClienteAreaAtuacaoOutro("");
+                      }
+                    }}
                     disabled={isClientLocked}
                     required
                   >
@@ -689,6 +700,22 @@ export default function TicketsClient({
                       </option>
                     ))}
                   </Select>
+                  {clienteAreaAtuacao === "Outro" ? (
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-[var(--color-muted-strong)]">
+                        Descreva a área de atuação
+                      </label>
+                      <Input
+                        name="cliente_area_atuacao_outro"
+                        value={clienteAreaAtuacaoOutro}
+                        onChange={(event) =>
+                          setClienteAreaAtuacaoOutro(event.target.value)
+                        }
+                        placeholder="Ex.: Agropecuária"
+                        required
+                      />
+                    </div>
+                  ) : null}
                   {isClientLocked ? (
                     <input
                       type="hidden"
@@ -1187,11 +1214,16 @@ export default function TicketsClient({
                         name="cliente_area_atuacao"
                         value={editForm.clienteAreaAtuacao}
                         onChange={(event) =>
-                          setEditForm((prev) =>
-                            prev
-                              ? { ...prev, clienteAreaAtuacao: event.target.value }
-                              : prev
-                          )
+                          setEditForm((prev) => {
+                            if (!prev) return prev;
+                            const value = event.target.value;
+                            return {
+                              ...prev,
+                              clienteAreaAtuacao: value,
+                              clienteAreaAtuacaoOutro:
+                                value === "Outro" ? prev.clienteAreaAtuacaoOutro : "",
+                            };
+                          })
                         }
                         required
                       >
@@ -1202,6 +1234,29 @@ export default function TicketsClient({
                           </option>
                         ))}
                       </Select>
+                      {editForm.clienteAreaAtuacao === "Outro" ? (
+                        <div className="space-y-2">
+                          <label className="text-xs font-medium text-[var(--color-muted-strong)]">
+                            Descreva a área de atuação
+                          </label>
+                          <Input
+                            name="cliente_area_atuacao_outro"
+                            value={editForm.clienteAreaAtuacaoOutro}
+                            onChange={(event) =>
+                              setEditForm((prev) =>
+                                prev
+                                  ? {
+                                      ...prev,
+                                      clienteAreaAtuacaoOutro: event.target.value,
+                                    }
+                                  : prev
+                              )
+                            }
+                            placeholder="Ex.: Agropecuária"
+                            required
+                          />
+                        </div>
+                      ) : null}
                     </div>
 
                     <div className="space-y-2">
