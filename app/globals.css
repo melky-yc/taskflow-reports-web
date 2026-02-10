@@ -1,5 +1,5 @@
 ﻿@import "tailwindcss";
-@plugin "../hero";
+@plugin "../hero.mjs";
 @source "../app/**/*.{js,ts,jsx,tsx,mdx}";
 @source "../components/**/*.{js,ts,jsx,tsx,mdx}";
 @source "../lib/**/*.{js,ts,jsx,tsx,mdx}";

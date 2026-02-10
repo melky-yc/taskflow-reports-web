@@ -31,7 +31,7 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    files: ["app/ui/**/*.{ts,tsx}", "hero.ts"],
+    files: ["app/ui/**/*.{ts,tsx}", "hero.mjs"],
     rules: {
       "no-restricted-imports": "off",
     },

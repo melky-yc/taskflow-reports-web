@@ -57,4 +57,4 @@ import {
 
 - Tokens de design: `app/ui/tokens.ts`
 - Variaveis CSS globais: `app/globals.css`
-- Tema do HeroUI (cores/layout): `hero.ts`
+- Tema do HeroUI (cores/layout): `hero.mjs`
