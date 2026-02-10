@@ -6,7 +6,6 @@ import {
   Activity,
   BarChart3,
   CalendarDays,
-  Filter,
   LineChart as LineChartIcon,
   Monitor,
   TrendingUp,
@@ -29,9 +28,6 @@ import {
 } from "recharts";
 import cidadesPi from "@/data/cidades_pi.json";
 import { createClient } from "@/lib/supabase/client";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   MOTIVOS_OPTIONS,
   PRIORIDADES_OPTIONS,
@@ -39,28 +35,23 @@ import {
   USO_PLATAFORMA_OPTIONS,
   UF_PADRAO,
 } from "@/app/tickets/constants";
+import {
+  AppBadge,
+  AppButton,
+  AppCard,
+  AppCardBody,
+  AppCardDescription,
+  AppCardHeader,
+  AppCardTitle,
+  FilterModal,
+  KpiCard,
+  PageHeader,
+} from "@/app/ui";
 import ActiveFiltersChips, {
   type ActiveFilterChip,
 } from "@/components/dashboard/ActiveFiltersChips";
 import EmptyState from "@/components/dashboard/EmptyState";
 import DashboardFiltersForm from "@/components/dashboard/FiltersToolbar";
-import KpiCard from "@/components/dashboard/KpiCard";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDateBR } from "@/utils/exportReports";
 
@@ -542,86 +533,45 @@ export default function DashboardClient() {
   return (
     <div className="space-y-6">
       <div className="space-y-3">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-[var(--color-text)]">
-              Dashboard
-            </h1>
-            <p className="text-sm text-[var(--color-muted)]">
-              Visão geral dos chamados de suporte de TI.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button asChild>
-              <Link href="/tickets#novo-chamado">Criar ticket</Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href={ticketsLink}>Exportar (CSV/XLSX)</Link>
-            </Button>
-          </div>
-        </div>
+        <PageHeader
+          title="Dashboard"
+          subtitle="Visão geral dos chamados de suporte de TI."
+          actions={
+            <>
+              <AppButton as={Link} href="/tickets#novo-chamado">
+                Criar ticket
+              </AppButton>
+              <AppButton as={Link} href={ticketsLink} variant="soft">
+                Exportar (CSV/XLSX)
+              </AppButton>
+            </>
+          }
+        />
         <ActiveFiltersChips items={activeFilterChips} />
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3">
-        <Dialog open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
-          <DialogTrigger asChild>
-            <Button
-              type="button"
-              variant="outline"
-              className="h-9 gap-2"
-              aria-label="Abrir filtros"
-            >
-              <Filter className="h-4 w-4" />
-              Filtros
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Filtros</DialogTitle>
-              <DialogDescription>
-                Ajuste os filtros e aplique para atualizar o dashboard.
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-4">
-              <DashboardFiltersForm
-                filters={filters}
-                periodOptions={PERIOD_OPTIONS}
-                motivos={MOTIVOS_OPTIONS}
-                prioridades={PRIORIDADES_OPTIONS}
-                usoPlataforma={USO_PLATAFORMA_OPTIONS}
-                ufOptions={[UF_PADRAO]}
-                cidadesListId={CIDADES_LIST_ID}
-                onFilterChange={handleFilterChange}
-                maskDateInput={maskDateInput}
-              />
-
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-9 px-4"
-                  onClick={handleClear}
-                  disabled={loading}
-                >
-                  Limpar
-                </Button>
-                <Button
-                  type="button"
-                  className="h-9 px-4"
-                  onClick={() => {
-                    handleApply();
-                    setIsFiltersOpen(false);
-                  }}
-                  disabled={loading}
-                >
-                  {loading ? "Aplicando..." : "Aplicar"}
-                </Button>
-              </DialogFooter>
-            </div>
-          </DialogContent>
-        </Dialog>
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 shadow-[var(--shadow-card)]">
+        <FilterModal
+          isOpen={isFiltersOpen}
+          onOpenChange={setIsFiltersOpen}
+          description="Ajuste os filtros e aplique para atualizar o dashboard."
+          onApply={handleApply}
+          onClear={handleClear}
+          isLoading={loading}
+          size="lg"
+        >
+          <DashboardFiltersForm
+            filters={filters}
+            periodOptions={PERIOD_OPTIONS}
+            motivos={MOTIVOS_OPTIONS}
+            prioridades={PRIORIDADES_OPTIONS}
+            usoPlataforma={USO_PLATAFORMA_OPTIONS}
+            ufOptions={[UF_PADRAO]}
+            cidadesListId={CIDADES_LIST_ID}
+            onFilterChange={handleFilterChange}
+            maskDateInput={maskDateInput}
+          />
+        </FilterModal>
 
         <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--color-muted)]">
           <span>Última atualização: {formatTime(lastUpdated)}</span>
@@ -630,15 +580,22 @@ export default function DashboardClient() {
       </div>
 
       {error ? (
-        <Alert className="border-[var(--color-danger)] bg-[var(--color-danger-soft)]">
-          <AlertTitle>Não foi possível carregar</AlertTitle>
-          <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
-            <span>{error}</span>
-            <Button variant="outline" onClick={() => applyFilters(filters)}>
+        <AppCard className="border-[var(--color-danger)] bg-[var(--color-danger-soft)]">
+          <AppCardBody className="flex flex-wrap items-center justify-between gap-3 p-4">
+            <div>
+              <div className="text-sm font-semibold text-[var(--color-danger)]">
+                Não foi possível carregar
+              </div>
+              <div className="text-sm text-[var(--color-danger)]">{error}</div>
+            </div>
+            <AppButton
+              variant="ghost"
+              onPress={() => applyFilters(filters)}
+            >
               Tentar novamente
-            </Button>
-          </AlertDescription>
-        </Alert>
+            </AppButton>
+          </AppCardBody>
+        </AppCard>
       ) : null}
 
       {loading ? (
@@ -652,40 +609,40 @@ export default function DashboardClient() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <KpiCard
               icon={<Activity className="h-5 w-5" />}
-              label="Total de chamados"
+              title="Total de chamados"
               value={formatNumber(totalCount)}
               description={periodLabel}
-              meta={kpiTotalMeta}
+              delta={kpiTotalMeta}
               tone="primary"
             />
             <KpiCard
               icon={<Monitor className="h-5 w-5" />}
-              label="Canal com mais chamados"
+              title="Canal com mais chamados"
               value={usageLeader}
               description={periodLabel}
-              meta={kpiUsageMeta}
+              delta={kpiUsageMeta}
               tone="warning"
             />
             <KpiCard
               icon={<BarChart3 className="h-5 w-5" />}
-              label="Área mais recorrente"
+              title="Área mais recorrente"
               value={topAreaAtuacao}
               description={periodLabel}
-              meta={kpiAreaMeta}
+              delta={kpiAreaMeta}
               tone="primary"
             />
             <KpiCard
               icon={<CalendarDays className="h-5 w-5" />}
-              label="Chamados hoje"
+              title="Chamados hoje"
               value={formatNumber(todayCount)}
               description={periodLabel}
-              meta={kpiTodayMeta}
+              delta={kpiTodayMeta}
               tone="success"
             />
           </div>
 
-          <Card className="mt-4">
-            <CardContent className="flex items-center gap-3 p-4">
+          <AppCard className="mt-4">
+            <AppCardBody className="flex items-center gap-3 p-4">
               <div className="rounded-lg bg-[var(--color-primary-soft)] p-2 text-[var(--color-primary)]">
                 <TrendingUp className="h-5 w-5" />
               </div>
@@ -700,21 +657,21 @@ export default function DashboardClient() {
                   {hasData ? "Baseado no período selecionado" : "Sem dados"}
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </AppCardBody>
+          </AppCard>
         </>
       )}
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader className="flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+        <AppCard>
+          <AppCardHeader className="flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
             <div>
-              <CardTitle>Série temporal</CardTitle>
-              <CardDescription>{periodLabel}</CardDescription>
+              <AppCardTitle>Série temporal</AppCardTitle>
+              <AppCardDescription>{periodLabel}</AppCardDescription>
             </div>
             <LineChartIcon className="h-5 w-5 text-[var(--color-muted)]" />
-          </CardHeader>
-          <CardContent>
+          </AppCardHeader>
+          <AppCardBody>
             {!hasTimeseriesData ? (
               <EmptyState label="Sem dados para o período selecionado." />
             ) : !hasTrendData ? (
@@ -738,18 +695,18 @@ export default function DashboardClient() {
                 </ResponsiveContainer>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </AppCardBody>
+        </AppCard>
 
-        <Card>
-          <CardHeader className="flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+        <AppCard>
+          <AppCardHeader className="flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
             <div>
-              <CardTitle>Distribuição por prioridade</CardTitle>
-              <CardDescription>Chamados no período</CardDescription>
+              <AppCardTitle>Distribuição por prioridade</AppCardTitle>
+              <AppCardDescription>Chamados no período</AppCardDescription>
             </div>
             <BarChart3 className="h-5 w-5 text-[var(--color-muted)]" />
-          </CardHeader>
-          <CardContent>
+          </AppCardHeader>
+          <AppCardBody>
             {!hasPriorityChartData ? (
               <EmptyState label="Sem dados para o período selecionado." />
             ) : isSinglePriority ? (
@@ -866,17 +823,17 @@ export default function DashboardClient() {
                 </div>
               </>
             )}
-          </CardContent>
-        </Card>
+          </AppCardBody>
+        </AppCard>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="lg:col-span-3">
-          <CardHeader>
-            <CardTitle>Top motivos</CardTitle>
-            <CardDescription>Chamados mais recorrentes</CardDescription>
-          </CardHeader>
-          <CardContent>
+        <AppCard className="lg:col-span-3">
+          <AppCardHeader>
+            <AppCardTitle>Top motivos</AppCardTitle>
+            <AppCardDescription>Chamados mais recorrentes</AppCardDescription>
+          </AppCardHeader>
+          <AppCardBody>
             {!hasMotivosChartData ? (
               <EmptyState label="Sem dados para o período selecionado." />
             ) : (
@@ -913,24 +870,30 @@ export default function DashboardClient() {
                 </ResponsiveContainer>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </AppCardBody>
+        </AppCard>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader className="flex flex-row items-start justify-between gap-3">
+        <AppCard>
+          <AppCardHeader className="flex flex-row items-start justify-between gap-3">
             <div>
-              <CardTitle>Top unidades</CardTitle>
-              <CardDescription>Volume por unidade</CardDescription>
+              <AppCardTitle>Top unidades</AppCardTitle>
+              <AppCardDescription>Volume por unidade</AppCardDescription>
             </div>
             {topUnidades.length >= 5 && !isUnidadesUniform ? (
-              <Button asChild variant="ghost" className="h-7 px-2 text-xs">
-                <Link href="/reports">Ver mais</Link>
-              </Button>
+              <AppButton
+                as={Link}
+                href="/reports"
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs"
+              >
+                Ver mais
+              </AppButton>
             ) : null}
-          </CardHeader>
-          <CardContent>
+          </AppCardHeader>
+          <AppCardBody>
             {topUnidades.length === 0 ? (
               <EmptyState label="Sem dados para o período selecionado." />
             ) : (
@@ -957,7 +920,9 @@ export default function DashboardClient() {
                           <span className="text-xs text-[var(--color-muted)]">
                             {percent}%
                           </span>
-                          <Badge variant="muted">{formatNumber(item.count)}</Badge>
+                          <AppBadge tone="default" variant="soft" size="sm">
+                            {formatNumber(item.count)}
+                          </AppBadge>
                         </div>
                       </div>
                       <div className="mt-2 h-2 w-full rounded-full bg-[var(--color-muted-soft)]">
@@ -971,22 +936,28 @@ export default function DashboardClient() {
                 })}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </AppCardBody>
+        </AppCard>
 
-        <Card>
-          <CardHeader className="flex flex-row items-start justify-between gap-3">
+        <AppCard>
+          <AppCardHeader className="flex flex-row items-start justify-between gap-3">
             <div>
-              <CardTitle>Top cidades</CardTitle>
-              <CardDescription>Volume por cidade</CardDescription>
+              <AppCardTitle>Top cidades</AppCardTitle>
+              <AppCardDescription>Volume por cidade</AppCardDescription>
             </div>
             {topCidades.length >= 5 && !isCidadesUniform ? (
-              <Button asChild variant="ghost" className="h-7 px-2 text-xs">
-                <Link href="/reports">Ver mais</Link>
-              </Button>
+              <AppButton
+                as={Link}
+                href="/reports"
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs"
+              >
+                Ver mais
+              </AppButton>
             ) : null}
-          </CardHeader>
-          <CardContent>
+          </AppCardHeader>
+          <AppCardBody>
             {topCidades.length === 0 ? (
               <EmptyState label="Sem dados para o período selecionado." />
             ) : (
@@ -1013,7 +984,9 @@ export default function DashboardClient() {
                           <span className="text-xs text-[var(--color-muted)]">
                             {percent}%
                           </span>
-                          <Badge variant="muted">{formatNumber(item.count)}</Badge>
+                          <AppBadge tone="default" variant="soft" size="sm">
+                            {formatNumber(item.count)}
+                          </AppBadge>
                         </div>
                       </div>
                       <div className="mt-2 h-2 w-full rounded-full bg-[var(--color-muted-soft)]">
@@ -1027,8 +1000,8 @@ export default function DashboardClient() {
                 })}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </AppCardBody>
+        </AppCard>
       </div>
 
       <datalist id={CIDADES_LIST_ID}>

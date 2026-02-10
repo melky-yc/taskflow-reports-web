@@ -69,6 +69,7 @@ export function AppSelect({
       isRequired={isRequired}
       isDisabled={isDisabled}
       name={name}
+      selectionMode="single"
       size={size}
       variant={variant}
       radius="md"

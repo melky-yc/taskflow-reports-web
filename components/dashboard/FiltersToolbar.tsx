@@ -1,7 +1,6 @@
 "use client";
 
-import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
+import { AppInput, AppSelect } from "@/app/ui";
 
 type PeriodOption = "7" | "30" | "90" | "365" | "custom";
 type PeriodOptionItem = { value: PeriodOption; label: string };
@@ -42,45 +41,40 @@ export default function DashboardFiltersForm({
 }: DashboardFiltersFormProps) {
   return (
     <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end">
-      <div className="min-w-[160px] flex-1 space-y-1.5">
-        <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-          Per√≠odo
-        </label>
-        <Select
+      <div className="min-w-[160px] flex-1">
+        <AppSelect
+          label="PerÌodo"
           value={filters.period}
-          onChange={(event) =>
-            onFilterChange({ period: event.target.value as PeriodOption })
+          onValueChange={(value) =>
+            onFilterChange({ period: value as PeriodOption })
           }
-        >
-          {periodOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </Select>
+          options={periodOptions.map((option) => ({
+            value: option.value,
+            label: option.label,
+          }))}
+        />
       </div>
 
       {filters.period === "custom" ? (
-        <div className="min-w-[260px] flex-1 space-y-1.5">
-          <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-            Intervalo
-          </label>
-          <div className="grid grid-cols-2 gap-2">
-            <Input
+        <div className="min-w-[260px] flex-1">
+          <div className="grid gap-2 sm:grid-cols-2">
+            <AppInput
+              label="De"
               value={filters.startDate}
-              onChange={(event) =>
+              onValueChange={(value) =>
                 onFilterChange({
-                  startDate: maskDateInput(event.target.value),
+                  startDate: maskDateInput(value),
                 })
               }
               placeholder="DD/MM/AAAA"
               inputMode="numeric"
             />
-            <Input
+            <AppInput
+              label="AtÈ"
               value={filters.endDate}
-              onChange={(event) =>
+              onValueChange={(value) =>
                 onFilterChange({
-                  endDate: maskDateInput(event.target.value),
+                  endDate: maskDateInput(value),
                 })
               }
               placeholder="DD/MM/AAAA"
@@ -90,83 +84,54 @@ export default function DashboardFiltersForm({
         </div>
       ) : null}
 
-      <div className="min-w-[180px] flex-1 space-y-1.5">
-        <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-          Motivo
-        </label>
-        <Select
+      <div className="min-w-[180px] flex-1">
+        <AppSelect
+          label="Motivo"
+          placeholder="Todos"
           value={filters.motivo}
-          onChange={(event) => onFilterChange({ motivo: event.target.value })}
-        >
-          <option value="">Todos</option>
-          {motivos.map((item) => (
-            <option key={item} value={item}>
-              {item}
-            </option>
-          ))}
-        </Select>
+          onValueChange={(value) => onFilterChange({ motivo: value })}
+          options={motivos.map((item) => ({ value: item, label: item }))}
+        />
       </div>
 
-      <div className="min-w-[160px] flex-1 space-y-1.5">
-        <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-          Prioridade
-        </label>
-        <Select
+      <div className="min-w-[160px] flex-1">
+        <AppSelect
+          label="Prioridade"
+          placeholder="Todos"
           value={filters.prioridade}
-          onChange={(event) => onFilterChange({ prioridade: event.target.value })}
-        >
-          <option value="">Todos</option>
-          {prioridades.map((item) => (
-            <option key={item} value={item}>
-              {item === "Media" ? "M√©dia" : item}
-            </option>
-          ))}
-        </Select>
+          onValueChange={(value) => onFilterChange({ prioridade: value })}
+          options={prioridades.map((item) => ({
+            value: item,
+            label: item === "Media" ? "MÈdia" : item,
+          }))}
+        />
       </div>
 
-      <div className="min-w-[170px] flex-1 space-y-1.5">
-        <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-          Uso da plataforma
-        </label>
-        <Select
+      <div className="min-w-[170px] flex-1">
+        <AppSelect
+          label="Uso da plataforma"
+          placeholder="Todos"
           value={filters.uso}
-          onChange={(event) => onFilterChange({ uso: event.target.value })}
-        >
-          <option value="">Todos</option>
-          {usoPlataforma.map((item) => (
-            <option key={item} value={item}>
-              {item}
-            </option>
-          ))}
-        </Select>
+          onValueChange={(value) => onFilterChange({ uso: value })}
+          options={usoPlataforma.map((item) => ({ value: item, label: item }))}
+        />
       </div>
 
-      <div className="min-w-[110px] flex-1 space-y-1.5">
-        <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-          UF
-        </label>
-        <Select
+      <div className="min-w-[110px] flex-1">
+        <AppSelect
+          label="UF"
+          placeholder="Todos"
           value={filters.uf}
-          onChange={(event) =>
-            onFilterChange({ uf: event.target.value, cidade: "" })
-          }
-        >
-          <option value="">Todos</option>
-          {ufOptions.map((uf) => (
-            <option key={uf} value={uf}>
-              {uf}
-            </option>
-          ))}
-        </Select>
+          onValueChange={(value) => onFilterChange({ uf: value, cidade: "" })}
+          options={ufOptions.map((item) => ({ value: item, label: item }))}
+        />
       </div>
 
-      <div className="min-w-[180px] flex-1 space-y-1.5">
-        <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-          Cidade
-        </label>
-        <Input
+      <div className="min-w-[180px] flex-1">
+        <AppInput
+          label="Cidade"
           value={filters.cidade}
-          onChange={(event) => onFilterChange({ cidade: event.target.value })}
+          onValueChange={(value) => onFilterChange({ cidade: value })}
           list={cidadesListId}
           placeholder="Todas"
         />
