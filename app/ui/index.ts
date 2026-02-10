@@ -7,3 +7,7 @@ export * from "./modal";
 export * from "./card";
 export * from "./badge";
 export * from "./table";
+export * from "./kpi-card";
+export * from "./status-badge";
+export * from "./page-header";
+export * from "./filter-modal";
