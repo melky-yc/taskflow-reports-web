@@ -74,12 +74,17 @@ export async function createTicketAction(formData: FormData) {
   const cidade = normalizeText(String(formData.get("cliente_cidade") || ""));
   const estadoUf = normalizeText(String(formData.get("cliente_estado") || "")).toUpperCase();
   const usoPlataforma = normalizeText(
-    String(formData.get("cliente_uso_plataforma") || "")
+    String(
+      formData.get("uso_plataforma") ||
+        formData.get("cliente_uso_plataforma") ||
+        ""
+    )
   );
   const areaAtuacao = normalizeText(
     String(formData.get("cliente_area_atuacao") || "")
   );
   const unidade = normalizeText(String(formData.get("cliente_unidade") || ""));
+  const clientIdFromForm = Number(formData.get("client_id") || 0);
 
   if (
     !motivo ||
@@ -113,56 +118,68 @@ export async function createTicketAction(formData: FormData) {
     redirect("/tickets?error=retroativo");
   }
 
-  const { data: existingClient, error: existingError } = await supabase
-    .from("clients")
-    .select("id")
-    .eq("cpf", cpf)
-    .maybeSingle();
-
-  if (existingError) {
-    redirect("/tickets?error=cliente");
-  }
-
   let clientId: number | null = null;
 
-  if (existingClient?.id) {
-    const { error: updateError } = await supabase
+  if (clientIdFromForm) {
+    const { data: clientById, error: clientByIdError } = await supabase
       .from("clients")
-      .update({
-        nome,
-        cidade,
-        estado_uf: estadoUf,
-        uso_plataforma: usoPlataforma || null,
-        area_atuacao: areaAtuacao,
-        unidade,
-      })
-      .eq("id", existingClient.id);
+      .select("id, cpf")
+      .eq("id", clientIdFromForm)
+      .maybeSingle();
 
-    if (updateError) {
-      redirect("/tickets?error=cliente");
+    if (!clientByIdError && clientById?.id && clientById.cpf === cpf) {
+      clientId = clientById.id;
     }
+  }
 
-    clientId = existingClient.id;
-  } else {
-    const { data: insertedClient, error: insertError } = await supabase
+  if (!clientId) {
+    const { data: existingClient, error: existingError } = await supabase
       .from("clients")
-      .insert({
-        cpf,
-        nome,
-        cidade,
-        estado_uf: estadoUf,
-        uso_plataforma: usoPlataforma || null,
-        area_atuacao: areaAtuacao,
-        unidade,
-      })
       .select("id")
-      .single();
+      .eq("cpf", cpf)
+      .maybeSingle();
 
-    if (insertError || !insertedClient) {
+    if (existingError) {
       redirect("/tickets?error=cliente");
     }
 
-    clientId = insertedClient.id;
+    if (existingClient?.id) {
+      const { error: updateError } = await supabase
+        .from("clients")
+        .update({
+          nome,
+          cidade,
+          estado_uf: estadoUf,
+          area_atuacao: areaAtuacao,
+          unidade,
+        })
+        .eq("id", existingClient.id);
+
+      if (updateError) {
+        redirect("/tickets?error=cliente");
+      }
+
+      clientId = existingClient.id;
+    } else {
+      const { data: insertedClient, error: insertError } = await supabase
+        .from("clients")
+        .insert({
+          cpf,
+          nome,
+          cidade,
+          estado_uf: estadoUf,
+          area_atuacao: areaAtuacao,
+          unidade,
+        })
+        .select("id")
+        .single();
+
+      if (insertError || !insertedClient) {
+        redirect("/tickets?error=cliente");
+      }
+
+      clientId = insertedClient.id;
+    }
   }
 
   const { error: ticketError } = await supabase.from("tickets").insert({
@@ -171,6 +188,7 @@ export async function createTicketAction(formData: FormData) {
     motivo,
     motivo_outro_descricao: motivo === "Outro" ? motivoOutro : null,
     prioridade,
+    uso_plataforma: usoPlataforma || null,
     data_atendimento: dataAtendimento || null,
     retroativo,
     retroativo_motivo: retroativo ? retroativoMotivo : null,
@@ -216,7 +234,11 @@ export async function updateTicketAction(formData: FormData) {
   const cidade = normalizeText(String(formData.get("cliente_cidade") || ""));
   const estadoUf = normalizeText(String(formData.get("cliente_estado") || "")).toUpperCase();
   const usoPlataforma = normalizeText(
-    String(formData.get("cliente_uso_plataforma") || "")
+    String(
+      formData.get("uso_plataforma") ||
+        formData.get("cliente_uso_plataforma") ||
+        ""
+    )
   );
   const areaAtuacao = normalizeText(
     String(formData.get("cliente_area_atuacao") || "")
@@ -265,7 +287,6 @@ export async function updateTicketAction(formData: FormData) {
       nome,
       cidade,
       estado_uf: estadoUf,
-      uso_plataforma: usoPlataforma || null,
       area_atuacao: areaAtuacao,
       unidade,
     })
@@ -281,6 +302,7 @@ export async function updateTicketAction(formData: FormData) {
       motivo,
       motivo_outro_descricao: motivo === "Outro" ? motivoOutro : null,
       prioridade,
+      uso_plataforma: usoPlataforma || null,
       data_atendimento: dataAtendimento || null,
       retroativo,
       retroativo_motivo: retroativo ? retroativoMotivo : null,

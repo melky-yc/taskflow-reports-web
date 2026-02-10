@@ -6,6 +6,7 @@ export type ReportTicket = {
   prioridade: string;
   profissional_nome: string;
   retroativo: boolean;
+  uso_plataforma: string | null;
   client: {
     nome: string;
     cpf: string;
@@ -82,6 +83,8 @@ function maskCpf(digits: string) {
 }
 
 export function mapReportRow(ticket: ReportTicket): string[] {
+  const usoPlataforma =
+    ticket.uso_plataforma ?? ticket.client.uso_plataforma ?? "";
   return [
     String(ticket.id),
     formatDateBR(ticket.data_atendimento),
@@ -92,7 +95,7 @@ export function mapReportRow(ticket: ReportTicket): string[] {
     maskCpf(ticket.client.cpf || ""),
     ticket.client.cidade || "",
     ticket.client.estado_uf || "",
-    ticket.client.uso_plataforma || "",
+    usoPlataforma,
     ticket.client.unidade || "",
     formatDateBR(ticket.created_at),
   ];

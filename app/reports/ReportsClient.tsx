@@ -265,7 +265,7 @@ export default function ReportsClient() {
     const { data, error: queryError, count } = await supabase
       .from("tickets")
       .select(
-        "id, created_at, data_atendimento, motivo, prioridade, profissional_nome, retroativo, clients(nome, cpf, cidade, estado_uf, uso_plataforma, unidade)",
+        "id, created_at, data_atendimento, motivo, prioridade, uso_plataforma, profissional_nome, retroativo, clients(nome, cpf, cidade, estado_uf, uso_plataforma, unidade)",
         { count: "exact" }
       )
       .or(
@@ -292,6 +292,7 @@ export default function ReportsClient() {
         prioridade: ticket.prioridade,
         profissional_nome: ticket.profissional_nome,
         retroativo: Boolean(ticket.retroativo),
+        uso_plataforma: ticket.uso_plataforma ?? null,
         client: {
           nome: clientData?.nome ?? "",
           cpf: clientData?.cpf ?? "",

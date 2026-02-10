@@ -66,7 +66,7 @@ export default async function TicketsPage({
   let query = supabase
     .from("tickets")
     .select(
-      "id, created_at, data_atendimento, motivo, motivo_outro_descricao, prioridade, profissional_nome, retroativo_motivo, client_id, clients(id, nome, cpf, cidade, estado_uf, uso_plataforma, area_atuacao, unidade)",
+      "id, created_at, data_atendimento, motivo, motivo_outro_descricao, prioridade, uso_plataforma, profissional_nome, retroativo_motivo, client_id, clients(id, nome, cpf, cidade, estado_uf, uso_plataforma, area_atuacao, unidade)",
       { count: "exact" }
     )
     .order("created_at", { ascending: false })
@@ -92,6 +92,7 @@ export default async function TicketsPage({
       prioridade: ticket.prioridade,
       profissional_nome: ticket.profissional_nome,
       retroativo_motivo: ticket.retroativo_motivo,
+      uso_plataforma: ticket.uso_plataforma ?? null,
       client_id: ticket.client_id,
       client: {
         id: clientData?.id ?? ticket.client_id,

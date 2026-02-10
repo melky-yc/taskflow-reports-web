@@ -56,7 +56,7 @@ begin
         t.retroativo,
         c.cidade,
         c.estado_uf,
-        c.uso_plataforma,
+        coalesce(nullif(t.uso_plataforma, ''), c.uso_plataforma) as uso_plataforma,
         c.area_atuacao,
         c.unidade,
         coalesce(t.data_atendimento, t.created_at::date) as base_date
@@ -65,7 +65,7 @@ begin
       where coalesce(t.data_atendimento, t.created_at::date) between v_start and v_end
         and (v_motivo is null or t.motivo = v_motivo)
         and (v_prioridade is null or t.prioridade = v_prioridade)
-        and (v_uso is null or c.uso_plataforma = v_uso)
+        and (v_uso is null or t.uso_plataforma = v_uso)
         and (v_uf is null or c.estado_uf = v_uf)
         and (v_cidade is null or c.cidade = v_cidade)
     ),

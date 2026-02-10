@@ -1,11 +1,12 @@
 ﻿"use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { ChevronDown, Inbox } from "lucide-react";
 import cidadesPi from "@/data/cidades_pi.json";
 import { createTicketAction, updateTicketAction } from "@/app/tickets/actions";
 import type { TicketClient } from "@/app/tickets/types";
+import { createClient } from "@/lib/supabase/client";
 import {
   AREA_ATUACAO_OPTIONS,
   getPriorityBadgeVariant,
@@ -172,6 +173,7 @@ export default function TicketsClient({
   status,
   error,
 }: TicketsClientProps) {
+  const supabase = useMemo(() => createClient(), []);
   const [motivo, setMotivo] = useState("");
   const [motivoOutro, setMotivoOutro] = useState("");
   const todayIso = useMemo(() => getTodayLocalISODate(), []);
@@ -181,12 +183,23 @@ export default function TicketsClient({
   );
   const [retroativoMotivo, setRetroativoMotivo] = useState("");
   const [cpfDigits, setCpfDigits] = useState("");
+  const [clienteNome, setClienteNome] = useState("");
+  const [clienteCidade, setClienteCidade] = useState("");
+  const [clienteUsoPlataforma, setClienteUsoPlataforma] = useState("");
+  const [clienteAreaAtuacao, setClienteAreaAtuacao] = useState("");
+  const [clienteUnidade, setClienteUnidade] = useState("");
+  const [isClientLocked, setIsClientLocked] = useState(false);
+  const [cpfLookupState, setCpfLookupState] = useState<
+    "idle" | "loading" | "found" | "not_found" | "error"
+  >("idle");
+  const [matchedClientId, setMatchedClientId] = useState<number | null>(null);
   const [isCreateValid, setIsCreateValid] = useState(false);
   const [exportNotice, setExportNotice] = useState("");
   const [isDateModalOpen, setIsDateModalOpen] = useState(false);
   const [isEditDateModalOpen, setIsEditDateModalOpen] = useState(false);
 
   const createFormRef = useRef<HTMLFormElement | null>(null);
+  const lastLookupCpfRef = useRef("");
 
   const retroativo = useMemo(
     () => isRetroativoIso(dataAtendimentoIso),
@@ -211,7 +224,8 @@ export default function TicketsClient({
       clienteCpfDigits: ticket.client.cpf,
       clienteCidade: ticket.client.cidade,
       clienteEstado: ticket.client.estado_uf || UF_PADRAO,
-      clienteUsoPlataforma: ticket.client.uso_plataforma ?? "",
+      clienteUsoPlataforma:
+        ticket.uso_plataforma ?? ticket.client.uso_plataforma ?? "",
       clienteAreaAtuacao: ticket.client.area_atuacao ?? "",
       clienteUnidade: ticket.client.unidade,
     });
@@ -260,12 +274,12 @@ export default function TicketsClient({
 
   const cpfDisplay = formatCpf(cpfDigits);
 
-  const updateCreateValidity = (nextBr?: string, nextIso?: string) => {
+  const updateCreateValidity = useCallback((nextBr?: string, nextIso?: string) => {
     const form = createFormRef.current;
     if (!form) return;
     const isoValue = typeof nextIso === "string" ? nextIso : dataAtendimentoIso;
     setIsCreateValid(form.checkValidity() && Boolean(isoValue));
-  };
+  }, [dataAtendimentoIso]);
 
   const handleCreateInput = () => {
     updateCreateValidity();
@@ -276,6 +290,91 @@ export default function TicketsClient({
     setDataAtendimentoBr(isoToBr(isoValue));
     updateCreateValidity(undefined, isoValue);
   };
+
+  const resetClientFields = useCallback(() => {
+    setClienteNome("");
+    setClienteCidade("");
+    setClienteUsoPlataforma("");
+    setClienteAreaAtuacao("");
+    setClienteUnidade("");
+  }, []);
+
+  const applyClientData = useCallback((client: {
+    nome?: string | null;
+    cidade?: string | null;
+    uso_plataforma?: string | null;
+    area_atuacao?: string | null;
+    unidade?: string | null;
+  }) => {
+    setClienteNome(client.nome ?? "");
+    setClienteCidade(client.cidade ?? "");
+    setClienteUsoPlataforma(client.uso_plataforma ?? "");
+    setClienteAreaAtuacao(client.area_atuacao ?? "");
+    setClienteUnidade(client.unidade ?? "");
+  }, []);
+
+  const handleCpfLookup = useCallback(
+    async (cpfValue: string) => {
+      if (cpfValue.length !== 11) {
+        if (isClientLocked) {
+          setIsClientLocked(false);
+          setMatchedClientId(null);
+          resetClientFields();
+          updateCreateValidity();
+        }
+        setCpfLookupState("idle");
+        return;
+      }
+
+      if (lastLookupCpfRef.current === cpfValue && cpfLookupState !== "error") {
+        return;
+      }
+
+      lastLookupCpfRef.current = cpfValue;
+      setCpfLookupState("loading");
+
+      const { data, error: lookupError } = await supabase.rpc(
+        "find_client_by_cpf",
+        {
+          cpf_param: cpfValue,
+        }
+      );
+
+      if (lookupError) {
+        setCpfLookupState("error");
+        setIsClientLocked(false);
+        setMatchedClientId(null);
+        return;
+      }
+
+      const matchedClient = Array.isArray(data) ? data[0] : data;
+
+      if (matchedClient?.id) {
+        setMatchedClientId(matchedClient.id);
+        setIsClientLocked(true);
+        setCpfLookupState("found");
+        applyClientData(matchedClient);
+        window.setTimeout(() => updateCreateValidity(), 0);
+        return;
+      }
+
+      if (isClientLocked) {
+        resetClientFields();
+      }
+      setMatchedClientId(null);
+      setIsClientLocked(false);
+      setCpfLookupState("not_found");
+      window.setTimeout(() => updateCreateValidity(), 0);
+    },
+    [
+      applyClientData,
+      cpfLookupState,
+      isClientLocked,
+      resetClientFields,
+      supabase,
+      updateCreateValidity,
+    ]
+  );
 
   const handleEditDateConfirm = (isoValue: string) => {
     setEditForm((prev) =>
@@ -469,13 +568,6 @@ export default function TicketsClient({
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-                    Nome
-                  </label>
-                  <Input name="cliente_nome" required />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-[var(--color-muted-strong)]">
                     CPF
                   </label>
                   <Input
@@ -486,11 +578,52 @@ export default function TicketsClient({
                         .replace(/\D/g, "")
                         .slice(0, 11);
                       setCpfDigits(digits);
+                      if (digits.length === 11 || isClientLocked) {
+                        handleCpfLookup(digits);
+                      }
                     }}
+                    onBlur={() => handleCpfLookup(cpfDigits)}
                     placeholder="000.000.000-00"
                     required
                   />
                   <input type="hidden" name="cliente_cpf" value={cpfDigits} />
+                  {matchedClientId ? (
+                    <input type="hidden" name="client_id" value={matchedClientId} />
+                  ) : null}
+                  {cpfLookupState === "loading" ? (
+                    <p className="text-xs text-[var(--color-muted)]">
+                      Buscando cliente...
+                    </p>
+                  ) : null}
+                  {cpfLookupState === "found" ? (
+                    <p className="text-xs text-[var(--color-success)]">
+                      Cliente encontrado. Dados preenchidos automaticamente.
+                    </p>
+                  ) : null}
+                  {cpfLookupState === "not_found" ? (
+                    <p className="text-xs text-[var(--color-muted)]">
+                      Cliente não encontrado. Preencha os dados abaixo.
+                    </p>
+                  ) : null}
+                  {cpfLookupState === "error" ? (
+                    <p className="text-xs text-[var(--color-danger)]">
+                      Não foi possível buscar o cliente agora.
+                    </p>
+                  ) : null}
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-[var(--color-muted-strong)]">
+                    Nome
+                  </label>
+                  <Input
+                    name="cliente_nome"
+                    value={clienteNome}
+                    onChange={(event) => setClienteNome(event.target.value)}
+                    readOnly={isClientLocked}
+                    className={isClientLocked ? "bg-[var(--color-muted-soft)]" : ""}
+                    required
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -501,6 +634,10 @@ export default function TicketsClient({
                     name="cliente_cidade"
                     list={CIDADES_LIST_ID}
                     placeholder="Selecione a cidade"
+                    value={clienteCidade}
+                    onChange={(event) => setClienteCidade(event.target.value)}
+                    readOnly={isClientLocked}
+                    className={isClientLocked ? "bg-[var(--color-muted-soft)]" : ""}
                     required
                   />
                 </div>
@@ -520,7 +657,11 @@ export default function TicketsClient({
                   <label className="text-xs font-medium text-[var(--color-muted-strong)]">
                     Uso da plataforma
                   </label>
-                  <Select name="cliente_uso_plataforma">
+                  <Select
+                    name="uso_plataforma"
+                    value={clienteUsoPlataforma}
+                    onChange={(event) => setClienteUsoPlataforma(event.target.value)}
+                  >
                     <option value="">Selecione</option>
                     {USO_PLATAFORMA_OPTIONS.map((item) => (
                       <option key={item} value={item}>
@@ -534,7 +675,13 @@ export default function TicketsClient({
                   <label className="text-xs font-medium text-[var(--color-muted-strong)]">
                     Área de atuação
                   </label>
-                  <Select name="cliente_area_atuacao" required>
+                  <Select
+                    name="cliente_area_atuacao"
+                    value={clienteAreaAtuacao}
+                    onChange={(event) => setClienteAreaAtuacao(event.target.value)}
+                    disabled={isClientLocked}
+                    required
+                  >
                     <option value="">Selecione</option>
                     {AREA_ATUACAO_OPTIONS.map((item) => (
                       <option key={item} value={item}>
@@ -542,13 +689,27 @@ export default function TicketsClient({
                       </option>
                     ))}
                   </Select>
+                  {isClientLocked ? (
+                    <input
+                      type="hidden"
+                      name="cliente_area_atuacao"
+                      value={clienteAreaAtuacao}
+                    />
+                  ) : null}
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-xs font-medium text-[var(--color-muted-strong)]">
                     Unidade
                   </label>
-                  <Input name="cliente_unidade" required />
+                  <Input
+                    name="cliente_unidade"
+                    value={clienteUnidade}
+                    onChange={(event) => setClienteUnidade(event.target.value)}
+                    readOnly={isClientLocked}
+                    className={isClientLocked ? "bg-[var(--color-muted-soft)]" : ""}
+                    required
+                  />
                 </div>
               </div>
             </section>
@@ -996,7 +1157,7 @@ export default function TicketsClient({
                         Uso da plataforma
                       </label>
                       <Select
-                        name="cliente_uso_plataforma"
+                        name="uso_plataforma"
                         value={editForm.clienteUsoPlataforma}
                         onChange={(event) =>
                           setEditForm((prev) =>

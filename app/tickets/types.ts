@@ -7,6 +7,7 @@
   prioridade: string;
   profissional_nome: string;
   retroativo_motivo: string | null;
+  uso_plataforma: string | null;
   client_id: number;
   client: {
     id: number;

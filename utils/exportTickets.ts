@@ -53,6 +53,8 @@ function maskCpf(digits: string) {
 }
 
 export function mapToExportRow(ticket: TicketClient): ExportRow {
+  const usoPlataforma =
+    ticket.uso_plataforma ?? ticket.client.uso_plataforma ?? "";
   return [
     String(ticket.id),
     formatDateBR(ticket.data_atendimento),
@@ -63,7 +65,7 @@ export function mapToExportRow(ticket: TicketClient): ExportRow {
     maskCpf(ticket.client.cpf || ""),
     ticket.client.cidade || "",
     ticket.client.estado_uf || "",
-    ticket.client.uso_plataforma || "",
+    usoPlataforma,
     ticket.client.unidade || "",
     formatDateBR(ticket.created_at),
   ];
