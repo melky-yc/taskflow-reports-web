@@ -6,9 +6,9 @@ const STATUS_MAP: Record<
   { label: string; tone: AppBadgeProps["tone"]; variant?: AppBadgeProps["variant"] }
 > = {
   Baixa: { label: "Baixa", tone: "default" },
-  Media: { label: "Média", tone: "warning" },
+  Media: { label: "Media", tone: "warning" },
   Alta: { label: "Alta", tone: "danger" },
-  Critica: { label: "Crítica", tone: "danger", variant: "solid" },
+  Critica: { label: "Critica", tone: "danger", variant: "solid" },
   Retroativo: { label: "Retroativo", tone: "warning" },
   Normal: { label: "Normal", tone: "success" },
 };

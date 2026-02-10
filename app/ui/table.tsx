@@ -10,6 +10,21 @@ import {
 import { cn } from "@/lib/utils";
 
 export function AppTable({ className, classNames, ...props }: TableProps) {
+  const baseOverride = typeof classNames?.base === "string" ? classNames.base : undefined;
+  const tableOverride =
+    typeof classNames?.table === "string" ? classNames.table : undefined;
+  const theadOverride =
+    typeof classNames?.thead === "string" ? classNames.thead : undefined;
+  const thOverride = typeof classNames?.th === "string" ? classNames.th : undefined;
+  const tbodyOverride =
+    typeof classNames?.tbody === "string" ? classNames.tbody : undefined;
+  const trOverride = typeof classNames?.tr === "string" ? classNames.tr : undefined;
+  const tdOverride = typeof classNames?.td === "string" ? classNames.td : undefined;
+  const emptyOverride =
+    typeof classNames?.emptyWrapper === "string"
+      ? classNames.emptyWrapper
+      : undefined;
+
   return (
     <Table
       className={cn("min-w-full", className)}
@@ -17,23 +32,23 @@ export function AppTable({ className, classNames, ...props }: TableProps) {
         base: cn(
           "rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)]",
           "shadow-[var(--shadow-card)]",
-          classNames?.base
+          baseOverride
         ),
-        table: cn("min-w-full text-sm", classNames?.table),
-        thead: cn("bg-[var(--color-muted-soft)]", classNames?.thead),
+        table: cn("min-w-full text-sm", tableOverride),
+        thead: cn("bg-[var(--color-muted-soft)]", theadOverride),
         th: cn(
           "px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--color-muted)]",
-          classNames?.th
+          thOverride
         ),
-        tbody: cn("divide-y divide-[var(--color-border)]", classNames?.tbody),
+        tbody: cn("divide-y divide-[var(--color-border)]", tbodyOverride),
         tr: cn(
           "text-[var(--color-text)] hover:bg-[var(--color-muted-soft)]",
-          classNames?.tr
+          trOverride
         ),
-        td: cn("px-3 py-3", classNames?.td),
+        td: cn("px-3 py-3", tdOverride),
         emptyWrapper: cn(
           "px-6 py-10 text-sm text-[var(--color-muted)]",
-          classNames?.emptyWrapper
+          emptyOverride
         ),
       }}
       {...props}

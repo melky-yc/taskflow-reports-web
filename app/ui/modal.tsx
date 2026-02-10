@@ -34,6 +34,22 @@ export function AppModal({
   classNames,
   ...props
 }: AppModalProps) {
+  const baseOverride = typeof classNames?.base === "string" ? classNames.base : undefined;
+  const headerOverride =
+    typeof classNames?.header === "string" ? classNames.header : undefined;
+  const bodyOverride =
+    typeof classNames?.body === "string" ? classNames.body : undefined;
+  const footerOverride =
+    typeof classNames?.footer === "string" ? classNames.footer : undefined;
+  const backdropOverride =
+    typeof classNames?.backdrop === "string" ? classNames.backdrop : undefined;
+  const closeOverride =
+    typeof classNames?.closeButton === "string"
+      ? classNames.closeButton
+      : undefined;
+  const wrapperOverride =
+    typeof classNames?.wrapper === "string" ? classNames.wrapper : undefined;
+
   return (
     <Modal
       size={sizeMap[size]}
@@ -43,27 +59,27 @@ export function AppModal({
         base: cn(
           "bg-[var(--color-surface)] text-[var(--color-text)] border border-[var(--color-border)]",
           "shadow-[var(--shadow-popover)]",
-          classNames?.base
+          baseOverride
         ),
         header: cn(
           "border-b border-[var(--color-border)]",
           "px-6 py-4",
-          classNames?.header
+          headerOverride
         ),
-        body: cn("px-6 py-4", classNames?.body),
+        body: cn("px-6 py-4", bodyOverride),
         footer: cn(
           "border-t border-[var(--color-border)]",
           "px-6 py-4",
-          classNames?.footer
+          footerOverride
         ),
-        backdrop: cn("bg-[var(--color-overlay)]", classNames?.backdrop),
-        closeButton: cn("text-[var(--color-muted)]", classNames?.closeButton),
-        wrapper: classNames?.wrapper,
+        backdrop: cn("bg-[var(--color-overlay)]", backdropOverride),
+        closeButton: cn("text-[var(--color-muted)]", closeOverride),
+        wrapper: wrapperOverride,
       }}
       {...props}
     >
       <ModalContent>
-        {(onClose) => (
+        {() => (
           <>
             {title ? (
               <ModalHeader>

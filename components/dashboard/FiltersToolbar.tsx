@@ -43,7 +43,7 @@ export default function DashboardFiltersForm({
     <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end">
       <div className="min-w-[160px] flex-1">
         <AppSelect
-          label="Período"
+          label="Periodo"
           value={filters.period}
           onValueChange={(value) =>
             onFilterChange({ period: value as PeriodOption })
@@ -70,7 +70,7 @@ export default function DashboardFiltersForm({
               inputMode="numeric"
             />
             <AppInput
-              label="Até"
+              label="Ate"
               value={filters.endDate}
               onValueChange={(value) =>
                 onFilterChange({
@@ -102,7 +102,7 @@ export default function DashboardFiltersForm({
           onValueChange={(value) => onFilterChange({ prioridade: value })}
           options={prioridades.map((item) => ({
             value: item,
-            label: item === "Media" ? "Média" : item,
+            label: item === "Media" ? "Media" : item,
           }))}
         />
       </div>

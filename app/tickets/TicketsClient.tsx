@@ -913,7 +913,7 @@ export default function TicketsClient({
               <AppTableColumn>CPF</AppTableColumn>
               <AppTableColumn>Unidade</AppTableColumn>
               <AppTableColumn>Criado em</AppTableColumn>
-              <AppTableColumn className="text-right"></AppTableColumn>
+              <AppTableColumn className="text-right">Acoes</AppTableColumn>
             </AppTableHeader>
             <AppTableBody>
               {tickets.length === 0 ? (
