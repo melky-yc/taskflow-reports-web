@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useAlerts } from "@/components/alerts/AlertsProvider";
 import {
   Card,
   CardContent,
@@ -145,6 +146,7 @@ type ReportState = {
 
 export default function ReportsClient() {
   const supabase = useMemo(() => createClient(), []);
+  const { notify } = useAlerts();
 
   const today = useMemo(() => new Date(), []);
   const [period, setPeriod] = useState<Period>("daily");
@@ -153,7 +155,6 @@ export default function ReportsClient() {
   const [yearValue, setYearValue] = useState(String(today.getFullYear()));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
   const [report, setReport] = useState<ReportState | null>(null);
 
   const periodLabel = useMemo(() => {
@@ -238,88 +239,98 @@ export default function ReportsClient() {
 
   const handleGenerate = async () => {
     setError("");
-    setNotice("");
     setLoading(true);
-    const range = getRange();
-    if (!range) {
-      setLoading(false);
-      setError("Informe um período válido para gerar o relatório.");
-      return;
-    }
+    try {
+      const range = getRange();
+      if (!range) {
+        setError("Informe um período válido para gerar o relatório.");
+        return;
+      }
 
-    const startDateIso = toIsoDate(range.start);
-    const endDateIso = toIsoDate(range.end);
+      const startDateIso = toIsoDate(range.start);
+      const endDateIso = toIsoDate(range.end);
 
-    const startTime = new Date(range.start);
-    startTime.setHours(0, 0, 0, 0);
-    const endTime = new Date(range.end);
-    endTime.setHours(23, 59, 59, 999);
+      const startTime = new Date(range.start);
+      startTime.setHours(0, 0, 0, 0);
+      const endTime = new Date(range.end);
+      endTime.setHours(23, 59, 59, 999);
 
-    const rangeLabel =
-      period === "daily"
-        ? formatDateBrFromDate(range.start)
-        : `${formatDateBrFromDate(range.start)} - ${formatDateBrFromDate(
-            range.end
-          )}`;
+      const rangeLabel =
+        period === "daily"
+          ? formatDateBrFromDate(range.start)
+          : `${formatDateBrFromDate(range.start)} - ${formatDateBrFromDate(
+              range.end
+            )}`;
 
-    const { data, error: queryError, count } = await supabase
-      .from("tickets")
-      .select(
-        "id, created_at, data_atendimento, motivo, prioridade, uso_plataforma, profissional_nome, retroativo, clients(nome, cpf, cidade, estado_uf, uso_plataforma, unidade)",
-        { count: "exact" }
-      )
-      .or(
-        `and(data_atendimento.gte.${startDateIso},data_atendimento.lte.${endDateIso}),and(data_atendimento.is.null,created_at.gte.${startTime.toISOString()},created_at.lte.${endTime.toISOString()})`
-      )
-      .order("created_at", { ascending: false })
-      .range(0, LIMIT - 1);
+      const { data, error: queryError, count } = await supabase
+        .from("tickets")
+        .select(
+          "id, created_at, data_atendimento, motivo, prioridade, uso_plataforma, profissional_nome, retroativo, clients(nome, cpf, cidade, estado_uf, uso_plataforma, unidade)",
+          { count: "exact" }
+        )
+        .or(
+          `and(data_atendimento.gte.${startDateIso},data_atendimento.lte.${endDateIso}),and(data_atendimento.is.null,created_at.gte.${startTime.toISOString()},created_at.lte.${endTime.toISOString()})`
+        )
+        .order("created_at", { ascending: false })
+        .range(0, LIMIT - 1);
 
-    if (queryError) {
-      setLoading(false);
+      if (queryError) {
+        setError("Não foi possível gerar o relatório. Tente novamente.");
+        return;
+      }
+
+      const tickets: ReportTicket[] = (data ?? []).map((ticket) => {
+        const clientData = Array.isArray(ticket.clients)
+          ? ticket.clients[0]
+          : ticket.clients;
+        return {
+          id: ticket.id,
+          created_at: ticket.created_at,
+          data_atendimento: ticket.data_atendimento,
+          motivo: ticket.motivo,
+          prioridade: ticket.prioridade,
+          profissional_nome: ticket.profissional_nome,
+          retroativo: Boolean(ticket.retroativo),
+          uso_plataforma: ticket.uso_plataforma ?? null,
+          client: {
+            nome: clientData?.nome ?? "",
+            cpf: clientData?.cpf ?? "",
+            cidade: clientData?.cidade ?? "",
+            estado_uf: clientData?.estado_uf ?? "",
+            uso_plataforma: clientData?.uso_plataforma ?? null,
+            unidade: clientData?.unidade ?? "",
+          },
+        };
+      });
+
+      const summary = buildSummary(tickets, rangeLabel);
+
+      setReport({
+        tickets,
+        summary,
+        hasMore: (count ?? 0) > LIMIT,
+      });
+      notify({
+        title: "Relatório gerado",
+        description: `Período ${periodLabel} selecionado.`,
+        tone: "success",
+      });
+    } catch {
       setError("Não foi possível gerar o relatório. Tente novamente.");
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    const tickets: ReportTicket[] = (data ?? []).map((ticket) => {
-      const clientData = Array.isArray(ticket.clients)
-        ? ticket.clients[0]
-        : ticket.clients;
-      return {
-        id: ticket.id,
-        created_at: ticket.created_at,
-        data_atendimento: ticket.data_atendimento,
-        motivo: ticket.motivo,
-        prioridade: ticket.prioridade,
-        profissional_nome: ticket.profissional_nome,
-        retroativo: Boolean(ticket.retroativo),
-        uso_plataforma: ticket.uso_plataforma ?? null,
-        client: {
-          nome: clientData?.nome ?? "",
-          cpf: clientData?.cpf ?? "",
-          cidade: clientData?.cidade ?? "",
-          estado_uf: clientData?.estado_uf ?? "",
-          uso_plataforma: clientData?.uso_plataforma ?? null,
-          unidade: clientData?.unidade ?? "",
-        },
-      };
-    });
-
-    const summary = buildSummary(tickets, rangeLabel);
-
-    setReport({
-      tickets,
-      summary,
-      hasMore: (count ?? 0) > LIMIT,
-    });
-    setLoading(false);
   };
 
   const handleExport = () => {
     if (!report) return;
     const rows = report.tickets.map(mapReportRow);
     exportReportCSV(rows, report.summary, buildFilename(periodLabel));
-    setNotice("Exportação gerada.");
-    window.setTimeout(() => setNotice(""), 3000);
+    notify({
+      title: "Exportação concluída",
+      description: "Arquivo CSV gerado.",
+      tone: "success",
+    });
   };
 
   return (
@@ -397,7 +408,7 @@ export default function ReportsClient() {
           </div>
 
           <div className="mt-4 flex justify-end">
-            <Button onClick={handleGenerate} disabled={loading}>
+            <Button type="button" onClick={handleGenerate} disabled={loading}>
               {loading ? "Gerando..." : "Gerar relatório"}
             </Button>
           </div>
@@ -431,12 +442,6 @@ export default function ReportsClient() {
           </Button>
         </CardHeader>
         <CardContent className="space-y-6">
-          {notice ? (
-            <div className="rounded-lg border border-[var(--color-success)] bg-[var(--color-success-soft)] px-4 py-2 text-sm text-[var(--color-success)]">
-              {notice}
-            </div>
-          ) : null}
-
           {loading ? (
             <div className="space-y-4">
               <Skeleton className="h-24 w-full" />

@@ -1,12 +1,13 @@
 ﻿"use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { ChevronDown, Inbox } from "lucide-react";
 import cidadesPi from "@/data/cidades_pi.json";
 import { createTicketAction, updateTicketAction } from "@/app/tickets/actions";
 import type { TicketClient } from "@/app/tickets/types";
 import { createClient } from "@/lib/supabase/client";
+import { useAlerts } from "@/components/alerts/AlertsProvider";
 import {
   AREA_ATUACAO_OPTIONS,
   getPriorityBadgeVariant,
@@ -175,6 +176,7 @@ export default function TicketsClient({
   error,
 }: TicketsClientProps) {
   const supabase = useMemo(() => createClient(), []);
+  const { notify } = useAlerts();
   const [motivo, setMotivo] = useState("");
   const [motivoOutro, setMotivoOutro] = useState("");
   const todayIso = useMemo(() => getTodayLocalISODate(), []);
@@ -196,12 +198,12 @@ export default function TicketsClient({
   >("idle");
   const [matchedClientId, setMatchedClientId] = useState<number | null>(null);
   const [isCreateValid, setIsCreateValid] = useState(false);
-  const [exportNotice, setExportNotice] = useState("");
   const [isDateModalOpen, setIsDateModalOpen] = useState(false);
   const [isEditDateModalOpen, setIsEditDateModalOpen] = useState(false);
 
   const createFormRef = useRef<HTMLFormElement | null>(null);
   const lastLookupCpfRef = useRef("");
+  const lastNotifiedStatusRef = useRef<string | null>(null);
 
   const retroativo = useMemo(
     () => isRetroativoIso(dataAtendimentoIso),
@@ -245,12 +247,26 @@ export default function TicketsClient({
     [editForm]
   );
 
-  const statusMessage =
-    status === "created"
-      ? "Chamado criado com sucesso."
-      : status === "updated"
-      ? "Chamado atualizado com sucesso."
-      : "";
+  useEffect(() => {
+    if (!status || lastNotifiedStatusRef.current === status) {
+      return;
+    }
+    lastNotifiedStatusRef.current = status;
+    if (status === "created") {
+      notify({
+        title: "Chamado criado",
+        description: "Ticket registrado com sucesso.",
+        tone: "success",
+      });
+    }
+    if (status === "updated") {
+      notify({
+        title: "Chamado atualizado",
+        description: "As alterações foram salvas.",
+        tone: "success",
+      });
+    }
+  }, [status, notify]);
 
   const errorMessage = (() => {
     switch (error) {
@@ -404,8 +420,11 @@ export default function TicketsClient({
     } else {
       exportToXLSX(rows, filename);
     }
-    setExportNotice("Exportação gerada.");
-    window.setTimeout(() => setExportNotice(""), 3000);
+    notify({
+      title: "Exportação concluída",
+      description: `Arquivo ${type.toUpperCase()} gerado.`,
+      tone: "success",
+    });
   };
 
   return (
@@ -419,11 +438,6 @@ export default function TicketsClient({
         </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-3">
-            {statusMessage ? (
-              <div className="rounded-lg border border-[var(--color-success)] bg-[var(--color-success-soft)] px-4 py-2 text-sm text-[var(--color-success)]">
-                {statusMessage}
-              </div>
-            ) : null}
             {errorMessage ? (
               <div className="rounded-lg border border-[var(--color-danger)] bg-[var(--color-danger-soft)] px-4 py-2 text-sm text-[var(--color-danger)]">
                 {errorMessage}
@@ -865,11 +879,6 @@ export default function TicketsClient({
           </div>
         </CardHeader>
         <CardContent>
-          {exportNotice ? (
-            <div className="mb-4 rounded-lg border border-[var(--color-success)] bg-[var(--color-success-soft)] px-4 py-2 text-sm text-[var(--color-success)]">
-              {exportNotice}
-            </div>
-          ) : null}
           <div className="overflow-x-auto">
             <table className="min-w-full border-collapse text-sm">
               <thead className="sticky top-0 bg-[var(--color-muted-soft)]">

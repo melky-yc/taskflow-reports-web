@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Moon, Settings, Sun, User } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useAlerts } from "@/components/alerts/AlertsProvider";
 import {
   Card,
   CardContent,
@@ -45,6 +45,7 @@ function applyTheme(theme: ThemeOption) {
 export default function ConfigClient() {
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
+  const { notify } = useAlerts();
 
   const [theme, setTheme] = useState<ThemeOption>(() => {
     if (typeof window === "undefined") return "light";
@@ -62,7 +63,6 @@ export default function ConfigClient() {
       return DEFAULT_PREFS;
     }
   });
-  const [notice, setNotice] = useState("");
   const [email, setEmail] = useState("-");
 
   useEffect(() => {
@@ -79,16 +79,22 @@ export default function ConfigClient() {
     setTheme(nextTheme);
     applyTheme(nextTheme);
     localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
-    setNotice("Preferências salvas.");
-    window.setTimeout(() => setNotice(""), 2500);
+    notify({
+      title: "Tema atualizado",
+      description: "Preferências salvas com sucesso.",
+      tone: "success",
+    });
   };
 
   const handlePrefChange = (key: keyof Preferences) => (value: boolean) => {
     const next = { ...prefs, [key]: value };
     setPrefs(next);
     localStorage.setItem(PREFS_STORAGE_KEY, JSON.stringify(next));
-    setNotice("Preferências salvas.");
-    window.setTimeout(() => setNotice(""), 2500);
+    notify({
+      title: "Preferências atualizadas",
+      description: "As alterações foram salvas.",
+      tone: "success",
+    });
   };
 
   const handleLogout = async () => {
@@ -111,13 +117,6 @@ export default function ConfigClient() {
           </p>
         </div>
       </div>
-
-      {notice ? (
-        <Alert className="border-[var(--color-success)] bg-[var(--color-success-soft)]">
-          <AlertTitle>Configurações atualizadas</AlertTitle>
-          <AlertDescription>{notice}</AlertDescription>
-        </Alert>
-      ) : null}
 
       <Tabs defaultValue="themes">
         <TabsList>
