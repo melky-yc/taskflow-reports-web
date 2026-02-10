@@ -45,12 +45,12 @@ const lightColors = {
   divider: "#dbe3ef",
   overlay: "rgba(15, 23, 42, 0.45)",
   focus: "#1f3b6f",
-  default: "#edf1f7",
-  primary: "#1f3b6f",
-  secondary: "#294a88",
-  success: "#0f766e",
-  warning: "#b45309",
-  danger: "#b42318",
+  default: { DEFAULT: "#edf1f7", foreground: "#0f172a" },
+  primary: { DEFAULT: "#1f3b6f", foreground: "#ffffff" },
+  secondary: { DEFAULT: "#294a88", foreground: "#ffffff" },
+  success: { DEFAULT: "#0f766e", foreground: "#ffffff" },
+  warning: { DEFAULT: "#b45309", foreground: "#ffffff" },
+  danger: { DEFAULT: "#b42318", foreground: "#ffffff" },
 };
 
 const darkColors = {
@@ -63,12 +63,12 @@ const darkColors = {
   divider: "#1f2a3a",
   overlay: "rgba(3, 7, 18, 0.7)",
   focus: "#7a97ff",
-  default: "#141d2f",
-  primary: "#7a97ff",
-  secondary: "#92abff",
-  success: "#2dd4bf",
-  warning: "#fbbf24",
-  danger: "#f87171",
+  default: { DEFAULT: "#141d2f", foreground: "#e5e7eb" },
+  primary: { DEFAULT: "#7a97ff", foreground: "#0b1120" },
+  secondary: { DEFAULT: "#92abff", foreground: "#0b1120" },
+  success: { DEFAULT: "#2dd4bf", foreground: "#0b1120" },
+  warning: { DEFAULT: "#fbbf24", foreground: "#0b1120" },
+  danger: { DEFAULT: "#f87171", foreground: "#0b1120" },
 };
 
 export default heroui({
