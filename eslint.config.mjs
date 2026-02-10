@@ -13,6 +13,29 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    files: ["**/*.{ts,tsx,mts}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "@heroui/react",
+              message:
+                "Importe componentes do HeroUI apenas via camada /app/ui (wrappers do app).",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["app/ui/**/*.{ts,tsx}", "hero.ts"],
+    rules: {
+      "no-restricted-imports": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;
