@@ -6,6 +6,7 @@ import {
   Activity,
   BarChart3,
   CalendarDays,
+  Filter,
   LineChart as LineChartIcon,
   Monitor,
   TrendingUp,
@@ -42,7 +43,7 @@ import ActiveFiltersChips, {
   type ActiveFilterChip,
 } from "@/components/dashboard/ActiveFiltersChips";
 import EmptyState from "@/components/dashboard/EmptyState";
-import FiltersToolbar from "@/components/dashboard/FiltersToolbar";
+import DashboardFiltersForm from "@/components/dashboard/FiltersToolbar";
 import KpiCard from "@/components/dashboard/KpiCard";
 import {
   Card,
@@ -51,6 +52,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDateBR } from "@/utils/exportReports";
 
@@ -218,6 +228,7 @@ export default function DashboardClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
   const applyFilters = useCallback(async (currentFilters: FiltersState) => {
     setError("");
@@ -552,22 +563,71 @@ export default function DashboardClient() {
         <ActiveFiltersChips items={activeFilterChips} />
       </div>
 
-      <FiltersToolbar
-        filters={filters}
-        periodOptions={PERIOD_OPTIONS}
-        motivos={MOTIVOS_OPTIONS}
-        prioridades={PRIORIDADES_OPTIONS}
-        usoPlataforma={USO_PLATAFORMA_OPTIONS}
-        ufOptions={[UF_PADRAO]}
-        cidadesListId={CIDADES_LIST_ID}
-        onFilterChange={handleFilterChange}
-        onApply={handleApply}
-        onClear={handleClear}
-        loading={loading}
-        lastUpdatedLabel={formatTime(lastUpdated)}
-        recordLabel={recordLabel}
-        maskDateInput={maskDateInput}
-      />
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3">
+        <Dialog open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
+          <DialogTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-9 gap-2"
+              aria-label="Abrir filtros"
+            >
+              <Filter className="h-4 w-4" />
+              Filtros
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Filtros</DialogTitle>
+              <DialogDescription>
+                Ajuste os filtros e aplique para atualizar o dashboard.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <DashboardFiltersForm
+                filters={filters}
+                periodOptions={PERIOD_OPTIONS}
+                motivos={MOTIVOS_OPTIONS}
+                prioridades={PRIORIDADES_OPTIONS}
+                usoPlataforma={USO_PLATAFORMA_OPTIONS}
+                ufOptions={[UF_PADRAO]}
+                cidadesListId={CIDADES_LIST_ID}
+                onFilterChange={handleFilterChange}
+                maskDateInput={maskDateInput}
+              />
+
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-9 px-4"
+                  onClick={handleClear}
+                  disabled={loading}
+                >
+                  Limpar
+                </Button>
+                <Button
+                  type="button"
+                  className="h-9 px-4"
+                  onClick={() => {
+                    handleApply();
+                    setIsFiltersOpen(false);
+                  }}
+                  disabled={loading}
+                >
+                  {loading ? "Aplicando..." : "Aplicar"}
+                </Button>
+              </DialogFooter>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--color-muted)]">
+          <span>Última atualização: {formatTime(lastUpdated)}</span>
+          <span>Registros encontrados: {recordLabel}</span>
+        </div>
+      </div>
 
       {error ? (
         <Alert className="border-[var(--color-danger)] bg-[var(--color-danger-soft)]">
@@ -979,4 +1039,3 @@ export default function DashboardClient() {
     </div>
   );
 }
-
