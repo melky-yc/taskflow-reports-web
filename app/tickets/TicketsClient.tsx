@@ -8,6 +8,7 @@ import { createTicketAction, updateTicketAction } from "@/app/tickets/actions";
 import type { TicketClient } from "@/app/tickets/types";
 import {
   AREA_ATUACAO_OPTIONS,
+  getPriorityBadgeVariant,
   MOTIVOS_OPTIONS,
   PRIORIDADES_OPTIONS,
   USO_PLATAFORMA_OPTIONS,
@@ -133,12 +134,6 @@ function isRetroativoIso(dateValue: string) {
     return false;
   }
   return dateValue < getTodayLocalISODate();
-}
-
-function prioridadeBadge(prioridade: string) {
-  if (prioridade === "Alta") return "danger";
-  if (prioridade === "Media") return "warning";
-  return "muted";
 }
 
 function formatPrioridadeLabel(prioridade: string) {
@@ -737,7 +732,7 @@ export default function TicketsClient({
                         </Badge>
                       </td>
                       <td className="px-3 py-3">
-                        <Badge variant={prioridadeBadge(ticket.prioridade)}>
+                        <Badge variant={getPriorityBadgeVariant(ticket.prioridade)}>
                           {formatPrioridadeLabel(ticket.prioridade)}
                         </Badge>
                       </td>

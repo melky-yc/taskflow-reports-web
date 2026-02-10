@@ -34,6 +34,7 @@ import { Button } from "@/components/ui/button";
 import {
   MOTIVOS_OPTIONS,
   PRIORIDADES_OPTIONS,
+  PRIORITY_COLOR_MAP,
   USO_PLATAFORMA_OPTIONS,
   UF_PADRAO,
 } from "@/app/tickets/constants";
@@ -66,13 +67,6 @@ const PERIOD_OPTIONS: { value: PeriodOption; label: string }[] = [
 const PRIORIDADES_CHART = ["Baixa", "Media", "Alta", "Critica"];
 const CIDADES_PI = cidadesPi.cidades;
 const CIDADES_LIST_ID = "cidades-dashboard";
-
-const PRIORITY_COLORS = {
-  Baixa: "#16a34a",
-  Media: "#f97316",
-  Alta: "#ef4444",
-  Critica: "#7c3aed",
-};
 
 const MOTIVO_COLOR = "var(--color-primary)";
 const CHART_GRID_COLOR = "var(--color-border)";
@@ -419,7 +413,9 @@ export default function DashboardClient() {
         ? "Crítica"
         : label,
     value: priorityMap[label] ?? 0,
-    color: PRIORITY_COLORS[label as keyof typeof PRIORITY_COLORS],
+    color:
+      PRIORITY_COLOR_MAP[label as keyof typeof PRIORITY_COLOR_MAP] ??
+      "#7c3aed",
   }));
   const priorityChartData = priorityData.filter((item) => item.value > 0);
   const hasPriorityChartData = priorityChartData.length > 0;

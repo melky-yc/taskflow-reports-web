@@ -18,6 +18,18 @@ export const MOTIVOS_OPTIONS = [
 
 export const PRIORIDADES_OPTIONS = ["Baixa", "Media", "Alta"] as const;
 
+export const PRIORITY_BADGE_VARIANTS = {
+  Baixa: "muted",
+  Media: "warning",
+  Alta: "danger",
+} as const;
+
+export const PRIORITY_COLOR_MAP = {
+  Baixa: "var(--color-muted-strong)",
+  Media: "var(--color-warning)",
+  Alta: "var(--color-danger)",
+} as const;
+
 export const USO_PLATAFORMA_OPTIONS = [
   "Mobile",
   "Web",
@@ -38,3 +50,9 @@ export type MotivoOption = (typeof MOTIVOS_OPTIONS)[number];
 export type PrioridadeOption = (typeof PRIORIDADES_OPTIONS)[number];
 export type UsoPlataformaOption = (typeof USO_PLATAFORMA_OPTIONS)[number];
 export type AreaAtuacaoOption = (typeof AREA_ATUACAO_OPTIONS)[number];
+
+export function getPriorityBadgeVariant(prioridade: string) {
+  return (
+    PRIORITY_BADGE_VARIANTS[prioridade as PrioridadeOption] ?? "muted"
+  );
+}

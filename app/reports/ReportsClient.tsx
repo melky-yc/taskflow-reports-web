@@ -22,6 +22,7 @@ import {
   type ReportSummary,
   type ReportTicket,
 } from "@/utils/exportReports";
+import { getPriorityBadgeVariant } from "@/app/tickets/constants";
 
 const LIMIT = 2000;
 
@@ -130,12 +131,6 @@ function buildFilename(periodLabel: string) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
   return `relatorio_${stamp}_${slug}.csv`;
-}
-
-function prioridadeBadge(prioridade: string) {
-  if (prioridade === "Alta") return "danger";
-  if (prioridade === "Media") return "warning";
-  return "muted";
 }
 
 function formatPrioridadeLabel(prioridade: string) {
@@ -502,7 +497,7 @@ export default function ReportsClient() {
                         ([label, count]) => (
                           <div key={label} className="flex items-center justify-between">
                             <span>{formatPrioridadeLabel(label)}</span>
-                            <Badge variant={prioridadeBadge(label)}>
+                            <Badge variant={getPriorityBadgeVariant(label)}>
                               {count}
                             </Badge>
                           </div>
@@ -592,7 +587,7 @@ export default function ReportsClient() {
                             </td>
                             <td className="px-3 py-3">{ticket.motivo}</td>
                             <td className="px-3 py-3">
-                              <Badge variant={prioridadeBadge(ticket.prioridade)}>
+                              <Badge variant={getPriorityBadgeVariant(ticket.prioridade)}>
                                 {formatPrioridadeLabel(ticket.prioridade)}
                               </Badge>
                             </td>
