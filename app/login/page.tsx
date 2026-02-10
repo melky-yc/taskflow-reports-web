@@ -1,4 +1,5 @@
 ﻿import { redirect } from "next/navigation";
+import Image from "next/image";
 import { Mail, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
@@ -41,11 +42,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-16">
         <div className="mb-6 flex items-center justify-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--color-surface)]">
-            <img
+            <Image
               src="/logotsf.svg"
               alt="Taskflow Reports"
+              width={32}
+              height={32}
               className="h-8 w-8"
-              loading="eager"
+              priority
             />
           </div>
         </div>

@@ -1,4 +1,5 @@
 ﻿import Link from "next/link";
+import Image from "next/image";
 import {
   BarChart3,
   ChevronRight,
@@ -36,11 +37,13 @@ export default async function AppShell({ active, breadcrumb, children }: AppShel
           <div className="flex items-center gap-3">
             <MobileNav active={active} />
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--color-surface)]">
-              <img
+              <Image
                 src="/logotsf.svg"
                 alt="Taskflow Reports"
+                width={24}
+                height={24}
                 className="h-6 w-6"
-                loading="eager"
+                priority
               />
             </div>
             <div>

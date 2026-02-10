@@ -4,10 +4,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Activity,
-  AlertTriangle,
   BarChart3,
   CalendarDays,
-  Filter,
   LineChart as LineChartIcon,
   Monitor,
   TrendingUp,
@@ -17,6 +15,7 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  Label,
   LabelList,
   Line,
   LineChart,
@@ -32,6 +31,12 @@ import { createClient } from "@/lib/supabase/client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import ActiveFiltersChips, {
+  type ActiveFilterChip,
+} from "@/components/dashboard/ActiveFiltersChips";
+import EmptyState from "@/components/dashboard/EmptyState";
+import FiltersToolbar from "@/components/dashboard/FiltersToolbar";
+import KpiCard from "@/components/dashboard/KpiCard";
 import {
   Card,
   CardContent,
@@ -39,8 +44,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDateBR } from "@/utils/exportReports";
 
@@ -72,15 +75,17 @@ const MOTIVOS = [
 ];
 
 const PRIORIDADES = ["Baixa", "Media", "Alta"];
+const PRIORIDADES_CHART = ["Baixa", "Media", "Alta", "Critica"];
 const USO_PLATAFORMA = ["Mobile", "Web", "Ambos", "Não informado"];
 const UF_PADRAO = "PI";
 const CIDADES_PI = cidadesPi.cidades;
 const CIDADES_LIST_ID = "cidades-dashboard";
 
 const PRIORITY_COLORS = {
-  Alta: "var(--color-danger)",
-  Media: "var(--color-warning)",
-  Baixa: "var(--color-success)",
+  Baixa: "#16a34a",
+  Media: "#f97316",
+  Alta: "#ef4444",
+  Critica: "#7c3aed",
 };
 
 const MOTIVO_COLOR = "var(--color-primary)";
@@ -179,14 +184,32 @@ function truncateLabel(value: string, max = 24) {
   return `${value.slice(0, max - 1)}…`;
 }
 
-function EmptyState({ label }: { label: string }) {
+function renderMotivosTick(
+  props: {
+    x?: number | string;
+    y?: number | string;
+    payload?: { value?: string };
+  } & Record<string, unknown>
+) {
+  const xValueRaw = typeof props.x === "number" ? props.x : Number(props.x);
+  const yValueRaw = typeof props.y === "number" ? props.y : Number(props.y);
+  const xValue = Number.isFinite(xValueRaw) ? xValueRaw : 0;
+  const yValue = Number.isFinite(yValueRaw) ? yValueRaw : 0;
+  const label = String(props.payload?.value ?? "");
   return (
-    <div className="flex flex-col items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-muted-soft)] px-4 py-6 text-sm text-[var(--color-muted-strong)]">
-      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-surface)] text-[var(--color-muted)]">
-        <AlertTriangle className="h-5 w-5" />
-      </div>
-      <div className="text-sm font-medium">{label}</div>
-    </div>
+    <g transform={`translate(${xValue},${yValue})`}>
+      <title>{label}</title>
+      <text
+        x={-6}
+        y={0}
+        dy={4}
+        textAnchor="end"
+        fill={CHART_AXIS_COLOR}
+        fontSize={12}
+      >
+        {truncateLabel(label)}
+      </text>
+    </g>
   );
 }
 
@@ -281,8 +304,51 @@ export default function DashboardClient() {
     setError("");
   };
 
+  const handleFilterChange = (patch: Partial<FiltersState>) => {
+    setFilters((prev) => ({ ...prev, ...patch }));
+  };
+
+  const handleRemoveFilter = useCallback(
+    (key: keyof FiltersState) => {
+      const nextFilters = { ...appliedFilters };
+      switch (key) {
+        case "period":
+          nextFilters.period = defaultFilters.period;
+          nextFilters.startDate = defaultFilters.startDate;
+          nextFilters.endDate = defaultFilters.endDate;
+          break;
+        case "motivo":
+          nextFilters.motivo = "";
+          break;
+        case "prioridade":
+          nextFilters.prioridade = "";
+          break;
+        case "uso":
+          nextFilters.uso = "";
+          break;
+        case "uf":
+          nextFilters.uf = "";
+          nextFilters.cidade = "";
+          break;
+        case "cidade":
+          nextFilters.cidade = "";
+          break;
+        default:
+          break;
+      }
+      setFilters(nextFilters);
+      applyFilters(nextFilters);
+    },
+    [appliedFilters, applyFilters, defaultFilters]
+  );
+
   const priorityMap = useMemo(() => {
-    const map: Record<string, number> = { Baixa: 0, Media: 0, Alta: 0 };
+    const map: Record<string, number> = {
+      Baixa: 0,
+      Media: 0,
+      Alta: 0,
+      Critica: 0,
+    };
     metrics?.by_priority?.forEach((item) => {
       map[item.prioridade] = item.count;
     });
@@ -296,6 +362,8 @@ export default function DashboardClient() {
 
   const totalCount = metrics?.totals.total_count ?? 0;
   const todayCount = metrics?.totals.today_count ?? 0;
+  const hasData = totalCount > 0;
+  const recordLabel = formatNumber(totalCount);
   const usoPlataforma = metrics?.by_uso_plataforma ?? [];
   const webCount =
     usoPlataforma.find((item) => item.uso_plataforma === "Web")?.count ?? 0;
@@ -310,7 +378,6 @@ export default function DashboardClient() {
       : webCount > mobileCount
       ? "Web"
       : "Mobile";
-  const usageLeaderCount = Math.max(webCount, mobileCount);
   const topMotivo = metrics?.totals.top_motivo || "Sem dados";
   const topAreaAtuacaoRaw = metrics?.totals.top_area_atuacao?.trim() ?? "";
   const topAreaAtuacao =
@@ -320,26 +387,153 @@ export default function DashboardClient() {
     date: formatDateBR(item.date),
     count: item.count,
   }));
-  const hasTimeseriesData = timeseriesData.length > 0;
+  const hasTimeseriesData = totalCount > 0 && timeseriesData.length > 0;
+  const hasTrendData = timeseriesData.length >= 3;
 
-  const priorityData = PRIORIDADES.map((label) => ({
-    name: label === "Media" ? "Média" : label,
+  const periodDays = useMemo(() => {
+    if (appliedFilters.period === "custom") {
+      const startIso = brToIso(appliedFilters.startDate);
+      const endIso = brToIso(appliedFilters.endDate);
+      if (!startIso || !endIso) {
+        return 0;
+      }
+      const start = new Date(`${startIso}T00:00:00`);
+      const end = new Date(`${endIso}T00:00:00`);
+      const diff = Math.floor((end.getTime() - start.getTime()) / 86400000) + 1;
+      return diff > 0 ? diff : 0;
+    }
+    const value = Number(appliedFilters.period);
+    return Number.isFinite(value) && value > 0 ? value : 0;
+  }, [appliedFilters]);
+
+  const avgPerDayValue = periodDays > 0 ? totalCount / periodDays : 0;
+  const avgPerDayLabel =
+    totalCount > 0 && periodDays > 0
+      ? formatNumber(Math.round(avgPerDayValue))
+      : "—";
+  const peakDayValue =
+    timeseriesData.length > 0
+      ? Math.max(...timeseriesData.map((item) => item.count))
+      : 0;
+  const peakDayLabel = totalCount > 0 ? formatNumber(peakDayValue) : "—";
+  const kpiTotalMeta = `Média/dia: ${avgPerDayLabel} • Pico: ${peakDayLabel}`;
+  const kpiUsageMeta =
+    usageTotal === 0
+      ? "—"
+      : `Web: ${formatNumber(webCount)} · Mobile: ${formatNumber(mobileCount)}`;
+  const kpiAreaMeta =
+    totalCount > 0 ? `Baseado em ${recordLabel} chamados` : "—";
+  const kpiTodayMeta = `Média/dia: ${avgPerDayLabel}`;
+
+  const priorityData = PRIORIDADES_CHART.map((label) => ({
+    name:
+      label === "Media"
+        ? "Média"
+        : label === "Critica"
+        ? "Crítica"
+        : label,
     value: priorityMap[label] ?? 0,
     color: PRIORITY_COLORS[label as keyof typeof PRIORITY_COLORS],
   }));
   const priorityChartData = priorityData.filter((item) => item.value > 0);
   const hasPriorityChartData = priorityChartData.length > 0;
   const isSinglePriority = priorityChartData.length === 1;
+  const priorityTotal = priorityChartData.reduce(
+    (acc, item) => acc + item.value,
+    0
+  );
+  const priorityTotalLabel = formatNumber(priorityTotal);
 
-  const topMotivos = (metrics?.by_motivo ?? []).slice(0, 5).map((item) => ({
-    name: item.motivo,
-    value: item.count,
-  }));
+  const topMotivos = (metrics?.by_motivo ?? [])
+    .slice()
+    .sort(
+      (a, b) => b.count - a.count || a.motivo.localeCompare(b.motivo)
+    )
+    .slice(0, 5)
+    .map((item) => ({
+      name: item.motivo,
+      value: item.count,
+    }));
   const motivosChartData = topMotivos.filter((item) => item.value > 0);
   const hasMotivosChartData = motivosChartData.length > 0;
 
-  const hasData = totalCount > 0;
-  const recordLabel = formatNumber(totalCount);
+  const topUnidades = metrics?.top_unidades ?? [];
+  const topCidades = metrics?.top_cidades ?? [];
+  const isUnidadesUniform =
+    topUnidades.length > 1 &&
+    topUnidades.every((item) => item.count === topUnidades[0].count);
+  const isCidadesUniform =
+    topCidades.length > 1 &&
+    topCidades.every((item) => item.count === topCidades[0].count);
+  const topUnidadesDisplay = topUnidades.slice(0, isUnidadesUniform ? 3 : 5);
+  const topCidadesDisplay = topCidades.slice(0, isCidadesUniform ? 3 : 5);
+  const maxUnidadeCount = Math.max(
+    ...topUnidades.map((item) => item.count),
+    0
+  );
+  const maxCidadeCount = Math.max(
+    ...topCidades.map((item) => item.count),
+    0
+  );
+
+  const activeFilterChips = useMemo<ActiveFilterChip[]>(() => {
+    const chips: ActiveFilterChip[] = [];
+    const periodChipLabel =
+      appliedFilters.period === "custom"
+        ? `De ${appliedFilters.startDate || "—"} a ${
+            appliedFilters.endDate || "—"
+          }`
+        : PERIOD_OPTIONS.find((option) => option.value === appliedFilters.period)
+            ?.label || periodLabel;
+
+    chips.push({
+      id: "period",
+      label: periodChipLabel,
+      onRemove: () => handleRemoveFilter("period"),
+    });
+
+    if (appliedFilters.motivo) {
+      chips.push({
+        id: "motivo",
+        label: `Motivo: ${appliedFilters.motivo}`,
+        onRemove: () => handleRemoveFilter("motivo"),
+      });
+    }
+    if (appliedFilters.prioridade) {
+      chips.push({
+        id: "prioridade",
+        label: `Prioridade: ${
+          appliedFilters.prioridade === "Media"
+            ? "Média"
+            : appliedFilters.prioridade
+        }`,
+        onRemove: () => handleRemoveFilter("prioridade"),
+      });
+    }
+    if (appliedFilters.uso) {
+      chips.push({
+        id: "uso",
+        label: `Uso: ${appliedFilters.uso}`,
+        onRemove: () => handleRemoveFilter("uso"),
+      });
+    }
+    if (appliedFilters.uf) {
+      chips.push({
+        id: "uf",
+        label: `UF: ${appliedFilters.uf}`,
+        onRemove: () => handleRemoveFilter("uf"),
+      });
+    }
+    if (appliedFilters.cidade) {
+      chips.push({
+        id: "cidade",
+        label: `Cidade: ${appliedFilters.cidade}`,
+        onRemove: () => handleRemoveFilter("cidade"),
+      });
+    }
+
+    return chips;
+  }, [appliedFilters, handleRemoveFilter, periodLabel]);
 
   const ticketsLink = useMemo(() => {
     const params = new URLSearchParams();
@@ -354,197 +548,44 @@ export default function DashboardClient() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-[var(--color-text)]">Dashboard</h1>
-          <p className="text-sm text-[var(--color-muted)]">
-            Visão geral dos chamados de suporte de TI.
-          </p>
+      <div className="space-y-3">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-[var(--color-text)]">
+              Dashboard
+            </h1>
+            <p className="text-sm text-[var(--color-muted)]">
+              Visão geral dos chamados de suporte de TI.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button asChild>
+              <Link href="/tickets#novo-chamado">Criar ticket</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href={ticketsLink}>Exportar (CSV/XLSX)</Link>
+            </Button>
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button asChild>
-            <Link href="/tickets#novo-chamado">Criar ticket</Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href={ticketsLink}>Exportar dados</Link>
-          </Button>
-        </div>
+        <ActiveFiltersChips items={activeFilterChips} />
       </div>
 
-      <Card>
-        <CardHeader className="flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-          <div className="flex items-center gap-2 text-sm text-[var(--color-muted)]">
-            <Filter className="h-4 w-4" />
-            <span>Filtros globais</span>
-          </div>
-          <div className="flex flex-wrap items-center gap-4 text-xs text-[var(--color-muted)]">
-            <span>Última atualização: {formatTime(lastUpdated)}</span>
-            <span>Registros encontrados: {recordLabel}</span>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 xl:grid-cols-6">
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-                Período
-              </label>
-              <Select
-                value={filters.period}
-                onChange={(event) =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    period: event.target.value as PeriodOption,
-                  }))
-                }
-              >
-                {PERIOD_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </Select>
-            </div>
-
-            {filters.period === "custom" ? (
-              <div className="grid gap-3 md:grid-cols-2 xl:col-span-2">
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-                    Data inicial
-                  </label>
-                  <Input
-                    value={filters.startDate}
-                    onChange={(event) =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        startDate: maskDateInput(event.target.value),
-                      }))
-                    }
-                    placeholder="DD/MM/AAAA"
-                    inputMode="numeric"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-                    Data final
-                  </label>
-                  <Input
-                    value={filters.endDate}
-                    onChange={(event) =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        endDate: maskDateInput(event.target.value),
-                      }))
-                    }
-                    placeholder="DD/MM/AAAA"
-                    inputMode="numeric"
-                  />
-                </div>
-              </div>
-            ) : null}
-
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-[var(--color-muted-strong)]">Motivo</label>
-              <Select
-                value={filters.motivo}
-                onChange={(event) =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    motivo: event.target.value,
-                  }))
-                }
-              >
-                <option value="">Todos</option>
-                {MOTIVOS.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-                Prioridade
-              </label>
-              <Select
-                value={filters.prioridade}
-                onChange={(event) =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    prioridade: event.target.value,
-                  }))
-                }
-              >
-                <option value="">Todos</option>
-                {PRIORIDADES.map((item) => (
-                  <option key={item} value={item}>
-                    {item === "Media" ? "Média" : item}
-                  </option>
-                ))}
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-                Uso da plataforma
-              </label>
-              <Select
-                value={filters.uso}
-                onChange={(event) =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    uso: event.target.value,
-                  }))
-                }
-              >
-                <option value="">Todos</option>
-                {USO_PLATAFORMA.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-[var(--color-muted-strong)]">UF</label>
-              <Select
-                value={filters.uf}
-                onChange={(event) =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    uf: event.target.value,
-                    cidade: "",
-                  }))
-                }
-              >
-                <option value={UF_PADRAO}>{UF_PADRAO}</option>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-[var(--color-muted-strong)]">Cidade</label>
-              <Input
-                value={filters.cidade}
-                onChange={(event) =>
-                  setFilters((prev) => ({ ...prev, cidade: event.target.value }))
-                }
-                list={CIDADES_LIST_ID}
-                placeholder="Todas"
-              />
-            </div>
-          </div>
-
-          <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
-            <Button variant="outline" onClick={handleClear} disabled={loading}>
-              Limpar
-            </Button>
-            <Button onClick={handleApply} disabled={loading}>
-              {loading ? "Aplicando..." : "Aplicar"}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <FiltersToolbar
+        filters={filters}
+        periodOptions={PERIOD_OPTIONS}
+        motivos={MOTIVOS}
+        prioridades={PRIORIDADES}
+        usoPlataforma={USO_PLATAFORMA}
+        ufOptions={[UF_PADRAO]}
+        cidadesListId={CIDADES_LIST_ID}
+        onFilterChange={handleFilterChange}
+        onApply={handleApply}
+        onClear={handleClear}
+        loading={loading}
+        lastUpdatedLabel={formatTime(lastUpdated)}
+        recordLabel={recordLabel}
+        maskDateInput={maskDateInput}
+      />
 
       {error ? (
         <Alert className="border-[var(--color-danger)] bg-[var(--color-danger-soft)]">
@@ -559,90 +600,57 @@ export default function DashboardClient() {
       ) : null}
 
       {loading ? (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {Array.from({ length: 6 }).map((_, index) => (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
             <Skeleton key={index} className="h-28 w-full" />
           ))}
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <Card>
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className="rounded-lg bg-[var(--color-primary-soft)] p-2 text-[var(--color-primary)]">
-                <Activity className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="text-xs text-[var(--color-muted)]">Total de chamados</div>
-                <div className="text-2xl font-semibold text-[var(--color-text)]">
-                  {formatNumber(totalCount)}
-                </div>
-                <div className="text-xs text-[var(--color-muted)]">{periodLabel}</div>
-              </div>
-            </CardContent>
-          </Card>
+        <>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <KpiCard
+              icon={<Activity className="h-5 w-5" />}
+              label="Total de chamados"
+              value={formatNumber(totalCount)}
+              description={periodLabel}
+              meta={kpiTotalMeta}
+              tone="primary"
+            />
+            <KpiCard
+              icon={<Monitor className="h-5 w-5" />}
+              label="Canal com mais chamados"
+              value={usageLeader}
+              description={periodLabel}
+              meta={kpiUsageMeta}
+              tone="warning"
+            />
+            <KpiCard
+              icon={<BarChart3 className="h-5 w-5" />}
+              label="Área mais recorrente"
+              value={topAreaAtuacao}
+              description={periodLabel}
+              meta={kpiAreaMeta}
+              tone="primary"
+            />
+            <KpiCard
+              icon={<CalendarDays className="h-5 w-5" />}
+              label="Chamados hoje"
+              value={formatNumber(todayCount)}
+              description={periodLabel}
+              meta={kpiTodayMeta}
+              tone="success"
+            />
+          </div>
 
-          <Card>
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className="rounded-lg bg-[var(--color-warning-soft)] p-2 text-[var(--color-warning)]">
-                <Monitor className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="text-xs text-[var(--color-muted)]">
-                  Canal com mais chamados
-                </div>
-                <div className="text-2xl font-semibold text-[var(--color-text)]">
-                  {usageLeader}
-                </div>
-                <div className="text-xs text-[var(--color-muted)]">
-                  {usageTotal === 0
-                    ? "Sem registros no período"
-                    : `${formatNumber(usageLeaderCount)} chamados • Web: ${formatNumber(
-                        webCount
-                      )} · Mobile: ${formatNumber(mobileCount)}`}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className="rounded-lg bg-[var(--color-primary-soft)] p-2 text-[var(--color-primary)]">
-                <BarChart3 className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="text-xs text-[var(--color-muted)]">
-                  Área mais recorrente
-                </div>
-                <div className="text-2xl font-semibold text-[var(--color-text)]">
-                  {topAreaAtuacao}
-                </div>
-                <div className="text-xs text-[var(--color-muted)]">{periodLabel}</div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className="rounded-lg bg-[var(--color-success-soft)] p-2 text-[var(--color-success)]">
-                <CalendarDays className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="text-xs text-[var(--color-muted)]">Chamados hoje</div>
-                <div className="text-2xl font-semibold text-[var(--color-text)]">
-                  {formatNumber(todayCount)}
-                </div>
-                <div className="text-xs text-[var(--color-muted)]">{periodLabel}</div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="md:col-span-2 xl:col-span-4">
+          <Card className="mt-4">
             <CardContent className="flex items-center gap-3 p-4">
               <div className="rounded-lg bg-[var(--color-primary-soft)] p-2 text-[var(--color-primary)]">
                 <TrendingUp className="h-5 w-5" />
               </div>
               <div>
-                <div className="text-xs text-[var(--color-muted)]">Motivo mais recorrente</div>
+                <div className="text-xs text-[var(--color-muted)]">
+                  Motivo mais recorrente
+                </div>
                 <div className="text-lg font-semibold text-[var(--color-text)]">
                   {topMotivo || "Sem dados"}
                 </div>
@@ -652,7 +660,7 @@ export default function DashboardClient() {
               </div>
             </CardContent>
           </Card>
-        </div>
+        </>
       )}
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -667,8 +675,10 @@ export default function DashboardClient() {
           <CardContent>
             {!hasTimeseriesData ? (
               <EmptyState label="Sem dados para o período selecionado." />
+            ) : !hasTrendData ? (
+              <EmptyState label="Sem dados suficientes para tendência (mín. 3 dias)." />
             ) : (
-              <div className="h-72">
+              <div className="h-72" role="img" aria-label="Série temporal de chamados">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={timeseriesData} margin={{ left: 0, right: 16 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_COLOR} />
@@ -715,7 +725,11 @@ export default function DashboardClient() {
               </div>
             ) : (
               <>
-                <div className="h-72">
+                <div
+                  className="h-72"
+                  role="img"
+                  aria-label="Gráfico de distribuição por prioridade"
+                >
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -729,8 +743,68 @@ export default function DashboardClient() {
                         {priorityChartData.map((entry) => (
                           <Cell key={entry.name} fill={entry.color} />
                         ))}
+                        <Label
+                          position="center"
+                          content={({ viewBox }) => {
+                            if (!viewBox) {
+                              return null;
+                            }
+                            const polarViewBox = viewBox as {
+                              cx?: number;
+                              cy?: number;
+                            };
+                            if (
+                              typeof polarViewBox.cx !== "number" ||
+                              typeof polarViewBox.cy !== "number"
+                            ) {
+                              return null;
+                            }
+                            const cx = polarViewBox.cx;
+                            const cy = polarViewBox.cy;
+                            return (
+                              <text
+                                x={cx}
+                                y={cy}
+                                textAnchor="middle"
+                                dominantBaseline="central"
+                              >
+                                <tspan
+                                  x={cx}
+                                  dy="-0.2em"
+                                  fontSize="18"
+                                  fontWeight="600"
+                                  fill="var(--color-text)"
+                                >
+                                  {priorityTotalLabel}
+                                </tspan>
+                                <tspan
+                                  x={cx}
+                                  dy="1.4em"
+                                  fontSize="11"
+                                  fill="var(--color-muted)"
+                                >
+                                  Total
+                                </tspan>
+                              </text>
+                            );
+                          }}
+                        />
                       </Pie>
-                      <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
+                      <Tooltip
+                        contentStyle={CHART_TOOLTIP_STYLE}
+                        formatter={(value, name) => {
+                          const numericValue =
+                            typeof value === "number" ? value : Number(value);
+                          const percent =
+                            priorityTotal > 0
+                              ? Math.round((numericValue / priorityTotal) * 100)
+                              : 0;
+                          return [
+                            `${formatNumber(numericValue)} • ${percent}%`,
+                            name,
+                          ];
+                        }}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
@@ -764,7 +838,7 @@ export default function DashboardClient() {
             {!hasMotivosChartData ? (
               <EmptyState label="Sem dados para o período selecionado." />
             ) : (
-              <div className="h-72">
+              <div className="h-72" role="img" aria-label="Top motivos de chamados">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={motivosChartData}
@@ -782,7 +856,7 @@ export default function DashboardClient() {
                       dataKey="name"
                       stroke={CHART_AXIS_COLOR}
                       width={180}
-                      tickFormatter={(value) => truncateLabel(String(value))}
+                      tick={renderMotivosTick}
                     />
                     <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
                     <Bar
@@ -803,48 +877,112 @@ export default function DashboardClient() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader>
-            <CardTitle>Top unidades</CardTitle>
-            <CardDescription>Volume por unidade</CardDescription>
+          <CardHeader className="flex flex-row items-start justify-between gap-3">
+            <div>
+              <CardTitle>Top unidades</CardTitle>
+              <CardDescription>Volume por unidade</CardDescription>
+            </div>
+            {topUnidades.length >= 5 && !isUnidadesUniform ? (
+              <Button asChild variant="ghost" className="h-7 px-2 text-xs">
+                <Link href="/reports">Ver mais</Link>
+              </Button>
+            ) : null}
           </CardHeader>
           <CardContent>
-            {(metrics?.top_unidades ?? []).length === 0 ? (
+            {topUnidades.length === 0 ? (
               <EmptyState label="Sem dados para o período selecionado." />
             ) : (
-              <div className="space-y-2 text-sm">
-                {metrics?.top_unidades.map((item) => (
-                  <div
-                    key={item.unidade}
-                    className="flex items-center justify-between rounded-lg border border-[var(--color-border)] px-3 py-2"
-                  >
-                    <span className="text-[var(--color-muted-strong)]">{item.unidade}</span>
-                    <Badge variant="muted">{formatNumber(item.count)}</Badge>
+              <div className="space-y-3 text-sm">
+                {isUnidadesUniform ? (
+                  <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-muted-soft)] px-3 py-2 text-xs text-[var(--color-muted-strong)]">
+                    Distribuição uniforme no período.
                   </div>
-                ))}
+                ) : null}
+                {topUnidadesDisplay.map((item) => {
+                  const percent = maxUnidadeCount
+                    ? Math.round((item.count / maxUnidadeCount) * 100)
+                    : 0;
+                  return (
+                    <div
+                      key={item.unidade}
+                      className="rounded-lg border border-[var(--color-border)] px-3 py-2"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-[var(--color-muted-strong)]">
+                          {item.unidade}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-[var(--color-muted)]">
+                            {percent}%
+                          </span>
+                          <Badge variant="muted">{formatNumber(item.count)}</Badge>
+                        </div>
+                      </div>
+                      <div className="mt-2 h-2 w-full rounded-full bg-[var(--color-muted-soft)]">
+                        <div
+                          className="h-2 rounded-full bg-[var(--color-primary)]"
+                          style={{ width: `${percent}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Top cidades</CardTitle>
-            <CardDescription>Volume por cidade</CardDescription>
+          <CardHeader className="flex flex-row items-start justify-between gap-3">
+            <div>
+              <CardTitle>Top cidades</CardTitle>
+              <CardDescription>Volume por cidade</CardDescription>
+            </div>
+            {topCidades.length >= 5 && !isCidadesUniform ? (
+              <Button asChild variant="ghost" className="h-7 px-2 text-xs">
+                <Link href="/reports">Ver mais</Link>
+              </Button>
+            ) : null}
           </CardHeader>
           <CardContent>
-            {(metrics?.top_cidades ?? []).length === 0 ? (
+            {topCidades.length === 0 ? (
               <EmptyState label="Sem dados para o período selecionado." />
             ) : (
-              <div className="space-y-2 text-sm">
-                {metrics?.top_cidades.map((item) => (
-                  <div
-                    key={item.cidade}
-                    className="flex items-center justify-between rounded-lg border border-[var(--color-border)] px-3 py-2"
-                  >
-                    <span className="text-[var(--color-muted-strong)]">{item.cidade}</span>
-                    <Badge variant="muted">{formatNumber(item.count)}</Badge>
+              <div className="space-y-3 text-sm">
+                {isCidadesUniform ? (
+                  <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-muted-soft)] px-3 py-2 text-xs text-[var(--color-muted-strong)]">
+                    Distribuição uniforme no período.
                   </div>
-                ))}
+                ) : null}
+                {topCidadesDisplay.map((item) => {
+                  const percent = maxCidadeCount
+                    ? Math.round((item.count / maxCidadeCount) * 100)
+                    : 0;
+                  return (
+                    <div
+                      key={item.cidade}
+                      className="rounded-lg border border-[var(--color-border)] px-3 py-2"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-[var(--color-muted-strong)]">
+                          {item.cidade}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-[var(--color-muted)]">
+                            {percent}%
+                          </span>
+                          <Badge variant="muted">{formatNumber(item.count)}</Badge>
+                        </div>
+                      </div>
+                      <div className="mt-2 h-2 w-full rounded-full bg-[var(--color-muted-soft)]">
+                        <div
+                          className="h-2 rounded-full bg-[var(--color-primary)]"
+                          style={{ width: `${percent}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </CardContent>
