@@ -3,25 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import AppShell from "@/components/AppShell";
 import TicketsClient from "@/app/tickets/TicketsClient";
 import type { TicketClient } from "@/app/tickets/types";
+import { MOTIVOS_OPTIONS, type MotivoOption } from "@/app/tickets/constants";
 
 const PAGE_SIZE = 10;
-
-const MOTIVOS = [
-  "Problema de cadastro",
-  "Problema de acesso",
-  "Recuperação de senha",
-  "Cadastro não localizado",
-  "Dados divergentes",
-  "Atualização de dados cadastrais",
-  "Alteração de Perfil",
-  "Erro no sistema",
-  "Funcionalidade indisponível",
-  "Sistema lento ou instável",
-  "Erro ao salvar informações",
-  "Dúvida sobre uso do sistema",
-  "Solicitação de informação",
-  "Outro",
-];
 
 type SearchParams = Promise<{
   period?: string;
@@ -57,7 +41,9 @@ export default async function TicketsPage({
   const error = params?.error ?? "";
 
   const period = ["7", "30", "90"].includes(periodParam) ? periodParam : "7";
-  const motivo = MOTIVOS.includes(motivoParam) ? motivoParam : "all";
+  const motivo = MOTIVOS_OPTIONS.includes(motivoParam as MotivoOption)
+    ? motivoParam
+    : "all";
   const page = Math.max(1, Number(pageParam) || 1);
 
   const supabase = await createClient();

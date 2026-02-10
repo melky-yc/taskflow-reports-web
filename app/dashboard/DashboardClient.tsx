@@ -31,6 +31,12 @@ import { createClient } from "@/lib/supabase/client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  MOTIVOS_OPTIONS,
+  PRIORIDADES_OPTIONS,
+  USO_PLATAFORMA_OPTIONS,
+  UF_PADRAO,
+} from "@/app/tickets/constants";
 import ActiveFiltersChips, {
   type ActiveFilterChip,
 } from "@/components/dashboard/ActiveFiltersChips";
@@ -57,27 +63,7 @@ const PERIOD_OPTIONS: { value: PeriodOption; label: string }[] = [
   { value: "custom", label: "Personalizado" },
 ];
 
-const MOTIVOS = [
-  "Problema de cadastro",
-  "Problema de acesso",
-  "Recuperação de senha",
-  "Cadastro não localizado",
-  "Dados divergentes",
-  "Atualização de dados cadastrais",
-  "Alteração de Perfil",
-  "Erro no sistema",
-  "Funcionalidade indisponível",
-  "Sistema lento ou instável",
-  "Erro ao salvar informações",
-  "Dúvida sobre uso do sistema",
-  "Solicitação de informação",
-  "Outro",
-];
-
-const PRIORIDADES = ["Baixa", "Media", "Alta"];
 const PRIORIDADES_CHART = ["Baixa", "Media", "Alta", "Critica"];
-const USO_PLATAFORMA = ["Mobile", "Web", "Ambos", "Não informado"];
-const UF_PADRAO = "PI";
 const CIDADES_PI = cidadesPi.cidades;
 const CIDADES_LIST_ID = "cidades-dashboard";
 
@@ -573,9 +559,9 @@ export default function DashboardClient() {
       <FiltersToolbar
         filters={filters}
         periodOptions={PERIOD_OPTIONS}
-        motivos={MOTIVOS}
-        prioridades={PRIORIDADES}
-        usoPlataforma={USO_PLATAFORMA}
+        motivos={MOTIVOS_OPTIONS}
+        prioridades={PRIORIDADES_OPTIONS}
+        usoPlataforma={USO_PLATAFORMA_OPTIONS}
         ufOptions={[UF_PADRAO]}
         cidadesListId={CIDADES_LIST_ID}
         onFilterChange={handleFilterChange}

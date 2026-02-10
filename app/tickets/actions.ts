@@ -3,24 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { AREA_ATUACAO_OPTIONS } from "@/app/tickets/constants";
-
-const MOTIVOS = [
-  "Problema de cadastro",
-  "Problema de acesso",
-  "Recuperação de senha",
-  "Cadastro não localizado",
-  "Dados divergentes",
-  "Atualização de dados cadastrais",
-  "Alteração de Perfil",
-  "Erro no sistema",
-  "Funcionalidade indisponível",
-  "Sistema lento ou instável",
-  "Erro ao salvar informações",
-  "Dúvida sobre uso do sistema",
-  "Solicitação de informação",
-  "Outro",
-];
+import {
+  AREA_ATUACAO_OPTIONS,
+  MOTIVOS_OPTIONS,
+  type MotivoOption,
+} from "@/app/tickets/constants";
 
 function onlyDigits(value: string) {
   return value.replace(/\D/g, "").slice(0, 11);
@@ -96,7 +83,7 @@ export async function createTicketAction(formData: FormData) {
 
   if (
     !motivo ||
-    !MOTIVOS.includes(motivo) ||
+    !MOTIVOS_OPTIONS.includes(motivo as MotivoOption) ||
     !prioridade ||
     !nome ||
     !cpf ||
@@ -242,7 +229,7 @@ export async function updateTicketAction(formData: FormData) {
 
   if (
     !motivo ||
-    !MOTIVOS.includes(motivo) ||
+    !MOTIVOS_OPTIONS.includes(motivo as MotivoOption) ||
     !prioridade ||
     !nome ||
     !cpf ||

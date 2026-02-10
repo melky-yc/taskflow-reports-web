@@ -6,7 +6,14 @@ import { ChevronDown, Inbox } from "lucide-react";
 import cidadesPi from "@/data/cidades_pi.json";
 import { createTicketAction, updateTicketAction } from "@/app/tickets/actions";
 import type { TicketClient } from "@/app/tickets/types";
-import { AREA_ATUACAO_OPTIONS } from "@/app/tickets/constants";
+import {
+  AREA_ATUACAO_OPTIONS,
+  MOTIVOS_OPTIONS,
+  PRIORIDADES_OPTIONS,
+  USO_PLATAFORMA_OPTIONS,
+  UF_PADRAO,
+} from "@/app/tickets/constants";
+import { getTodayLocalISODate } from "@/utils/date";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import DatePickerModal from "@/components/tickets/DatePickerModal";
 import {
   buildTicketsFilename,
   exportToCSV,
@@ -27,26 +35,6 @@ import {
   mapToExportRow,
 } from "@/utils/exportTickets";
 
-const MOTIVOS = [
-  "Problema de cadastro",
-  "Problema de acesso",
-  "Recuperação de senha",
-  "Cadastro não localizado",
-  "Dados divergentes",
-  "Atualização de dados cadastrais",
-  "Alteração de Perfil",
-  "Erro no sistema",
-  "Funcionalidade indisponível",
-  "Sistema lento ou instável",
-  "Erro ao salvar informações",
-  "Dúvida sobre uso do sistema",
-  "Solicitação de informação",
-  "Outro",
-];
-
-const PRIORIDADES = ["Baixa", "Media", "Alta"];
-const USO_PLATAFORMA = ["Mobile", "Web", "Ambos", "Não informado"];
-const UF_PADRAO = "PI";
 const CIDADES_PI = cidadesPi.cidades;
 const CIDADES_LIST_ID = "cidades-pi";
 
@@ -129,45 +117,6 @@ function formatDateTime(value?: string | null) {
   }).format(new Date(value));
 }
 
-function maskDateInput(value: string) {
-  const digits = value.replace(/\D/g, "").slice(0, 8);
-  const day = digits.slice(0, 2);
-  const month = digits.slice(2, 4);
-  const year = digits.slice(4, 8);
-  let result = day;
-  if (digits.length > 2) {
-    result += `/${month}`;
-  }
-  if (digits.length > 4) {
-    result += `/${year}`;
-  }
-  return result;
-}
-
-function brToIso(value: string) {
-  const match = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-  if (!match) {
-    return "";
-  }
-  const day = Number(match[1]);
-  const month = Number(match[2]);
-  const year = Number(match[3]);
-  if (!day || !month || !year) {
-    return "";
-  }
-  const date = new Date(year, month - 1, day);
-  if (
-    date.getFullYear() !== year ||
-    date.getMonth() !== month - 1 ||
-    date.getDate() !== day
-  ) {
-    return "";
-  }
-  const dayValue = String(day).padStart(2, "0");
-  const monthValue = String(month).padStart(2, "0");
-  return `${year}-${monthValue}-${dayValue}`;
-}
-
 function isoToBr(value?: string | null) {
   if (!value) {
     return "";
@@ -183,8 +132,7 @@ function isRetroativoIso(dateValue: string) {
   if (!dateValue) {
     return false;
   }
-  const today = new Date().toISOString().slice(0, 10);
-  return dateValue < today;
+  return dateValue < getTodayLocalISODate();
 }
 
 function prioridadeBadge(prioridade: string) {
@@ -231,12 +179,17 @@ export default function TicketsClient({
 }: TicketsClientProps) {
   const [motivo, setMotivo] = useState("");
   const [motivoOutro, setMotivoOutro] = useState("");
-  const [dataAtendimentoBr, setDataAtendimentoBr] = useState("");
-  const [dataAtendimentoIso, setDataAtendimentoIso] = useState("");
+  const todayIso = useMemo(() => getTodayLocalISODate(), []);
+  const [dataAtendimentoIso, setDataAtendimentoIso] = useState(todayIso);
+  const [dataAtendimentoBr, setDataAtendimentoBr] = useState(() =>
+    isoToBr(todayIso)
+  );
   const [retroativoMotivo, setRetroativoMotivo] = useState("");
   const [cpfDigits, setCpfDigits] = useState("");
   const [isCreateValid, setIsCreateValid] = useState(false);
   const [exportNotice, setExportNotice] = useState("");
+  const [isDateModalOpen, setIsDateModalOpen] = useState(false);
+  const [isEditDateModalOpen, setIsEditDateModalOpen] = useState(false);
 
   const createFormRef = useRef<HTMLFormElement | null>(null);
 
@@ -250,6 +203,7 @@ export default function TicketsClient({
 
   const openEdit = (ticket: TicketClient) => {
     const dataAtendimentoIso = ticket.data_atendimento ?? "";
+    setIsEditDateModalOpen(false);
     setEditTicket(ticket);
     setEditForm({
       motivo: ticket.motivo,
@@ -269,6 +223,7 @@ export default function TicketsClient({
   };
 
   const closeEdit = () => {
+    setIsEditDateModalOpen(false);
     setEditTicket(null);
     setEditForm(null);
   };
@@ -313,23 +268,30 @@ export default function TicketsClient({
   const updateCreateValidity = (nextBr?: string, nextIso?: string) => {
     const form = createFormRef.current;
     if (!form) return;
-    const brValue = typeof nextBr === "string" ? nextBr : dataAtendimentoBr;
     const isoValue = typeof nextIso === "string" ? nextIso : dataAtendimentoIso;
-    const hasDateInput = brValue.trim().length > 0;
-    const isDateValid = !hasDateInput || Boolean(isoValue);
-    setIsCreateValid(form.checkValidity() && isDateValid);
+    setIsCreateValid(form.checkValidity() && Boolean(isoValue));
   };
 
   const handleCreateInput = () => {
     updateCreateValidity();
   };
 
-  const handleCreateDateChange = (value: string) => {
-    const masked = maskDateInput(value);
-    const isoValue = brToIso(masked);
-    setDataAtendimentoBr(masked);
+  const handleCreateDateConfirm = (isoValue: string) => {
     setDataAtendimentoIso(isoValue);
-    updateCreateValidity(masked, isoValue);
+    setDataAtendimentoBr(isoToBr(isoValue));
+    updateCreateValidity(undefined, isoValue);
+  };
+
+  const handleEditDateConfirm = (isoValue: string) => {
+    setEditForm((prev) =>
+      prev
+        ? {
+            ...prev,
+            dataAtendimentoIso: isoValue,
+            dataAtendimentoBr: isoToBr(isoValue),
+          }
+        : prev
+    );
   };
 
   const handleExport = (type: "csv" | "xlsx") => {
@@ -439,7 +401,7 @@ export default function TicketsClient({
                     required
                   >
                     <option value="">Selecione</option>
-                    {MOTIVOS.map((item) => (
+                    {MOTIVOS_OPTIONS.map((item) => (
                       <option key={item} value={item}>
                         {item}
                       </option>
@@ -453,7 +415,7 @@ export default function TicketsClient({
                   </label>
                   <Select name="prioridade" required>
                     <option value="">Selecione</option>
-                    {PRIORIDADES.map((item) => (
+                    {PRIORIDADES_OPTIONS.map((item) => (
                       <option key={item} value={item}>
                         {formatPrioridadeLabel(item)}
                       </option>
@@ -465,12 +427,18 @@ export default function TicketsClient({
                   <label className="text-xs font-medium text-[var(--color-muted-strong)]">
                     Data de atendimento
                   </label>
-                  <Input
-                    value={dataAtendimentoBr}
-                    onChange={(event) => handleCreateDateChange(event.target.value)}
-                    inputMode="numeric"
-                    placeholder="DD/MM/AAAA"
-                  />
+                  <div className="flex items-center justify-between rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2">
+                    <span className="text-sm text-[var(--color-text)]">
+                      {dataAtendimentoBr}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setIsDateModalOpen(true)}
+                      className="text-xs font-medium text-[var(--color-primary)] transition hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
+                    >
+                      Alterar
+                    </button>
+                  </div>
                   <input
                     type="hidden"
                     name="data_atendimento"
@@ -559,7 +527,7 @@ export default function TicketsClient({
                   </label>
                   <Select name="cliente_uso_plataforma">
                     <option value="">Selecione</option>
-                    {USO_PLATAFORMA.map((item) => (
+                    {USO_PLATAFORMA_OPTIONS.map((item) => (
                       <option key={item} value={item}>
                         {item}
                       </option>
@@ -628,6 +596,19 @@ export default function TicketsClient({
               <SubmitButton disabled={!isCreateValid} />
             </div>
           </form>
+
+          {isDateModalOpen ? (
+            <DatePickerModal
+              title="Alterar data de atendimento"
+              valueIso={dataAtendimentoIso}
+              maxIso={todayIso}
+              onCancel={() => setIsDateModalOpen(false)}
+              onConfirm={(valueIso) => {
+                handleCreateDateConfirm(valueIso || todayIso);
+                setIsDateModalOpen(false);
+              }}
+            />
+          ) : null}
         </CardContent>
       </Card>
 
@@ -665,7 +646,7 @@ export default function TicketsClient({
                     className="h-9 pr-8"
                   >
                     <option value="">Todos</option>
-                    {MOTIVOS.map((item) => (
+                    {MOTIVOS_OPTIONS.map((item) => (
                       <option key={item} value={item}>
                         {item}
                       </option>
@@ -879,7 +860,7 @@ export default function TicketsClient({
                         }
                         required
                       >
-                        {MOTIVOS.map((item) => (
+                        {MOTIVOS_OPTIONS.map((item) => (
                           <option key={item} value={item}>
                             {item}
                           </option>
@@ -901,7 +882,7 @@ export default function TicketsClient({
                         }
                         required
                       >
-                        {PRIORIDADES.map((item) => (
+                        {PRIORIDADES_OPTIONS.map((item) => (
                           <option key={item} value={item}>
                             {formatPrioridadeLabel(item)}
                           </option>
@@ -913,24 +894,18 @@ export default function TicketsClient({
                       <label className="text-xs font-medium text-[var(--color-muted-strong)]">
                         Data de atendimento
                       </label>
-                      <Input
-                        value={editForm.dataAtendimentoBr}
-                        onChange={(event) => {
-                          const masked = maskDateInput(event.target.value);
-                          const isoValue = brToIso(masked);
-                          setEditForm((prev) =>
-                            prev
-                              ? {
-                                  ...prev,
-                                  dataAtendimentoBr: masked,
-                                  dataAtendimentoIso: isoValue,
-                                }
-                              : prev
-                          );
-                        }}
-                        inputMode="numeric"
-                        placeholder="DD/MM/AAAA"
-                      />
+                      <div className="flex items-center justify-between rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2">
+                        <span className="text-sm text-[var(--color-text)]">
+                          {editForm.dataAtendimentoBr || "—"}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setIsEditDateModalOpen(true)}
+                          className="text-xs font-medium text-[var(--color-primary)] transition hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
+                        >
+                          Alterar
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -1040,7 +1015,7 @@ export default function TicketsClient({
                         }
                       >
                         <option value="">Selecione</option>
-                        {USO_PLATAFORMA.map((item) => (
+                        {USO_PLATAFORMA_OPTIONS.map((item) => (
                           <option key={item} value={item}>
                             {item}
                           </option>
@@ -1142,6 +1117,19 @@ export default function TicketsClient({
             </div>
           </div>
         </div>
+      ) : null}
+
+      {isEditDateModalOpen ? (
+        <DatePickerModal
+          title="Alterar data de atendimento"
+          valueIso={editForm?.dataAtendimentoIso || todayIso}
+          maxIso={todayIso}
+          onCancel={() => setIsEditDateModalOpen(false)}
+          onConfirm={(valueIso) => {
+            handleEditDateConfirm(valueIso || todayIso);
+            setIsEditDateModalOpen(false);
+          }}
+        />
       ) : null}
 
       <datalist id={CIDADES_LIST_ID}>

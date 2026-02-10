@@ -27,11 +27,11 @@ type FiltersState = {
 
 type FiltersToolbarProps = {
   filters: FiltersState;
-  periodOptions: PeriodOptionItem[];
-  motivos: string[];
-  prioridades: string[];
-  usoPlataforma: string[];
-  ufOptions: string[];
+  periodOptions: readonly PeriodOptionItem[];
+  motivos: readonly string[];
+  prioridades: readonly string[];
+  usoPlataforma: readonly string[];
+  ufOptions: readonly string[];
   cidadesListId: string;
   onFilterChange: (patch: Partial<FiltersState>) => void;
   onApply: () => void;
