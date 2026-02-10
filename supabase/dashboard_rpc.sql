@@ -84,11 +84,10 @@ begin
       limit 1
     ),
     top_area_atuacao as (
-      select area_atuacao
+      select coalesce(nullif(btrim(area_atuacao), ''), 'Não informado') as area_atuacao_label
       from base
-      where area_atuacao is not null and btrim(area_atuacao) <> ''
-      group by area_atuacao
-      order by count(*) desc, area_atuacao asc
+      group by area_atuacao_label
+      order by count(*) desc, area_atuacao_label asc
       limit 1
     )
     select jsonb_build_object(
@@ -100,7 +99,7 @@ begin
         end,
         'today_count', coalesce(totals.today_count, 0),
         'top_motivo', coalesce((select motivo from top_motivo), ''),
-        'top_area_atuacao', coalesce((select area_atuacao from top_area_atuacao), '')
+        'top_area_atuacao', coalesce((select area_atuacao_label from top_area_atuacao), '')
       ),
       'timeseries', coalesce(
         (

@@ -312,7 +312,9 @@ export default function DashboardClient() {
       : "Mobile";
   const usageLeaderCount = Math.max(webCount, mobileCount);
   const topMotivo = metrics?.totals.top_motivo || "Sem dados";
-  const topAreaAtuacao = metrics?.totals.top_area_atuacao || "Sem dados";
+  const topAreaAtuacaoRaw = metrics?.totals.top_area_atuacao?.trim() ?? "";
+  const topAreaAtuacao =
+    topAreaAtuacaoRaw || (totalCount > 0 ? "Não informado" : "Sem dados");
 
   const timeseriesData = (metrics?.timeseries ?? []).map((item) => ({
     date: formatDateBR(item.date),
