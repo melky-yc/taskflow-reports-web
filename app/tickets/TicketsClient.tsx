@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { ChevronDown, Inbox } from "lucide-react";
+import { Inbox } from "lucide-react";
 import cidadesPi from "@/data/cidades_pi.json";
 import { createTicketAction, updateTicketAction } from "@/app/tickets/actions";
 import type { TicketClient } from "@/app/tickets/types";
@@ -10,13 +10,30 @@ import { createClient } from "@/lib/supabase/client";
 import { useAlerts } from "@/components/alerts/AlertsProvider";
 import {
   AREA_ATUACAO_OPTIONS,
-  getPriorityBadgeVariant,
   MOTIVOS_OPTIONS,
   PRIORIDADES_OPTIONS,
   USO_PLATAFORMA_OPTIONS,
   UF_PADRAO,
 } from "@/app/tickets/constants";
 import { getTodayLocalISODate } from "@/utils/date";
+import {
+  AppBadge,
+  AppButton,
+  AppCard,
+  AppCardBody,
+  AppCardDescription,
+  AppCardHeader,
+  AppCardTitle,
+  AppSelect,
+  AppTable,
+  AppTableBody,
+  AppTableCell,
+  AppTableColumn,
+  AppTableHeader,
+  AppTableRow,
+  FilterModal,
+  StatusBadge,
+} from "@/app/ui";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -143,9 +160,9 @@ function formatPrioridadeLabel(prioridade: string) {
   return prioridade === "Media" ? "Média" : prioridade;
 }
 
-function motivoBadge(motivo: string) {
+function motivoTone(motivo: string) {
   if (motivo === "Outro") return "warning";
-  if (motivo.includes("Problema")) return "muted";
+  if (motivo.includes("Problema")) return "default";
   return "success";
 }
 
@@ -200,8 +217,10 @@ export default function TicketsClient({
   const [isCreateValid, setIsCreateValid] = useState(false);
   const [isDateModalOpen, setIsDateModalOpen] = useState(false);
   const [isEditDateModalOpen, setIsEditDateModalOpen] = useState(false);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
   const createFormRef = useRef<HTMLFormElement | null>(null);
+  const filtersFormRef = useRef<HTMLFormElement | null>(null);
   const lastLookupCpfRef = useRef("");
   const lastNotifiedStatusRef = useRef<string | null>(null);
 
@@ -425,6 +444,10 @@ export default function TicketsClient({
       description: `Arquivo ${type.toUpperCase()} gerado.`,
       tone: "success",
     });
+  };
+
+  const handleFilterSubmit = () => {
+    filtersFormRef.current?.requestSubmit();
   };
 
   return (
@@ -809,158 +832,149 @@ export default function TicketsClient({
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <AppCard>
+        <AppCardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <CardTitle>Últimos Chamados</CardTitle>
-            <CardDescription>
+            <AppCardTitle>Ultimos Chamados</AppCardTitle>
+            <AppCardDescription>
               {tickets.length} registros encontrados
-            </CardDescription>
+            </AppCardDescription>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <form method="get" className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2 text-sm text-[var(--color-muted-strong)]">
-                <span>Período</span>
-                <div className="relative">
-                  <Select
-                    name="period"
-                    defaultValue={filters.period}
-                    className="h-9 pr-8"
-                  >
-                    <option value="7">7 dias</option>
-                    <option value="30">30 dias</option>
-                    <option value="90">90 dias</option>
-                  </Select>
-                  <ChevronDown className="pointer-events-none absolute right-2 top-2.5 h-4 w-4 text-[var(--color-muted)]" />
-                </div>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-[var(--color-muted-strong)]">
-                <span>Motivo</span>
-                <div className="relative">
-                  <Select
-                    name="motivo"
-                    defaultValue={filters.motivo === "all" ? "" : filters.motivo}
-                    className="h-9 pr-8"
-                  >
-                    <option value="">Todos</option>
-                    {MOTIVOS_OPTIONS.map((item) => (
-                      <option key={item} value={item}>
-                        {item}
-                      </option>
-                    ))}
-                  </Select>
-                  <ChevronDown className="pointer-events-none absolute right-2 top-2.5 h-4 w-4 text-[var(--color-muted)]" />
-                </div>
-              </div>
-              <Button variant="secondary" className="h-9">
-                Filtrar
-              </Button>
-            </form>
+            <FilterModal
+              isOpen={isFiltersOpen}
+              onOpenChange={setIsFiltersOpen}
+              title="Filtros"
+              description="Filtre os chamados por periodo e motivo."
+              onApply={handleFilterSubmit}
+              size="md"
+            >
+              <form
+                ref={filtersFormRef}
+                method="get"
+                className="grid gap-3 sm:grid-cols-2"
+              >
+                <AppSelect
+                  name="period"
+                  label="Periodo"
+                  defaultValue={filters.period}
+                  options={[
+                    { value: "7", label: "7 dias" },
+                    { value: "30", label: "30 dias" },
+                    { value: "90", label: "90 dias" },
+                  ]}
+                />
+                <AppSelect
+                  name="motivo"
+                  label="Motivo"
+                  placeholder="Todos"
+                  defaultValue={filters.motivo === "all" ? "" : filters.motivo}
+                  options={MOTIVOS_OPTIONS.map((item) => ({
+                    value: item,
+                    label: item,
+                  }))}
+                />
+              </form>
+            </FilterModal>
             <div className="flex items-center gap-2">
-              <Button
+              <AppButton
                 type="button"
-                variant="outline"
-                className="h-9"
-                onClick={() => handleExport("csv")}
-                disabled={tickets.length === 0}
+                variant="soft"
+                size="sm"
+                onPress={() => handleExport("csv")}
+                isDisabled={tickets.length === 0}
               >
                 Exportar CSV
-              </Button>
-              <Button
+              </AppButton>
+              <AppButton
                 type="button"
-                variant="outline"
-                className="h-9"
-                onClick={() => handleExport("xlsx")}
-                disabled={tickets.length === 0}
+                variant="soft"
+                size="sm"
+                onPress={() => handleExport("xlsx")}
+                isDisabled={tickets.length === 0}
               >
                 Exportar XLSX
-              </Button>
+              </AppButton>
             </div>
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="min-w-full border-collapse text-sm">
-              <thead className="sticky top-0 bg-[var(--color-muted-soft)]">
-                <tr className="border-b border-[var(--color-border)] text-left text-xs uppercase tracking-wide text-[var(--color-muted)]">
-                  <th className="px-3 py-2">ID</th>
-                  <th className="px-3 py-2">Data</th>
-                  <th className="px-3 py-2">Profissional</th>
-                  <th className="px-3 py-2">Motivo</th>
-                  <th className="px-3 py-2">Prioridade</th>
-                  <th className="px-3 py-2">Cliente</th>
-                  <th className="px-3 py-2">CPF</th>
-                  <th className="px-3 py-2">Unidade</th>
-                  <th className="px-3 py-2">Criado em</th>
-                  <th className="px-3 py-2"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {tickets.length === 0 ? (
-                  <tr>
-                    <td colSpan={10} className="px-6 py-14">
-                      <div className="flex flex-col items-center gap-3 text-[var(--color-muted)]">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-muted-soft)]">
-                          <Inbox className="h-5 w-5" />
-                        </div>
-                        <div className="text-sm font-medium">
-                          Nenhum chamado encontrado
-                        </div>
-                        <div className="text-xs text-[var(--color-muted)]">
-                          Ajuste os filtros ou crie um novo chamado.
-                        </div>
+        </AppCardHeader>
+        <AppCardBody>
+          <AppTable
+            aria-label="Tabela de chamados"
+            classNames={{ base: "overflow-x-auto" }}
+          >
+            <AppTableHeader>
+              <AppTableColumn>ID</AppTableColumn>
+              <AppTableColumn>Data</AppTableColumn>
+              <AppTableColumn>Profissional</AppTableColumn>
+              <AppTableColumn>Motivo</AppTableColumn>
+              <AppTableColumn>Prioridade</AppTableColumn>
+              <AppTableColumn>Cliente</AppTableColumn>
+              <AppTableColumn>CPF</AppTableColumn>
+              <AppTableColumn>Unidade</AppTableColumn>
+              <AppTableColumn>Criado em</AppTableColumn>
+              <AppTableColumn className="text-right"></AppTableColumn>
+            </AppTableHeader>
+            <AppTableBody>
+              {tickets.length === 0 ? (
+                <AppTableRow>
+                  <AppTableCell colSpan={10} className="px-6 py-14">
+                    <div className="flex flex-col items-center gap-3 text-[var(--color-muted)]">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-muted-soft)]">
+                        <Inbox className="h-5 w-5" />
                       </div>
-                    </td>
-                  </tr>
-                ) : (
-                  tickets.map((ticket) => (
-                    <tr
-                      key={ticket.id}
-                      className="border-b border-[var(--color-border)] text-[var(--color-text)] hover:bg-[var(--color-muted-soft)]"
-                    >
-                      <td className="px-3 py-3 font-medium">#{ticket.id}</td>
-                      <td className="px-3 py-3">
-                        {formatDate(ticket.data_atendimento)}
-                      </td>
-                      <td className="px-3 py-3">{ticket.profissional_nome}</td>
-                      <td className="px-3 py-3">
-                        <Badge variant={motivoBadge(ticket.motivo)}>
-                          {ticket.motivo}
-                        </Badge>
-                      </td>
-                      <td className="px-3 py-3">
-                        <Badge variant={getPriorityBadgeVariant(ticket.prioridade)}>
-                          {formatPrioridadeLabel(ticket.prioridade)}
-                        </Badge>
-                      </td>
-                      <td className="px-3 py-3">{ticket.client.nome}</td>
-                      <td className="px-3 py-3 font-mono text-xs">
-                        {maskCpf(ticket.client.cpf)}
-                      </td>
-                      <td className="px-3 py-3">{ticket.client.unidade}</td>
-                      <td className="px-3 py-3">
-                        {formatDateTime(ticket.created_at)}
-                      </td>
-                      <td className="px-3 py-3 text-right">
-                        <Button
-                          variant="ghost"
-                          className="h-8 px-3"
-                          type="button"
-                          onClick={() => openEdit(ticket)}
-                        >
-                          Editar
-                        </Button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                      <div className="text-sm font-medium">
+                        Nenhum chamado encontrado
+                      </div>
+                      <div className="text-xs text-[var(--color-muted)]">
+                        Ajuste os filtros ou crie um novo chamado.
+                      </div>
+                    </div>
+                  </AppTableCell>
+                </AppTableRow>
+              ) : (
+                tickets.map((ticket) => (
+                  <AppTableRow key={ticket.id}>
+                    <AppTableCell className="font-medium">#{ticket.id}</AppTableCell>
+                    <AppTableCell>
+                      {formatDate(ticket.data_atendimento)}
+                    </AppTableCell>
+                    <AppTableCell>{ticket.profissional_nome}</AppTableCell>
+                    <AppTableCell>
+                      <AppBadge tone={motivoTone(ticket.motivo)} variant="soft" size="sm">
+                        {ticket.motivo}
+                      </AppBadge>
+                    </AppTableCell>
+                    <AppTableCell>
+                      <StatusBadge status={ticket.prioridade} size="sm" />
+                    </AppTableCell>
+                    <AppTableCell>{ticket.client.nome}</AppTableCell>
+                    <AppTableCell className="font-mono text-xs">
+                      {maskCpf(ticket.client.cpf)}
+                    </AppTableCell>
+                    <AppTableCell>{ticket.client.unidade}</AppTableCell>
+                    <AppTableCell>
+                      {formatDateTime(ticket.created_at)}
+                    </AppTableCell>
+                    <AppTableCell className="text-right">
+                      <AppButton
+                        variant="ghost"
+                        size="sm"
+                        type="button"
+                        onPress={() => openEdit(ticket)}
+                      >
+                        Editar
+                      </AppButton>
+                    </AppTableCell>
+                  </AppTableRow>
+                ))
+              )}
+            </AppTableBody>
+          </AppTable>
 
           <div className="mt-4 flex items-center justify-between text-sm text-[var(--color-muted-strong)]">
             <div>
-              Página {pagination.page} de {pagination.totalPages}
+              Pagina {pagination.page} de {pagination.totalPages}
             </div>
             <div className="flex items-center gap-2">
               {pagination.prevHref ? (
@@ -980,17 +994,17 @@ export default function TicketsClient({
                   className="rounded-lg border border-[var(--color-border)] px-3 py-1 hover:bg-[var(--color-muted-soft)]"
                   href={pagination.nextHref}
                 >
-                  Próxima
+                  Proxima
                 </a>
               ) : (
                 <span className="rounded-lg border border-[var(--color-border)] px-3 py-1 text-[var(--color-muted)] opacity-60">
-                  Próxima
+                  Proxima
                 </span>
               )}
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </AppCardBody>
+      </AppCard>
 
       {editTicket && editForm ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay px-4 py-6">
