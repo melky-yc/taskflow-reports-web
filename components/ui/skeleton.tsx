@@ -1,18 +1,10 @@
-﻿import * as React from "react";
-import { cn } from "@/lib/utils";
+import * as React from "react";
+import { AppSkeleton, type AppSkeletonProps } from "@/app/ui";
 
-const Skeleton = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div
-      ref={ref}
-      className={cn(
-        "animate-pulse rounded-lg bg-[var(--color-muted-soft)]",
-        className
-      )}
-      {...props}
-    />
-  )
-);
+const Skeleton = React.forwardRef<HTMLDivElement, AppSkeletonProps>((props, ref) => {
+  return <AppSkeleton ref={ref} {...props} />;
+});
+
 Skeleton.displayName = "Skeleton";
 
 export { Skeleton };

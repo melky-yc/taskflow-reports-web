@@ -1,8 +1,8 @@
-import { Input, type InputProps } from "@heroui/react";
+import { Textarea, type TextAreaProps } from "@heroui/react";
 import { cn } from "@/lib/utils";
 
-export type AppInputProps = Omit<
-  InputProps,
+export type AppTextareaProps = Omit<
+  TextAreaProps,
   "variant" | "color" | "size" | "radius" | "label" | "description" | "errorMessage"
 > & {
   label?: string;
@@ -12,7 +12,7 @@ export type AppInputProps = Omit<
   size?: "sm" | "md" | "lg";
 };
 
-export function AppInput({
+export function AppTextarea({
   label,
   helperText,
   errorText,
@@ -22,12 +22,13 @@ export function AppInput({
   classNames,
   className,
   ...props
-}: AppInputProps) {
+}: AppTextareaProps) {
   const hasError = Boolean(errorText) || Boolean(isInvalid);
-  const { inputWrapper: inputWrapperOverride, ...restClassNames } = classNames ?? {};
+  const { inputWrapper: inputWrapperOverride, ...restClassNames } =
+    classNames ?? {};
 
   return (
-    <Input
+    <Textarea
       label={label}
       description={helperText}
       errorMessage={errorText}

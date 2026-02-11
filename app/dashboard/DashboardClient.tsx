@@ -40,12 +40,12 @@ import {
   AppButton,
   AppCard,
   AppCardBody,
-  AppCardDescription,
-  AppCardHeader,
-  AppCardTitle,
+  AppTooltip,
+  ChartCard,
   FilterModal,
-  KpiCard,
+  HighlightCard,
   PageHeader,
+  StatCard,
 } from "@/app/ui";
 import ActiveFiltersChips, {
   type ActiveFilterChip,
@@ -69,15 +69,15 @@ const PRIORIDADES_CHART = ["Baixa", "Media", "Alta", "Critica"];
 const CIDADES_PI = cidadesPi.cidades;
 const CIDADES_LIST_ID = "cidades-dashboard";
 
-const MOTIVO_COLOR = "var(--color-primary)";
-const CHART_GRID_COLOR = "var(--color-border)";
+const MOTIVO_COLOR = "var(--color-chart-1)";
+const CHART_GRID_COLOR = "var(--color-chart-track)";
 const CHART_AXIS_COLOR = "var(--color-muted)";
 const CHART_TOOLTIP_STYLE = {
   backgroundColor: "var(--color-surface)",
   borderColor: "var(--color-border)",
   color: "var(--color-text)",
   borderRadius: 12,
-  boxShadow: "var(--color-shadow)",
+  boxShadow: "var(--shadow-popover)",
 };
 
 type DashboardMetrics = {
@@ -360,7 +360,6 @@ export default function DashboardClient() {
       : webCount > mobileCount
       ? "Web"
       : "Mobile";
-  const topMotivo = metrics?.totals.top_motivo || "Sem dados";
   const topAreaAtuacaoRaw = metrics?.totals.top_area_atuacao?.trim() ?? "";
   const topAreaAtuacao =
     topAreaAtuacaoRaw || (totalCount > 0 ? "Não informado" : "Sem dados");
@@ -441,6 +440,12 @@ export default function DashboardClient() {
   const motivosChartData = topMotivos.filter((item) => item.value > 0);
   const hasMotivosChartData = motivosChartData.length > 0;
 
+  const topMotivoSummary = topMotivos[0];
+  const topMotivoLabel = topMotivoSummary?.name ?? "Sem dados";
+  const topMotivoCount = topMotivoSummary?.value ?? 0;
+  const topMotivoPercent =
+    totalCount > 0 ? Math.round((topMotivoCount / totalCount) * 100) : 0;
+
   const topUnidades = metrics?.top_unidades ?? [];
   const topCidades = metrics?.top_cidades ?? [];
   const isUnidadesUniform =
@@ -459,6 +464,11 @@ export default function DashboardClient() {
     ...topCidades.map((item) => item.count),
     0
   );
+  const topCidadeSummary = topCidades[0];
+  const topCidadeLabel = topCidadeSummary?.cidade ?? "Sem dados";
+  const topCidadeCount = topCidadeSummary?.count ?? 0;
+  const topCidadePercent =
+    totalCount > 0 ? Math.round((topCidadeCount / totalCount) * 100) : 0;
 
   const activeFilterChips = useMemo<ActiveFilterChip[]>(() => {
     const chips: ActiveFilterChip[] = [];
@@ -550,7 +560,7 @@ export default function DashboardClient() {
         <ActiveFiltersChips items={activeFilterChips} />
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 shadow-[var(--shadow-card)]">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 shadow-[var(--shadow-card)]">
         <FilterModal
           isOpen={isFiltersOpen}
           onOpenChange={setIsFiltersOpen}
@@ -581,7 +591,7 @@ export default function DashboardClient() {
 
       {error ? (
         <AppCard className="border-[var(--color-danger)] bg-[var(--color-danger-soft)]">
-          <AppCardBody className="flex flex-wrap items-center justify-between gap-3 p-4">
+          <AppCardBody className="flex flex-wrap items-center justify-between gap-3 p-4 md:p-6">
             <div>
               <div className="text-sm font-semibold text-[var(--color-danger)]">
                 Não foi possível carregar
@@ -605,283 +615,309 @@ export default function DashboardClient() {
           ))}
         </div>
       ) : (
-        <>
+        <div className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <KpiCard
+            <StatCard
               icon={<Activity className="h-5 w-5" />}
               title="Total de chamados"
               value={formatNumber(totalCount)}
               description={periodLabel}
-              delta={kpiTotalMeta}
+              meta={kpiTotalMeta}
               tone="primary"
             />
-            <KpiCard
+            <StatCard
               icon={<Monitor className="h-5 w-5" />}
               title="Canal com mais chamados"
               value={usageLeader}
               description={periodLabel}
-              delta={kpiUsageMeta}
+              meta={kpiUsageMeta}
               tone="warning"
             />
-            <KpiCard
+            <StatCard
               icon={<BarChart3 className="h-5 w-5" />}
               title="Área mais recorrente"
               value={topAreaAtuacao}
               description={periodLabel}
-              delta={kpiAreaMeta}
+              meta={kpiAreaMeta}
               tone="primary"
             />
-            <KpiCard
+            <StatCard
               icon={<CalendarDays className="h-5 w-5" />}
               title="Chamados hoje"
               value={formatNumber(todayCount)}
               description={periodLabel}
-              delta={kpiTodayMeta}
+              meta={kpiTodayMeta}
               tone="success"
             />
           </div>
 
-          <AppCard className="mt-4">
-            <AppCardBody className="flex items-center gap-3 p-4">
-              <div className="rounded-lg bg-[var(--color-primary-soft)] p-2 text-[var(--color-primary)]">
-                <TrendingUp className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="text-xs text-[var(--color-muted)]">
-                  Motivo mais recorrente
+          <div className="grid gap-4 lg:grid-cols-2">
+            <HighlightCard
+              title="Motivo mais recorrente"
+              value={
+                topMotivoLabel.length > 28 ? (
+                  <AppTooltip content={topMotivoLabel}>
+                    <span className="max-w-[260px] truncate">{topMotivoLabel}</span>
+                  </AppTooltip>
+                ) : (
+                  topMotivoLabel
+                )
+              }
+              subtitle={periodLabel}
+              tone="primary"
+              icon={<TrendingUp className="h-5 w-5" />}
+              badge={
+                <div className="flex flex-col items-end gap-2">
+                  <AppBadge tone="primary" variant="soft" size="sm">
+                    {hasData ? `${formatNumber(topMotivoCount)} chamados` : "—"}
+                  </AppBadge>
+                  <AppBadge tone="default" variant="soft" size="sm">
+                    {hasData ? `${topMotivoPercent}% do total` : "—"}
+                  </AppBadge>
                 </div>
-                <div className="text-lg font-semibold text-[var(--color-text)]">
-                  {topMotivo || "Sem dados"}
+              }
+              footer={hasData ? "Baseado no período selecionado." : "Sem dados"}
+            />
+            <HighlightCard
+              title="Cidade com mais chamados"
+              value={
+                topCidadeLabel.length > 28 ? (
+                  <AppTooltip content={topCidadeLabel}>
+                    <span className="max-w-[260px] truncate">{topCidadeLabel}</span>
+                  </AppTooltip>
+                ) : (
+                  topCidadeLabel
+                )
+              }
+              subtitle={periodLabel}
+              tone="warning"
+              icon={<TrendingUp className="h-5 w-5" />}
+              badge={
+                <div className="flex flex-col items-end gap-2">
+                  <AppBadge tone="warning" variant="soft" size="sm">
+                    {hasData ? `${formatNumber(topCidadeCount)} chamados` : "—"}
+                  </AppBadge>
+                  <AppBadge tone="default" variant="soft" size="sm">
+                    {hasData ? `${topCidadePercent}% do total` : "—"}
+                  </AppBadge>
                 </div>
-                <div className="text-xs text-[var(--color-muted)]">
-                  {hasData ? "Baseado no período selecionado" : "Sem dados"}
-                </div>
-              </div>
-            </AppCardBody>
-          </AppCard>
-        </>
+              }
+              footer={hasData ? "Volume concentrado no período." : "Sem dados"}
+            />
+          </div>
+        </div>
       )}
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <AppCard>
-          <AppCardHeader className="flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-            <div>
-              <AppCardTitle>Série temporal</AppCardTitle>
-              <AppCardDescription>{periodLabel}</AppCardDescription>
+        <ChartCard
+          title="Série temporal"
+          description={periodLabel}
+          icon={<LineChartIcon className="h-5 w-5" />}
+        >
+          {!hasTimeseriesData ? (
+            <EmptyState label="Sem dados para o período selecionado." />
+          ) : !hasTrendData ? (
+            <EmptyState label="Sem dados suficientes para tendência (mín. 3 dias)." />
+          ) : (
+            <div
+              className="h-72 min-h-[280px]"
+              role="img"
+              aria-label="Série temporal de chamados"
+            >
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={timeseriesData} margin={{ left: 8, right: 16 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_COLOR} />
+                  <XAxis dataKey="date" stroke={CHART_AXIS_COLOR} />
+                  <YAxis stroke={CHART_AXIS_COLOR} />
+                  <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
+                  <Line
+                    type="monotone"
+                    dataKey="count"
+                    stroke="var(--color-primary)"
+                    strokeWidth={3}
+                    dot={{ r: 3, fill: "var(--color-primary)" }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
-            <LineChartIcon className="h-5 w-5 text-[var(--color-muted)]" />
-          </AppCardHeader>
-          <AppCardBody>
-            {!hasTimeseriesData ? (
-              <EmptyState label="Sem dados para o período selecionado." />
-            ) : !hasTrendData ? (
-              <EmptyState label="Sem dados suficientes para tendência (mín. 3 dias)." />
-            ) : (
-              <div className="h-72" role="img" aria-label="Série temporal de chamados">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={timeseriesData} margin={{ left: 0, right: 16 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_COLOR} />
-                    <XAxis dataKey="date" stroke={CHART_AXIS_COLOR} />
-                    <YAxis stroke={CHART_AXIS_COLOR} />
-                    <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
-                    <Line
-                      type="monotone"
-                      dataKey="count"
-                      stroke="var(--color-primary)"
-                      strokeWidth={3}
-                      dot={{ r: 3, fill: "var(--color-primary)" }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-          </AppCardBody>
-        </AppCard>
+          )}
+        </ChartCard>
 
-        <AppCard>
-          <AppCardHeader className="flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-            <div>
-              <AppCardTitle>Distribuição por prioridade</AppCardTitle>
-              <AppCardDescription>Chamados no período</AppCardDescription>
-            </div>
-            <BarChart3 className="h-5 w-5 text-[var(--color-muted)]" />
-          </AppCardHeader>
-          <AppCardBody>
-            {!hasPriorityChartData ? (
-              <EmptyState label="Sem dados para o período selecionado." />
-            ) : isSinglePriority ? (
-              <div className="rounded-lg border border-[var(--color-border)] p-4">
-                <div className="text-sm text-[var(--color-muted)]">Prioridade dominante</div>
-                <div className="mt-1 text-xl font-semibold text-[var(--color-text)]">
-                  {priorityChartData[0].name}
-                </div>
-                <div className="mt-2 flex items-center gap-2 text-sm">
-                  <span className="font-medium text-[var(--color-text)]">
-                    {formatNumber(priorityChartData[0].value)}
-                  </span>
-                  <span className="text-[var(--color-muted)]">• 100%</span>
-                </div>
+        <ChartCard
+          title="Distribuição por prioridade"
+          description="Chamados no período"
+          icon={<BarChart3 className="h-5 w-5" />}
+        >
+          {!hasPriorityChartData ? (
+            <EmptyState label="Sem dados para o período selecionado." />
+          ) : isSinglePriority ? (
+            <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-muted-soft)] p-4">
+              <div className="text-sm text-[var(--color-muted)]">Prioridade dominante</div>
+              <div className="mt-1 text-xl font-semibold text-[var(--color-text)]">
+                {priorityChartData[0].name}
               </div>
-            ) : (
-              <>
-                <div
-                  className="h-72"
-                  role="img"
-                  aria-label="Gráfico de distribuição por prioridade"
-                >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={priorityChartData}
-                        dataKey="value"
-                        nameKey="name"
-                        innerRadius={55}
-                        outerRadius={90}
-                        paddingAngle={1}
-                      >
-                        {priorityChartData.map((entry) => (
-                          <Cell key={entry.name} fill={entry.color} />
-                        ))}
-                        <Label
-                          position="center"
-                          content={({ viewBox }) => {
-                            if (!viewBox) {
-                              return null;
-                            }
-                            const polarViewBox = viewBox as {
-                              cx?: number;
-                              cy?: number;
-                            };
-                            if (
-                              typeof polarViewBox.cx !== "number" ||
-                              typeof polarViewBox.cy !== "number"
-                            ) {
-                              return null;
-                            }
-                            const cx = polarViewBox.cx;
-                            const cy = polarViewBox.cy;
-                            return (
-                              <text
+              <div className="mt-2 flex items-center gap-2 text-sm">
+                <span className="font-medium text-[var(--color-text)]">
+                  {formatNumber(priorityChartData[0].value)}
+                </span>
+                <span className="text-[var(--color-muted)]">• 100%</span>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div
+                className="h-72 min-h-[280px]"
+                role="img"
+                aria-label="Gráfico de distribuição por prioridade"
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={priorityChartData}
+                      dataKey="value"
+                      nameKey="name"
+                      innerRadius={55}
+                      outerRadius={90}
+                      paddingAngle={1}
+                    >
+                      {priorityChartData.map((entry) => (
+                        <Cell key={entry.name} fill={entry.color} />
+                      ))}
+                      <Label
+                        position="center"
+                        content={({ viewBox }) => {
+                          if (!viewBox) {
+                            return null;
+                          }
+                          const polarViewBox = viewBox as {
+                            cx?: number;
+                            cy?: number;
+                          };
+                          if (
+                            typeof polarViewBox.cx !== "number" ||
+                            typeof polarViewBox.cy !== "number"
+                          ) {
+                            return null;
+                          }
+                          const cx = polarViewBox.cx;
+                          const cy = polarViewBox.cy;
+                          return (
+                            <text
+                              x={cx}
+                              y={cy}
+                              textAnchor="middle"
+                              dominantBaseline="central"
+                            >
+                              <tspan
                                 x={cx}
-                                y={cy}
-                                textAnchor="middle"
-                                dominantBaseline="central"
+                                dy="-0.2em"
+                                fontSize="18"
+                                fontWeight="600"
+                                fill="var(--color-text)"
                               >
-                                <tspan
-                                  x={cx}
-                                  dy="-0.2em"
-                                  fontSize="18"
-                                  fontWeight="600"
-                                  fill="var(--color-text)"
-                                >
-                                  {priorityTotalLabel}
-                                </tspan>
-                                <tspan
-                                  x={cx}
-                                  dy="1.4em"
-                                  fontSize="11"
-                                  fill="var(--color-muted)"
-                                >
-                                  Total
-                                </tspan>
-                              </text>
-                            );
-                          }}
-                        />
-                      </Pie>
-                      <Tooltip
-                        contentStyle={CHART_TOOLTIP_STYLE}
-                        formatter={(value, name) => {
-                          const numericValue =
-                            typeof value === "number" ? value : Number(value);
-                          const percent =
-                            priorityTotal > 0
-                              ? Math.round((numericValue / priorityTotal) * 100)
-                              : 0;
-                          return [
-                            `${formatNumber(numericValue)} • ${percent}%`,
-                            name,
-                          ];
+                                {priorityTotalLabel}
+                              </tspan>
+                              <tspan
+                                x={cx}
+                                dy="1.4em"
+                                fontSize="11"
+                                fill="var(--color-muted)"
+                              >
+                                Total
+                              </tspan>
+                            </text>
+                          );
                         }}
                       />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-sm text-[var(--color-muted-strong)]">
-                  {priorityChartData.map((item) => (
-                    <div key={item.name} className="flex items-center gap-2">
-                      <span
-                        className="h-2.5 w-2.5 rounded-full"
-                        style={{ backgroundColor: item.color }}
-                      />
-                      <span>{item.name}</span>
-                      <span className="font-medium text-[var(--color-text)]">
-                        {formatNumber(item.value)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </AppCardBody>
-        </AppCard>
+                    </Pie>
+                    <Tooltip
+                      contentStyle={CHART_TOOLTIP_STYLE}
+                      formatter={(value, name) => {
+                        const numericValue =
+                          typeof value === "number" ? value : Number(value);
+                        const percent =
+                          priorityTotal > 0
+                            ? Math.round((numericValue / priorityTotal) * 100)
+                            : 0;
+                        return [
+                          `${formatNumber(numericValue)} • ${percent}%`,
+                          name,
+                        ];
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-sm text-[var(--color-muted-strong)]">
+                {priorityChartData.map((item) => (
+                  <div key={item.name} className="flex items-center gap-2">
+                    <span
+                      className="h-2.5 w-2.5 rounded-full"
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <span>{item.name}</span>
+                    <span className="font-medium text-[var(--color-text)]">
+                      {formatNumber(item.value)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </ChartCard>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <AppCard className="lg:col-span-3">
-          <AppCardHeader>
-            <AppCardTitle>Top motivos</AppCardTitle>
-            <AppCardDescription>Chamados mais recorrentes</AppCardDescription>
-          </AppCardHeader>
-          <AppCardBody>
-            {!hasMotivosChartData ? (
-              <EmptyState label="Sem dados para o período selecionado." />
-            ) : (
-              <div className="h-72" role="img" aria-label="Top motivos de chamados">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={motivosChartData}
-                    layout="vertical"
-                    margin={{ left: 48, right: 24, top: 8, bottom: 8 }}
+        <ChartCard
+          title="Top motivos"
+          description="Chamados mais recorrentes"
+          className="lg:col-span-3"
+        >
+          {!hasMotivosChartData ? (
+            <EmptyState label="Sem dados para o período selecionado." />
+          ) : (
+            <div className="h-72 min-h-[280px]" role="img" aria-label="Top motivos de chamados">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={motivosChartData}
+                  layout="vertical"
+                  margin={{ left: 48, right: 24, top: 8, bottom: 8 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_COLOR} />
+                  <XAxis
+                    type="number"
+                    stroke={CHART_AXIS_COLOR}
+                    domain={[0, (dataMax: number) => dataMax + 1]}
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    stroke={CHART_AXIS_COLOR}
+                    width={180}
+                    tick={renderMotivosTick}
+                  />
+                  <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
+                  <Bar
+                    dataKey="value"
+                    fill={MOTIVO_COLOR}
+                    radius={[6, 6, 6, 6]}
+                    barSize={24}
                   >
-                    <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_COLOR} />
-                    <XAxis
-                      type="number"
-                      stroke={CHART_AXIS_COLOR}
-                      domain={[0, (dataMax: number) => dataMax + 1]}
-                    />
-                    <YAxis
-                      type="category"
-                      dataKey="name"
-                      stroke={CHART_AXIS_COLOR}
-                      width={180}
-                      tick={renderMotivosTick}
-                    />
-                    <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
-                    <Bar
-                      dataKey="value"
-                      fill={MOTIVO_COLOR}
-                      radius={[6, 6, 6, 6]}
-                      barSize={24}
-                    >
-                      <LabelList dataKey="value" position="right" fill="var(--color-text)" />
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-          </AppCardBody>
-        </AppCard>
+                    <LabelList dataKey="value" position="right" fill="var(--color-text)" />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </ChartCard>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <AppCard>
-          <AppCardHeader className="flex flex-row items-start justify-between gap-3">
-            <div>
-              <AppCardTitle>Top unidades</AppCardTitle>
-              <AppCardDescription>Volume por unidade</AppCardDescription>
-            </div>
-            {topUnidades.length >= 5 && !isUnidadesUniform ? (
+        <ChartCard
+          title="Top unidades"
+          description="Volume por unidade"
+          action={
+            topUnidades.length >= 5 && !isUnidadesUniform ? (
               <AppButton
                 as={Link}
                 href="/reports"
@@ -891,61 +927,70 @@ export default function DashboardClient() {
               >
                 Ver mais
               </AppButton>
-            ) : null}
-          </AppCardHeader>
-          <AppCardBody>
-            {topUnidades.length === 0 ? (
-              <EmptyState label="Sem dados para o período selecionado." />
-            ) : (
-              <div className="space-y-3 text-sm">
-                {isUnidadesUniform ? (
-                  <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-muted-soft)] px-3 py-2 text-xs text-[var(--color-muted-strong)]">
-                    Distribuição uniforme no período.
-                  </div>
-                ) : null}
-                {topUnidadesDisplay.map((item) => {
-                  const percent = maxUnidadeCount
-                    ? Math.round((item.count / maxUnidadeCount) * 100)
-                    : 0;
-                  return (
-                    <div
-                      key={item.unidade}
-                      className="rounded-lg border border-[var(--color-border)] px-3 py-2"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="text-[var(--color-muted-strong)]">
-                          {item.unidade}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-[var(--color-muted)]">
-                            {percent}%
-                          </span>
-                          <AppBadge tone="default" variant="soft" size="sm">
-                            {formatNumber(item.count)}
-                          </AppBadge>
-                        </div>
-                      </div>
-                      <div className="mt-2 h-2 w-full rounded-full bg-[var(--color-muted-soft)]">
-                        <div
-                          className="h-2 rounded-full bg-[var(--color-primary)]"
-                          style={{ width: `${percent}%` }}
-                        />
-                      </div>
-                    </div>
+            ) : null
+          }
+        >
+          {topUnidades.length === 0 ? (
+            <EmptyState label="Sem dados para o período selecionado." />
+          ) : (
+            <div className="space-y-3 text-sm">
+              {isUnidadesUniform ? (
+                <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-muted-soft)] px-3 py-2 text-xs text-[var(--color-muted-strong)]">
+                  Distribuição uniforme no período.
+                </div>
+              ) : null}
+              {topUnidadesDisplay.map((item) => {
+                const percent = maxUnidadeCount
+                  ? Math.round((item.count / maxUnidadeCount) * 100)
+                  : 0;
+                const unidadeLabel = item.unidade;
+                const unidadeDisplay = truncateLabel(unidadeLabel, 24);
+                const labelContent = (
+                  <span className="max-w-[200px] truncate">{unidadeDisplay}</span>
+                );
+                const labelNode =
+                  unidadeDisplay !== unidadeLabel ? (
+                    <AppTooltip content={unidadeLabel}>{labelContent}</AppTooltip>
+                  ) : (
+                    labelContent
                   );
-                })}
-              </div>
-            )}
-          </AppCardBody>
-        </AppCard>
 
-        <AppCard>
-          <AppCardHeader className="flex flex-row items-start justify-between gap-3">
-            <div>
-              <AppCardTitle>Top cidades</AppCardTitle>
-              <AppCardDescription>Volume por cidade</AppCardDescription>
+                return (
+                  <div
+                    key={item.unidade}
+                    className="rounded-lg border border-[var(--color-border)] px-3 py-2"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="min-w-0 text-[var(--color-muted-strong)]">
+                        {labelNode}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-[var(--color-muted)]">
+                          {percent}%
+                        </span>
+                        <AppBadge tone="default" variant="soft" size="sm">
+                          {formatNumber(item.count)}
+                        </AppBadge>
+                      </div>
+                    </div>
+                    <div className="mt-2 h-2 w-full rounded-full bg-[var(--color-chart-track)]">
+                      <div
+                        className="h-2 rounded-full bg-[var(--color-chart-1)]"
+                        style={{ width: `${percent}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-            {topCidades.length >= 5 && !isCidadesUniform ? (
+          )}
+        </ChartCard>
+
+        <ChartCard
+          title="Top cidades"
+          description="Volume por cidade"
+          action={
+            topCidades.length >= 5 && !isCidadesUniform ? (
               <AppButton
                 as={Link}
                 href="/reports"
@@ -955,53 +1000,64 @@ export default function DashboardClient() {
               >
                 Ver mais
               </AppButton>
-            ) : null}
-          </AppCardHeader>
-          <AppCardBody>
-            {topCidades.length === 0 ? (
-              <EmptyState label="Sem dados para o período selecionado." />
-            ) : (
-              <div className="space-y-3 text-sm">
-                {isCidadesUniform ? (
-                  <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-muted-soft)] px-3 py-2 text-xs text-[var(--color-muted-strong)]">
-                    Distribuição uniforme no período.
-                  </div>
-                ) : null}
-                {topCidadesDisplay.map((item) => {
-                  const percent = maxCidadeCount
-                    ? Math.round((item.count / maxCidadeCount) * 100)
-                    : 0;
-                  return (
-                    <div
-                      key={item.cidade}
-                      className="rounded-lg border border-[var(--color-border)] px-3 py-2"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="text-[var(--color-muted-strong)]">
-                          {item.cidade}
+            ) : null
+          }
+        >
+          {topCidades.length === 0 ? (
+            <EmptyState label="Sem dados para o período selecionado." />
+          ) : (
+            <div className="space-y-3 text-sm">
+              {isCidadesUniform ? (
+                <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-muted-soft)] px-3 py-2 text-xs text-[var(--color-muted-strong)]">
+                  Distribuição uniforme no período.
+                </div>
+              ) : null}
+              {topCidadesDisplay.map((item) => {
+                const percent = maxCidadeCount
+                  ? Math.round((item.count / maxCidadeCount) * 100)
+                  : 0;
+                const cidadeLabel = item.cidade;
+                const cidadeDisplay = truncateLabel(cidadeLabel, 24);
+                const labelContent = (
+                  <span className="max-w-[200px] truncate">{cidadeDisplay}</span>
+                );
+                const labelNode =
+                  cidadeDisplay !== cidadeLabel ? (
+                    <AppTooltip content={cidadeLabel}>{labelContent}</AppTooltip>
+                  ) : (
+                    labelContent
+                  );
+
+                return (
+                  <div
+                    key={item.cidade}
+                    className="rounded-lg border border-[var(--color-border)] px-3 py-2"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="min-w-0 text-[var(--color-muted-strong)]">
+                        {labelNode}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-[var(--color-muted)]">
+                          {percent}%
                         </span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-[var(--color-muted)]">
-                            {percent}%
-                          </span>
-                          <AppBadge tone="default" variant="soft" size="sm">
-                            {formatNumber(item.count)}
-                          </AppBadge>
-                        </div>
-                      </div>
-                      <div className="mt-2 h-2 w-full rounded-full bg-[var(--color-muted-soft)]">
-                        <div
-                          className="h-2 rounded-full bg-[var(--color-primary)]"
-                          style={{ width: `${percent}%` }}
-                        />
+                        <AppBadge tone="default" variant="soft" size="sm">
+                          {formatNumber(item.count)}
+                        </AppBadge>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </AppCardBody>
-        </AppCard>
+                    <div className="mt-2 h-2 w-full rounded-full bg-[var(--color-chart-track)]">
+                      <div
+                        className="h-2 rounded-full bg-[var(--color-chart-2)]"
+                        style={{ width: `${percent}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </ChartCard>
       </div>
 
       <datalist id={CIDADES_LIST_ID}>

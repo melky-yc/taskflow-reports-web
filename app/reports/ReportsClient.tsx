@@ -495,7 +495,7 @@ export default function ReportsClient() {
 
                 <div className="grid gap-4 lg:grid-cols-3">
                   <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-sm">
-                    <div className="text-sm font-semibold text-[var(--color-text)]">
+                    <div className  ="text-sm font-semibold text-[var(--color-text)]">
                       Distribuição por prioridade
                     </div>
                     <div className="mt-3 space-y-2 text-sm text-[var(--color-muted-strong)]">
