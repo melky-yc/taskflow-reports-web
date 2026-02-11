@@ -18,6 +18,8 @@ export * from "./stat-card";
 export * from "./chart-card";
 export * from "./highlight-card";
 export * from "./tooltip";
+export * from "./form-card";
+export * from "./form-section";
 export * from "./kpi-card";
 export * from "./status-badge";
 export * from "./page-header";
