@@ -4,11 +4,9 @@ import type { ReactNode } from "react";
 import {
   AppCard,
   AppCardBody,
-  AppCardDescription,
   AppCardFooter,
-  AppCardHeader,
-  AppCardTitle,
 } from "@/app/ui/card";
+import AppCardHeader from "@/components/ui/AppCardHeader";
 import { cn } from "@/lib/utils";
 
 export type FormCardProps = {
@@ -33,17 +31,12 @@ export function FormCard({
   return (
     <AppCard className={cn("h-full", className)}>
       {title ? (
-        <AppCardHeader className="flex flex-col gap-3 p-4 pb-0 md:p-6 md:pb-0">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <AppCardTitle className="text-base">{title}</AppCardTitle>
-              {description ? (
-                <AppCardDescription>{description}</AppCardDescription>
-              ) : null}
-            </div>
-            {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
-          </div>
-        </AppCardHeader>
+        <AppCardHeader
+          title={title}
+          subtitle={description}
+          action={actions}
+          className="p-4 pb-0 md:p-6 md:pb-0"
+        />
       ) : null}
       <AppCardBody className={cn("p-4 pt-4 md:p-6 md:pt-4", bodyClassName)}>
         {children}

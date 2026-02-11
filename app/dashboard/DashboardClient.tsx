@@ -53,6 +53,7 @@ import ActiveFiltersChips, {
 import EmptyState from "@/components/dashboard/EmptyState";
 import DashboardFiltersForm from "@/components/dashboard/FiltersToolbar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Toolbar } from "@/components/ui/Toolbar";
 import { formatDateBR } from "@/utils/exportReports";
 
 type PeriodOption = "7" | "30" | "90" | "365" | "custom";
@@ -529,6 +530,8 @@ export default function DashboardClient() {
     return chips;
   }, [appliedFilters, handleRemoveFilter, periodLabel]);
 
+  const hasActiveFilters = activeFilterChips.length > 0;
+
   const ticketsLink = useMemo(() => {
     const params = new URLSearchParams();
     const periodValue =
@@ -557,11 +560,10 @@ export default function DashboardClient() {
             </>
           }
         />
-        <ActiveFiltersChips items={activeFilterChips} />
       </div>
 
-      <AppCard>
-        <AppCardBody className="flex flex-wrap items-center justify-between gap-4 p-4 md:p-6">
+      <Toolbar
+        left={
           <FilterModal
             isOpen={isFiltersOpen}
             onOpenChange={setIsFiltersOpen}
@@ -583,13 +585,19 @@ export default function DashboardClient() {
               maskDateInput={maskDateInput}
             />
           </FilterModal>
-
-          <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--color-muted)]">
+        }
+        center={
+          hasActiveFilters ? (
+            <ActiveFiltersChips items={activeFilterChips} />
+          ) : null
+        }
+        right={
+          <>
             <span>Última atualização: {formatTime(lastUpdated)}</span>
             <span>Registros encontrados: {recordLabel}</span>
-          </div>
-        </AppCardBody>
-      </AppCard>
+          </>
+        }
+      />
 
       {error ? (
         <AppCard className="border-[var(--color-danger)] bg-[var(--color-danger-soft)]">

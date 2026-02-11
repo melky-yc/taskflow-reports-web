@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { Moon, Settings, Sun, User } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useAlerts } from "@/components/alerts/AlertsProvider";
+import { SelectableCard } from "@/components/ui/SelectableCard";
+import { SettingsRow } from "@/components/ui/SettingsRow";
 import {
   AppButton,
   AppCard,
@@ -150,45 +152,20 @@ export default function ConfigClient() {
             description="Defina o tema que melhor se adapta ao seu ambiente."
           >
             <div className="grid gap-4 md:gap-6 md:grid-cols-2">
-              <AppCard
-                isPressable
+              <SelectableCard
+                title="Claro"
+                description="Tema padrão para ambientes corporativos."
+                icon={<Sun className="text-[var(--color-warning)]" />}
+                selected={theme === "light"}
                 onPress={() => handleThemeChange("light")}
-                className={`transition ${
-                  theme === "light"
-                    ? "border-[var(--color-primary)] bg-[var(--color-primary-soft)]"
-                    : "border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-primary)]"
-                }`}
-              >
-                <AppCardBody className="p-4 md:p-6">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-[var(--color-text)]">
-                    <Sun className="h-4 w-4 text-[var(--color-warning)]" />
-                    Claro
-                  </div>
-                  <p className="mt-2 text-xs text-[var(--color-muted)]">
-                    Tema padrão para ambientes corporativos.
-                  </p>
-                </AppCardBody>
-              </AppCard>
-
-              <AppCard
-                isPressable
+              />
+              <SelectableCard
+                title="Escuro"
+                description="Interface otimizada para uso noturno."
+                icon={<Moon className="text-[var(--color-primary)]" />}
+                selected={theme === "dark"}
                 onPress={() => handleThemeChange("dark")}
-                className={`transition ${
-                  theme === "dark"
-                    ? "border-[var(--color-primary)] bg-[var(--color-muted-soft)]"
-                    : "border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-primary)]"
-                }`}
-              >
-                <AppCardBody className="p-4 md:p-6">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-[var(--color-text)]">
-                    <Moon className="h-4 w-4 text-[var(--color-primary)]" />
-                    Escuro
-                  </div>
-                  <p className="mt-2 text-xs text-[var(--color-muted)]">
-                    Interface otimizada para uso noturno.
-                  </p>
-                </AppCardBody>
-              </AppCard>
+              />
             </div>
           </FormCard>
         </AppTab>
@@ -198,76 +175,69 @@ export default function ConfigClient() {
             title="Preferências avançadas"
             description="Ajuste comportamentos e opções de exibição da interface."
           >
-            <div className="grid gap-4 md:gap-6 md:grid-cols-2">
+            <div className="space-y-4">
               <AppCard>
-                <AppCardBody className="p-4 md:p-6">
-                  <div className="text-xs text-[var(--color-muted)]">Idioma</div>
-                  <div className="mt-1 text-sm font-medium text-[var(--color-text)]">
-                    Português (Brasil)
+                <AppCardBody className="p-0 md:p-0 gap-0">
+                  <div className="divide-y divide-[var(--color-border)]">
+                    <SettingsRow
+                      title="Idioma"
+                      right={
+                        <span className="text-sm font-medium text-[var(--color-text)]">
+                          Português (Brasil)
+                        </span>
+                      }
+                      className="p-4 md:p-6"
+                    />
+                    <SettingsRow
+                      title="Formato de data"
+                      right={
+                        <span className="text-sm font-medium text-[var(--color-text)]">
+                          DD/MM/AAAA
+                        </span>
+                      }
+                      className="p-4 md:p-6"
+                    />
                   </div>
-                </AppCardBody>
-              </AppCard>
-              <AppCard>
-                <AppCardBody className="p-4 md:p-6">
-                  <div className="text-xs text-[var(--color-muted)]">
-                    Formato de data
-                  </div>
-                  <div className="mt-1 text-sm font-medium text-[var(--color-text)]">
-                    DD/MM/AAAA
-                  </div>
-                </AppCardBody>
-              </AppCard>
-            </div>
-
-            <div className="mt-4 space-y-3">
-              <AppCard>
-                <AppCardBody className="flex items-center justify-between gap-4 p-4 md:p-6">
-                  <div>
-                    <div className="text-sm font-medium text-[var(--color-text)]">
-                      Mostrar dicas na interface
-                    </div>
-                    <div className="text-xs text-[var(--color-muted)]">
-                      Exibe sugestões rápidas nos formulários.
-                    </div>
-                  </div>
-                  <AppSwitch
-                    checked={prefs.showTips}
-                    onCheckedChange={handlePrefChange("showTips")}
-                  />
                 </AppCardBody>
               </AppCard>
 
               <AppCard>
-                <AppCardBody className="flex items-center justify-between gap-4 p-4 md:p-6">
-                  <div>
-                    <div className="text-sm font-medium text-[var(--color-text)]">
-                      Confirmar antes de excluir registros
-                    </div>
-                    <div className="text-xs text-[var(--color-muted)]">
-                      Exibe confirmação antes de ações críticas.
-                    </div>
+                <AppCardBody className="p-0 md:p-0 gap-0">
+                  <div className="divide-y divide-[var(--color-border)]">
+                    <SettingsRow
+                      title="Mostrar dicas na interface"
+                      description="Exibe sugestões rápidas nos formulários."
+                      right={
+                        <AppSwitch
+                          checked={prefs.showTips}
+                          onCheckedChange={handlePrefChange("showTips")}
+                        />
+                      }
+                      className="p-4 md:p-6"
+                    />
+                    <SettingsRow
+                      title="Confirmar antes de excluir registros"
+                      description="Exibe confirmação antes de ações críticas."
+                      right={
+                        <AppSwitch
+                          checked={prefs.confirmDelete}
+                          onCheckedChange={handlePrefChange("confirmDelete")}
+                        />
+                      }
+                      className="p-4 md:p-6"
+                    />
+                    <SettingsRow
+                      title="Abrir dashboard ao fazer login"
+                      description="Mantém a home no painel de métricas."
+                      right={
+                        <AppSwitch
+                          checked={prefs.openDashboard}
+                          onCheckedChange={handlePrefChange("openDashboard")}
+                        />
+                      }
+                      className="p-4 md:p-6"
+                    />
                   </div>
-                  <AppSwitch
-                    checked={prefs.confirmDelete}
-                    onCheckedChange={handlePrefChange("confirmDelete")}
-                  />
-                </AppCardBody>
-              </AppCard>
-
-              <AppCard>
-                <AppCardBody className="flex items-center justify-between gap-4 p-4 md:p-6">
-                  <div>
-                    <div className="text-sm font-medium text-[var(--color-text)]">
-                      Abrir dashboard ao fazer login
-                    </div>
-                    <div className="text-xs text-[var(--color-muted)]">
-                      Mantém a home no painel de métricas.
-                    </div>
-                  </div>
-                  <AppSwitch
-                    checked={prefs.openDashboard}
-                    onCheckedChange={handlePrefChange("openDashboard")}
-                  />
                 </AppCardBody>
               </AppCard>
 

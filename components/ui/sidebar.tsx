@@ -54,7 +54,7 @@ export function Sidebar({
         className
       )}
     >
-      <AppCardBody className={cn("p-4", variant === "plain" && "p-0")}>
+      <AppCardBody className={cn(variant === "plain" && "p-0 md:p-0")}>
         <div className="text-xs font-semibold uppercase tracking-wide text-[var(--color-muted)]">
           Navegação
         </div>

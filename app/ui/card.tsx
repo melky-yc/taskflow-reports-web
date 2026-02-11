@@ -29,7 +29,7 @@ export function AppCardHeader({
 }: React.ComponentProps<typeof CardHeader>) {
   return (
     <CardHeader
-      className={cn("flex flex-col gap-2", className)}
+      className={cn("flex w-full flex-col items-start gap-2 text-left", className)}
       {...props}
     />
   );
@@ -39,7 +39,7 @@ export function AppCardBody({
   className,
   ...props
 }: React.ComponentProps<typeof CardBody>) {
-  return <CardBody className={cn("gap-4", className)} {...props} />;
+  return <CardBody className={cn("gap-4 p-4 md:p-6", className)} {...props} />;
 }
 
 export function AppCardFooter({

@@ -363,48 +363,58 @@ export default function ReportsClient() {
         title="Gerador de relatórios"
         description="Selecione o período e filtre os dados antes de gerar."
       >
-        <div className="grid gap-4 md:items-end md:gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
-          <AppSelect
-            label="Período"
-            value={period}
-            onValueChange={(value) => setPeriod(value as Period)}
-            options={PERIOD_OPTIONS.map((option) => ({
-              value: option.value,
-              label: option.label,
-            }))}
-          />
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between md:gap-6">
+          <div className="flex flex-1 flex-col gap-4 md:flex-row md:flex-wrap md:items-end md:gap-6">
+            <div className="min-w-[200px] flex-1">
+              <AppSelect
+                label="Período"
+                value={period}
+                onValueChange={(value) => setPeriod(value as Period)}
+                options={PERIOD_OPTIONS.map((option) => ({
+                  value: option.value,
+                  label: option.label,
+                }))}
+              />
+            </div>
 
-          {(period === "daily" || period === "weekly") && (
-            <AppInput
-              label="Data base"
-              value={baseDate}
-              onValueChange={(value) => setBaseDate(maskDateInput(value))}
-              placeholder="DD/MM/AAAA"
-              inputMode="numeric"
-            />
-          )}
+            {(period === "daily" || period === "weekly") && (
+              <div className="min-w-[200px] flex-1">
+                <AppInput
+                  label="Data base"
+                  value={baseDate}
+                  onValueChange={(value) => setBaseDate(maskDateInput(value))}
+                  placeholder="DD/MM/AAAA"
+                  inputMode="numeric"
+                />
+              </div>
+            )}
 
-          {period === "monthly" && (
-            <AppInput
-              label="Mês/Ano"
-              value={monthValue}
-              onValueChange={(value) => setMonthValue(maskMonthInput(value))}
-              placeholder="MM/AAAA"
-              inputMode="numeric"
-            />
-          )}
+            {period === "monthly" && (
+              <div className="min-w-[200px] flex-1">
+                <AppInput
+                  label="Mês/Ano"
+                  value={monthValue}
+                  onValueChange={(value) => setMonthValue(maskMonthInput(value))}
+                  placeholder="MM/AAAA"
+                  inputMode="numeric"
+                />
+              </div>
+            )}
 
-          {period === "yearly" && (
-            <AppInput
-              label="Ano"
-              value={yearValue}
-              onValueChange={(value) =>
-                setYearValue(value.replace(/\D/g, "").slice(0, 4))
-              }
-              placeholder="AAAA"
-              inputMode="numeric"
-            />
-          )}
+            {period === "yearly" && (
+              <div className="min-w-[160px] flex-1">
+                <AppInput
+                  label="Ano"
+                  value={yearValue}
+                  onValueChange={(value) =>
+                    setYearValue(value.replace(/\D/g, "").slice(0, 4))
+                  }
+                  placeholder="AAAA"
+                  inputMode="numeric"
+                />
+              </div>
+            )}
+          </div>
 
           <div className="flex md:justify-end">
             <AppButton
