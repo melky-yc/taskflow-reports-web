@@ -350,7 +350,9 @@ export default function TicketsClient({
     const form = createFormRef.current;
     if (!form) return;
     const isoValue = typeof nextIso === "string" ? nextIso : dataAtendimentoIso;
-    setIsCreateValid(form.checkValidity() && Boolean(isoValue));
+    // Avoid imperative validation side effects that can steal focus while typing.
+    const hasInvalidControl = Boolean(form.querySelector(":invalid"));
+    setIsCreateValid(!hasInvalidControl && Boolean(isoValue));
   }, [dataAtendimentoIso]);
 
   const handleCreateInput = () => {
@@ -505,7 +507,6 @@ export default function TicketsClient({
             action={createTicketAction}
             className="space-y-6"
             onInput={handleCreateInput}
-            onChange={handleCreateInput}
           >
             {errorMessage ? (
               <AppAlert
