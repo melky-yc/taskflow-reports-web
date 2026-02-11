@@ -32,6 +32,9 @@
   --color-chart-2: #0f766e;
   --color-chart-3: #b45309;
   --color-chart-4: #64748b;
+  --color-chart-low: #22c55e;
+  --color-chart-medium: #eab308;
+  --color-chart-high: #ef4444;
   --color-chart-track: #e2e8f0;
   --color-overlay: rgba(15, 23, 42, 0.45);
   --color-shadow: 0 16px 30px rgba(15, 23, 42, 0.08);
@@ -88,6 +91,9 @@
   --color-chart-2: #48a39b;
   --color-chart-3: #d4a166;
   --color-chart-4: #94a3b8;
+  --color-chart-low: #22c55e;
+  --color-chart-medium: #eab308;
+  --color-chart-high: #ef4444;
   --color-chart-track: #1f2937;
   --color-overlay: rgba(3, 7, 18, 0.7);
   --color-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
@@ -98,7 +104,11 @@
 body {
   background: var(--color-bg);
   color: var(--color-text);
-  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  font-family:
+    var(--font-inter),
+    system-ui,
+    -apple-system,
+    sans-serif;
 }
 
 * {

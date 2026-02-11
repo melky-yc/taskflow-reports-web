@@ -26,10 +26,10 @@ export const PRIORITY_BADGE_VARIANTS = {
 } as const;
 
 export const PRIORITY_COLOR_MAP = {
-  Baixa: "var(--color-muted-strong)",
-  Media: "var(--color-warning)",
-  Alta: "var(--color-danger)",
-  Critica: "var(--color-critical)",
+  Baixa: "var(--color-chart-low)",
+  Media: "var(--color-chart-medium)",
+  Alta: "var(--color-chart-high)",
+  Critica: "var(--color-chart-high)",
 } as const;
 
 export const USO_PLATAFORMA_OPTIONS = [

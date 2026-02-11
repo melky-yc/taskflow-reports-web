@@ -417,7 +417,7 @@ export default function DashboardClient() {
     value: priorityMap[label] ?? 0,
     color:
       PRIORITY_COLOR_MAP[label as keyof typeof PRIORITY_COLOR_MAP] ??
-      "#7c3aed",
+      "var(--color-chart-high)",
   }));
   const priorityChartData = priorityData.filter((item) => item.value > 0);
   const hasPriorityChartData = priorityChartData.length > 0;
