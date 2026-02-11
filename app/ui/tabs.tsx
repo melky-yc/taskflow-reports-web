@@ -15,10 +15,11 @@ export function AppTabs({ classNames, ...props }: AppTabsProps) {
         tabList: cn(
           "rounded-[var(--radius-md)] border border-[var(--color-border)]",
           "bg-[var(--color-muted-soft)] p-1",
+          "max-w-full overflow-x-auto whitespace-nowrap",
           classNames?.tabList
         ),
         tab: cn(
-          "text-[var(--color-muted-strong)]",
+          "shrink-0 text-[var(--color-muted-strong)]",
           "data-[selected=true]:text-[var(--color-text)] data-[selected=true]:shadow-sm",
           classNames?.tab
         ),

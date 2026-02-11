@@ -956,7 +956,9 @@ export default function DashboardClient() {
                 const unidadeLabel = item.unidade;
                 const unidadeDisplay = truncateLabel(unidadeLabel, 24);
                 const labelContent = (
-                  <span className="max-w-[200px] truncate">{unidadeDisplay}</span>
+                  <span className="max-w-[140px] truncate sm:max-w-[200px]">
+                    {unidadeDisplay}
+                  </span>
                 );
                 const labelNode =
                   unidadeDisplay !== unidadeLabel ? (
@@ -1029,7 +1031,9 @@ export default function DashboardClient() {
                 const cidadeLabel = item.cidade;
                 const cidadeDisplay = truncateLabel(cidadeLabel, 24);
                 const labelContent = (
-                  <span className="max-w-[200px] truncate">{cidadeDisplay}</span>
+                  <span className="max-w-[140px] truncate sm:max-w-[200px]">
+                    {cidadeDisplay}
+                  </span>
                 );
                 const labelNode =
                   cidadeDisplay !== cidadeLabel ? (

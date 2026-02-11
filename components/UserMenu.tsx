@@ -26,12 +26,12 @@ export default function UserMenu({ email }: UserMenuProps) {
           <AppButton
             variant="ghost"
             size="sm"
-            className="h-10 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text)] shadow-sm hover:bg-[var(--color-muted-soft)]"
+            className="h-10 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 text-sm text-[var(--color-text)] shadow-sm hover:bg-[var(--color-muted-soft)] sm:px-3"
           >
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-muted-soft)] text-[var(--color-muted-strong)]">
               <User className="h-4 w-4" />
             </span>
-            <span className="hidden text-sm font-medium text-[var(--color-text)] sm:inline">
+            <span className="hidden max-w-[220px] truncate text-sm font-medium text-[var(--color-text)] md:inline">
               {displayEmail}
             </span>
           </AppButton>

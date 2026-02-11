@@ -596,7 +596,7 @@ export default function ReportsClient() {
                 <AppTable
                   aria-label="Listagem resumida"
                   stickyHeader
-                  classNames={{ base: "overflow-x-auto" }}
+                  classNames={{ base: "overflow-x-auto", table: "min-w-[1080px]" }}
                 >
                   <AppTableHeader>
                     <AppTableColumn>ID</AppTableColumn>

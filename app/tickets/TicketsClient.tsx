@@ -881,7 +881,7 @@ export default function TicketsClient({
           <AppTable
             aria-label="Tabela de chamados"
             stickyHeader
-            classNames={{ base: "overflow-x-auto" }}
+            classNames={{ base: "overflow-x-auto", table: "min-w-[980px]" }}
           >
             <AppTableHeader>
               <AppTableColumn>ID</AppTableColumn>
@@ -952,11 +952,11 @@ export default function TicketsClient({
             </AppTableBody>
           </AppTable>
 
-          <div className="mt-4 flex items-center justify-between text-sm text-[var(--color-muted-strong)]">
+          <div className="mt-4 flex flex-col gap-3 text-sm text-[var(--color-muted-strong)] sm:flex-row sm:items-center sm:justify-between">
             <div>
               Página {pagination.page} de {pagination.totalPages}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 self-start sm:self-auto">
               {pagination.prevHref ? (
                 <a
                   className="rounded-xl border border-[var(--color-border)] px-3 py-1.5 text-xs font-medium text-[var(--color-text)] hover:bg-[var(--color-muted-soft)]"

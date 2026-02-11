@@ -23,8 +23,8 @@ export default async function AppShell({ active, breadcrumb, children }: AppShel
     <AlertsProvider>
       <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)]">
         <header className="fixed left-0 top-0 z-40 w-full border-b border-[var(--color-border)] bg-[var(--color-surface)]/95 backdrop-blur">
-          <div className="mx-auto flex h-16 w-full max-w-[1200px] items-center justify-between px-4 md:px-6">
-            <div className="flex items-center gap-3">
+          <div className="mx-auto flex h-14 w-full max-w-screen-2xl items-center justify-between px-3 sm:h-16 sm:px-4 lg:px-6 xl:max-w-[1680px] xl:px-8">
+            <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
               <MobileNav active={active} items={NAV_ITEMS} />
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--color-surface)]">
                 <Image
@@ -36,25 +36,27 @@ export default async function AppShell({ active, breadcrumb, children }: AppShel
                   priority
                 />
               </div>
-              <div>
-                <div className="text-sm font-semibold text-[var(--color-text)]">
+              <div className="min-w-0">
+                <div className="truncate text-sm font-semibold text-[var(--color-text)]">
                   Taskflow Reports
                 </div>
                 {breadcrumb ? (
-                  <div className="flex items-center gap-1 text-xs text-[var(--color-muted)]">
+                  <div className="hidden min-w-0 items-center gap-1 text-xs text-[var(--color-muted)] sm:flex">
                     <span>Início</span>
-                    <ChevronRight className="h-3 w-3" />
-                    <span>{breadcrumb}</span>
+                    <ChevronRight className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{breadcrumb}</span>
                   </div>
                 ) : null}
               </div>
             </div>
-            <UserMenu email={user?.email} />
+            <div className="shrink-0">
+              <UserMenu email={user?.email} />
+            </div>
           </div>
         </header>
 
-        <div className="mx-auto flex w-full max-w-[1200px] gap-6 px-4 pb-10 pt-24 md:px-6">
-          <aside className="hidden w-64 lg:block">
+        <div className="mx-auto flex w-full max-w-screen-2xl gap-4 px-3 pb-8 pt-20 sm:px-4 sm:pb-10 sm:pt-24 lg:gap-6 lg:px-6 xl:max-w-[1680px] xl:gap-8 xl:px-8">
+          <aside className="hidden w-64 lg:block xl:w-72">
             <div className="sticky top-24">
               <Sidebar items={NAV_ITEMS} activeKey={active} />
             </div>

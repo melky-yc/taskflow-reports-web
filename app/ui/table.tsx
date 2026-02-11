@@ -46,7 +46,7 @@ export function AppTable({
       className={cn("min-w-full", className)}
       classNames={{
         base: cn(
-          "rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)]",
+          "overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)]",
           "shadow-[var(--shadow-card)]",
           baseOverride
         ),

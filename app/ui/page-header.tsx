@@ -17,13 +17,19 @@ export function PageHeader({ title, subtitle, actions, className }: PageHeaderPr
         className
       )}
     >
-      <div>
-        <h1 className="text-2xl font-semibold text-[var(--color-text)]">{title}</h1>
+      <div className="min-w-0">
+        <h1 className="truncate text-xl font-semibold text-[var(--color-text)] sm:text-2xl">
+          {title}
+        </h1>
         {subtitle ? (
-          <p className="text-sm text-[var(--color-muted)]">{subtitle}</p>
+          <p className="max-w-3xl text-sm text-[var(--color-muted)]">{subtitle}</p>
         ) : null}
       </div>
-      {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
+      {actions ? (
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
+          {actions}
+        </div>
+      ) : null}
     </div>
   );
 }
