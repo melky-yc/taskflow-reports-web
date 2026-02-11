@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Modal,
   ModalBody,
@@ -105,3 +107,4 @@ export function AppModal({
 }
 
 export { ModalBody as AppModalBody, ModalFooter as AppModalFooter };
+

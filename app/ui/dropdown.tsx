@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Dropdown,
   DropdownItem,
@@ -65,3 +67,4 @@ export function AppDropdownSection({
     />
   );
 }
+

@@ -3,13 +3,13 @@
 import { LogOut, User } from "lucide-react";
 import { signOutAction } from "@/app/actions";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  AppButton,
+  AppDropdown,
+  AppDropdownItem,
+  AppDropdownMenu,
+  AppDropdownSection,
+  AppDropdownTrigger,
+} from "@/app/ui";
 
 type UserMenuProps = {
   email?: string | null;
@@ -19,28 +19,50 @@ export default function UserMenu({ email }: UserMenuProps) {
   const displayEmail = email ?? "Usuário";
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1.5 text-sm text-[var(--color-text)] shadow-sm hover:bg-[var(--color-muted-soft)]">
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-muted-soft)] text-[var(--color-muted-strong)]">
-          <User className="h-4 w-4" />
-        </span>
-        <span className="hidden text-sm font-medium text-[var(--color-text)] sm:inline">
-          {displayEmail}
-        </span>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        <DropdownMenuLabel>Conta</DropdownMenuLabel>
-        <div className="px-3 py-2 text-xs text-[var(--color-muted)]">
-          {displayEmail}
-        </div>
-        <DropdownMenuSeparator />
-        <form action={signOutAction}>
-          <DropdownMenuItem type="submit">
-            <LogOut className="h-4 w-4" />
+    <>
+      <form id="signout-form" action={signOutAction} className="hidden" />
+      <AppDropdown>
+        <AppDropdownTrigger>
+          <AppButton
+            variant="ghost"
+            size="sm"
+            className="h-10 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text)] shadow-sm hover:bg-[var(--color-muted-soft)]"
+          >
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-muted-soft)] text-[var(--color-muted-strong)]">
+              <User className="h-4 w-4" />
+            </span>
+            <span className="hidden text-sm font-medium text-[var(--color-text)] sm:inline">
+              {displayEmail}
+            </span>
+          </AppButton>
+        </AppDropdownTrigger>
+        <AppDropdownMenu aria-label="Conta">
+          <AppDropdownSection title="Conta" showDivider>
+            <AppDropdownItem
+              key="email"
+              className="cursor-default"
+              textValue={displayEmail}
+            >
+              <div className="text-xs text-[var(--color-muted)]">{displayEmail}</div>
+            </AppDropdownItem>
+          </AppDropdownSection>
+          <AppDropdownItem
+            key="logout"
+            as="button"
+            startContent={<LogOut className="h-4 w-4" />}
+            onPress={() => {
+              const form = document.getElementById("signout-form") as
+                | HTMLFormElement
+                | null;
+              form?.requestSubmit();
+            }}
+          >
             Sair
-          </DropdownMenuItem>
-        </form>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          </AppDropdownItem>
+        </AppDropdownMenu>
+      </AppDropdown>
+    </>
   );
 }
+
+

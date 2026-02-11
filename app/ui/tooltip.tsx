@@ -1,3 +1,5 @@
+"use client";
+
 import { Tooltip, type TooltipProps } from "@heroui/react";
 import { cn } from "@/lib/utils";
 
@@ -20,3 +22,4 @@ export function AppTooltip({ classNames, ...props }: AppTooltipProps) {
     />
   );
 }
+

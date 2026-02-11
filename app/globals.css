@@ -26,6 +26,8 @@
   --color-warning-soft: #fff4e5;
   --color-danger: #b42318;
   --color-danger-soft: #fee4e2;
+  --color-critical: #6d28d9;
+  --color-critical-soft: #f1e8ff;
   --color-chart-1: #2f4b8f;
   --color-chart-2: #0f766e;
   --color-chart-3: #b45309;
@@ -75,11 +77,13 @@
   --color-muted-strong: #c7d0da;
   --color-muted-soft: #141d2f;
   --color-success: #2dd4bf;
-  --color-success-soft: rgba(45, 212, 191, 0.12);
-  --color-warning: #fbbf24;
-  --color-warning-soft: rgba(251, 191, 36, 0.12);
-  --color-danger: #f87171;
-  --color-danger-soft: rgba(248, 113, 113, 0.12);
+  --color-success-soft: rgba(45, 212, 191, 0.14);
+  --color-warning: #f3b963;
+  --color-warning-soft: rgba(243, 185, 99, 0.14);
+  --color-danger: #f28b82;
+  --color-danger-soft: rgba(242, 139, 130, 0.16);
+  --color-critical: #a78bfa;
+  --color-critical-soft: rgba(167, 139, 250, 0.2);
   --color-chart-1: #6f82d6;
   --color-chart-2: #48a39b;
   --color-chart-3: #d4a166;
@@ -120,6 +124,9 @@ body {
   .bg-danger-soft {
     background-color: var(--color-danger-soft);
   }
+  .bg-critical-soft {
+    background-color: var(--color-critical-soft);
+  }
   .text-default {
     color: var(--color-text);
   }
@@ -137,6 +144,9 @@ body {
   }
   .text-danger {
     color: var(--color-danger);
+  }
+  .text-critical {
+    color: var(--color-critical);
   }
   .border-default {
     border-color: var(--color-border);

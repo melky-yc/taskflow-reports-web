@@ -67,8 +67,8 @@ const darkColors = {
   primary: { DEFAULT: "#7a97ff", foreground: "#0b1120" },
   secondary: { DEFAULT: "#92abff", foreground: "#0b1120" },
   success: { DEFAULT: "#2dd4bf", foreground: "#0b1120" },
-  warning: { DEFAULT: "#fbbf24", foreground: "#0b1120" },
-  danger: { DEFAULT: "#f87171", foreground: "#0b1120" },
+  warning: { DEFAULT: "#f3b963", foreground: "#0b1120" },
+  danger: { DEFAULT: "#f28b82", foreground: "#0b1120" },
 };
 
 export default heroui({

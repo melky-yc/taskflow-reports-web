@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Table,
   TableBody,
@@ -9,7 +11,20 @@ import {
 } from "@heroui/react";
 import { cn } from "@/lib/utils";
 
-export function AppTable({ className, classNames, ...props }: TableProps) {
+export type AppTableDensity = "comfortable" | "compact";
+
+export type AppTableProps = TableProps & {
+  stickyHeader?: boolean;
+  density?: AppTableDensity;
+};
+
+export function AppTable({
+  className,
+  classNames,
+  stickyHeader = false,
+  density = "comfortable",
+  ...props
+}: AppTableProps) {
   const baseOverride = typeof classNames?.base === "string" ? classNames.base : undefined;
   const tableOverride =
     typeof classNames?.table === "string" ? classNames.table : undefined;
@@ -24,6 +39,7 @@ export function AppTable({ className, classNames, ...props }: TableProps) {
     typeof classNames?.emptyWrapper === "string"
       ? classNames.emptyWrapper
       : undefined;
+  const paddingClass = density === "compact" ? "px-3 py-2" : "px-4 py-3";
 
   return (
     <Table
@@ -35,9 +51,13 @@ export function AppTable({ className, classNames, ...props }: TableProps) {
           baseOverride
         ),
         table: cn("min-w-full text-sm", tableOverride),
-        thead: cn("bg-[var(--color-muted-soft)]", theadOverride),
+        thead: cn(
+          "bg-[var(--color-muted-soft)]",
+          stickyHeader && "sticky top-0 z-10 shadow-[0_1px_0_var(--color-border)]",
+          theadOverride
+        ),
         th: cn(
-          "px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--color-muted)]",
+          `${paddingClass} text-left text-xs font-semibold uppercase tracking-wide text-[var(--color-muted)]`,
           thOverride
         ),
         tbody: cn("divide-y divide-[var(--color-border)]", tbodyOverride),
@@ -45,7 +65,7 @@ export function AppTable({ className, classNames, ...props }: TableProps) {
           "text-[var(--color-text)] hover:bg-[var(--color-muted-soft)]",
           trOverride
         ),
-        td: cn("px-3 py-3", tdOverride),
+        td: cn(paddingClass, tdOverride),
         emptyWrapper: cn(
           "px-6 py-10 text-sm text-[var(--color-muted)]",
           emptyOverride
@@ -63,3 +83,4 @@ export {
   TableRow as AppTableRow,
   TableCell as AppTableCell,
 };
+

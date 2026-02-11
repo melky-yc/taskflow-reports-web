@@ -1,3 +1,5 @@
+"use client";
+
 import { Button, type ButtonProps } from "@heroui/react";
 import { cn } from "@/lib/utils";
 
@@ -49,3 +51,4 @@ export function AppButton({
     />
   );
 }
+

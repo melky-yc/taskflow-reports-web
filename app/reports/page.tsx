@@ -1,4 +1,4 @@
-import AppShell from "@/components/AppShell";
+﻿import AppShell from "@/components/AppShell";
 import ReportsClient from "@/app/reports/ReportsClient";
 
 export default function ReportsPage() {
@@ -8,3 +8,5 @@ export default function ReportsPage() {
     </AppShell>
   );
 }
+
+

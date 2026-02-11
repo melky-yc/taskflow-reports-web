@@ -1,3 +1,5 @@
+"use client";
+
 import { Input, type InputProps } from "@heroui/react";
 import { cn } from "@/lib/utils";
 
@@ -51,3 +53,4 @@ export function AppInput({
     />
   );
 }
+

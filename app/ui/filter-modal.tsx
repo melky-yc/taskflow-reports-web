@@ -1,3 +1,5 @@
+"use client";
+
 import { Filter } from "lucide-react";
 import { AppButton } from "@/app/ui/button";
 import { AppModal, type AppModalSize } from "@/app/ui/modal";
@@ -103,3 +105,4 @@ export function FilterModal({
     </>
   );
 }
+

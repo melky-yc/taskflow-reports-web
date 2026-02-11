@@ -1,3 +1,5 @@
+"use client";
+
 import type { ReactNode } from "react";
 import { AppCard, AppCardBody } from "@/app/ui/card";
 
@@ -51,3 +53,4 @@ export function KpiCard({
     </AppCard>
   );
 }
+

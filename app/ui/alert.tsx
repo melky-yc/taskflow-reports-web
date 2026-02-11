@@ -1,3 +1,5 @@
+"use client";
+
 import { Alert, type AlertProps } from "@heroui/react";
 import { cn } from "@/lib/utils";
 
@@ -5,7 +7,7 @@ export type AppAlertTone = "primary" | "info" | "success" | "warning" | "danger"
 
 export type AppAlertProps = Omit<AlertProps, "color" | "variant"> & {
   tone?: AppAlertTone;
-  variant?: "solid" | "flat" | "bordered" | "faded" | "light" | "shadow";
+  variant?: AlertProps["variant"];
 };
 
 const toneMap: Record<AppAlertTone, AlertProps["color"]> = {
@@ -36,3 +38,4 @@ export function AppAlert({
     />
   );
 }
+

@@ -24,8 +24,8 @@ import {
   AppCardDescription,
   AppCardHeader,
   AppCardTitle,
-  AppDivider,
   AppInput,
+  AppModal,
   AppSelect,
   AppTextarea,
   AppAlert,
@@ -37,8 +37,8 @@ import {
   AppTableRow,
   FilterModal,
   FormCard,
-  FormSection,
   PageHeader,
+  Section,
   StatusBadge,
 } from "@/app/ui";
 import DatePickerModal from "@/components/tickets/DatePickerModal";
@@ -52,6 +52,7 @@ import {
 const CIDADES_PI = cidadesPi.cidades;
 const CIDADES_LIST_ID = "cidades-pi";
 const CREATE_FORM_ID = "create-ticket-form";
+const EDIT_FORM_ID = "edit-ticket-form";
 
 type TicketsClientProps = {
   currentUserName: string;
@@ -181,13 +182,37 @@ function SubmitButton({
   );
 }
 
-function UpdateButton() {
-  const { pending } = useFormStatus();
+function UpdateButton({
+  pending,
+  formId,
+}: {
+  pending: boolean;
+  formId: string;
+}) {
   return (
-    <AppButton type="submit" isDisabled={pending} isLoading={pending}>
+    <AppButton
+      type="submit"
+      form={formId}
+      isDisabled={pending}
+      isLoading={pending}
+    >
       Salvar alterações
     </AppButton>
   );
+}
+
+function EditPendingObserver({
+  onPendingChange,
+}: {
+  onPendingChange: (pending: boolean) => void;
+}) {
+  const { pending } = useFormStatus();
+
+  useEffect(() => {
+    onPendingChange(pending);
+  }, [onPendingChange, pending]);
+
+  return null;
 }
 
 export default function TicketsClient({
@@ -225,6 +250,7 @@ export default function TicketsClient({
   const [isDateModalOpen, setIsDateModalOpen] = useState(false);
   const [isEditDateModalOpen, setIsEditDateModalOpen] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [isEditPending, setIsEditPending] = useState(false);
 
   const createFormRef = useRef<HTMLFormElement | null>(null);
   const filtersFormRef = useRef<HTMLFormElement | null>(null);
@@ -266,6 +292,7 @@ export default function TicketsClient({
     setIsEditDateModalOpen(false);
     setEditTicket(null);
     setEditForm(null);
+    setIsEditPending(false);
   };
 
   const editRetroativo = useMemo(
@@ -488,7 +515,7 @@ export default function TicketsClient({
               />
             ) : null}
 
-            <FormSection
+            <Section
               title="Profissional"
               description="Usuário responsável pelo atendimento registrado."
               className="rounded-lg bg-[var(--color-muted-soft)] p-4"
@@ -498,7 +525,7 @@ export default function TicketsClient({
                 </AppBadge>
               }
             >
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 md:gap-6 md:grid-cols-2">
                 <AppInput
                   label="E-mail"
                   isReadOnly
@@ -506,15 +533,13 @@ export default function TicketsClient({
                   className="bg-[var(--color-muted-soft)]"
                 />
               </div>
-            </FormSection>
+            </Section>
 
-            <AppDivider />
-
-            <FormSection
+            <Section
               title="Dados do Chamado"
               description="Defina o motivo, a prioridade e a data do atendimento."
             >
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-4 md:gap-6 md:grid-cols-2 lg:grid-cols-3">
                 <AppSelect
                   name="motivo"
                   label="Motivo"
@@ -596,7 +621,7 @@ export default function TicketsClient({
                       Chamados com data anterior a hoje exigem justificativa.
                     </div>
                   </div>
-                  <AppBadge tone={retroativo ? "warning" : "default"} variant="soft" size="sm">
+                  <AppBadge tone={retroativo ? "warning" : "success"} variant="soft" size="sm">
                     {retroativo ? "Retroativo" : "Normal"}
                   </AppBadge>
                 </div>
@@ -614,15 +639,13 @@ export default function TicketsClient({
                   isRequired
                 />
               ) : null}
-            </FormSection>
+            </Section>
 
-            <AppDivider />
-
-            <FormSection
+            <Section
               title="Dados do Cliente"
               description="Informações cadastrais do cliente atendido."
             >
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-4 md:gap-6 md:grid-cols-2 lg:grid-cols-3">
                 <div className="space-y-2">
                   <AppInput
                     label="CPF"
@@ -764,7 +787,7 @@ export default function TicketsClient({
                   isRequired
                 />
               </div>
-            </FormSection>
+            </Section>
           </form>
 
           {isDateModalOpen ? (
@@ -856,6 +879,7 @@ export default function TicketsClient({
         <AppCardBody>
           <AppTable
             aria-label="Tabela de chamados"
+            stickyHeader
             classNames={{ base: "overflow-x-auto" }}
           >
             <AppTableHeader>
@@ -868,7 +892,7 @@ export default function TicketsClient({
               <AppTableColumn>CPF</AppTableColumn>
               <AppTableColumn>Unidade</AppTableColumn>
               <AppTableColumn>Criado em</AppTableColumn>
-              <AppTableColumn className="text-right">Acoes</AppTableColumn>
+              <AppTableColumn className="text-right">Ações</AppTableColumn>
             </AppTableHeader>
             <AppTableBody>
               {tickets.length === 0 ? (
@@ -929,31 +953,31 @@ export default function TicketsClient({
 
           <div className="mt-4 flex items-center justify-between text-sm text-[var(--color-muted-strong)]">
             <div>
-              Pagina {pagination.page} de {pagination.totalPages}
+              Página {pagination.page} de {pagination.totalPages}
             </div>
             <div className="flex items-center gap-2">
               {pagination.prevHref ? (
                 <a
-                  className="rounded-lg border border-[var(--color-border)] px-3 py-1 hover:bg-[var(--color-muted-soft)]"
+                  className="rounded-xl border border-[var(--color-border)] px-3 py-1.5 text-xs font-medium text-[var(--color-text)] hover:bg-[var(--color-muted-soft)]"
                   href={pagination.prevHref}
                 >
                   Anterior
                 </a>
               ) : (
-                <span className="rounded-lg border border-[var(--color-border)] px-3 py-1 text-[var(--color-muted)] opacity-60">
+                <span className="rounded-xl border border-[var(--color-border)] px-3 py-1.5 text-xs font-medium text-[var(--color-muted)] opacity-60">
                   Anterior
                 </span>
               )}
               {pagination.nextHref ? (
                 <a
-                  className="rounded-lg border border-[var(--color-border)] px-3 py-1 hover:bg-[var(--color-muted-soft)]"
+                  className="rounded-xl border border-[var(--color-border)] px-3 py-1.5 text-xs font-medium text-[var(--color-text)] hover:bg-[var(--color-muted-soft)]"
                   href={pagination.nextHref}
                 >
-                  Proxima
+                  Próxima
                 </a>
               ) : (
-                <span className="rounded-lg border border-[var(--color-border)] px-3 py-1 text-[var(--color-muted)] opacity-60">
-                  Proxima
+                <span className="rounded-xl border border-[var(--color-border)] px-3 py-1.5 text-xs font-medium text-[var(--color-muted)] opacity-60">
+                  Próxima
                 </span>
               )}
             </div>
@@ -962,343 +986,288 @@ export default function TicketsClient({
       </AppCard>
 
       {editTicket && editForm ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay px-4 py-6">
-          <div className="w-full max-w-3xl overflow-hidden rounded-xl bg-[var(--color-surface)] shadow-[var(--color-shadow)]">
-            <div className="flex items-start justify-between gap-4 border-b border-[var(--color-border)] px-6 py-4">
-              <div>
-                <h3 className="text-lg font-semibold text-[var(--color-text)]">
-                  Editar chamado
-                </h3>
-                <p className="text-sm text-[var(--color-muted)]">
-                  Atualize os dados do chamado e do cliente.
-                </p>
-              </div>
+        <AppModal
+          isOpen
+          onOpenChange={(open) => {
+            if (!open) {
+              closeEdit();
+            }
+          }}
+          title="Editar chamado"
+          description="Atualize os dados do chamado e do cliente."
+          size="xl"
+          footer={
+            <div className="flex w-full items-center justify-end gap-2">
               <AppButton
                 variant="ghost"
-                size="sm"
                 type="button"
                 onPress={closeEdit}
+                isDisabled={isEditPending}
               >
-                Fechar
+                Cancelar
               </AppButton>
+              <UpdateButton pending={isEditPending} formId={EDIT_FORM_ID} />
             </div>
+          }
+        >
+          <form
+            id={EDIT_FORM_ID}
+            action={updateTicketAction}
+            className="space-y-6"
+          >
+            <EditPendingObserver onPendingChange={setIsEditPending} />
+            <input type="hidden" name="ticket_id" value={editTicket.id} />
+            <input type="hidden" name="client_id" value={editTicket.client_id} />
+            <input
+              type="hidden"
+              name="cliente_cpf"
+              value={editForm.clienteCpfDigits}
+            />
+            <input
+              type="hidden"
+              name="data_atendimento"
+              value={editForm.dataAtendimentoIso}
+            />
 
-            <div className="max-h-[80vh] overflow-y-auto px-6 py-5">
-              <form action={updateTicketAction} className="space-y-5">
-                <input type="hidden" name="ticket_id" value={editTicket.id} />
-                <input type="hidden" name="client_id" value={editTicket.client_id} />
-                <input
-                  type="hidden"
-                  name="cliente_cpf"
-                  value={editForm.clienteCpfDigits}
+            <Section
+              title="Dados do Chamado"
+              description="Atualize motivo, prioridade e data do atendimento."
+            >
+              <div className="grid gap-4 md:gap-6 md:grid-cols-3">
+                <AppSelect
+                  name="motivo"
+                  label="Motivo"
+                  value={editForm.motivo}
+                  onValueChange={(value) =>
+                    setEditForm((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            motivo: value,
+                            motivoOutro:
+                              value === "Outro" ? prev.motivoOutro : "",
+                          }
+                        : prev
+                    )
+                  }
+                  options={MOTIVOS_OPTIONS.map((item) => ({
+                    value: item,
+                    label: item,
+                  }))}
+                  isRequired
                 />
-                <input
-                  type="hidden"
-                  name="data_atendimento"
-                  value={editForm.dataAtendimentoIso}
+
+                <AppSelect
+                  name="prioridade"
+                  label="Prioridade"
+                  value={editForm.prioridade}
+                  onValueChange={(value) =>
+                    setEditForm((prev) =>
+                      prev ? { ...prev, prioridade: value } : prev
+                    )
+                  }
+                  options={PRIORIDADES_OPTIONS.map((item) => ({
+                    value: item,
+                    label: formatPrioridadeLabel(item),
+                  }))}
+                  isRequired
                 />
 
-                <section className="space-y-3">
-                  <h4 className="text-sm font-semibold text-[var(--color-text)]">
-                    Dados do Chamado
-                  </h4>
-                  <div className="grid gap-4 md:grid-cols-3">
-                    <div className="space-y-2">
-                      <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-                        Motivo
-                      </label>
-                      <AppSelect
-                        name="motivo"
-                        value={editForm.motivo}
-                        onValueChange={(value) =>
-                          setEditForm((prev) =>
-                            prev
-                              ? {
-                                  ...prev,
-                                  motivo: value,
-                                  motivoOutro:
-                                    value === "Outro" ? prev.motivoOutro : "",
-                                }
-                              : prev
-                          )
-                        }
-                        options={MOTIVOS_OPTIONS.map((item) => ({
-                          value: item,
-                          label: item,
-                        }))}
-                        isRequired
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-                        Prioridade
-                      </label>
-                      <AppSelect
-                        name="prioridade"
-                        value={editForm.prioridade}
-                        onValueChange={(value) =>
-                          setEditForm((prev) =>
-                            prev ? { ...prev, prioridade: value } : prev
-                          )
-                        }
-                        options={PRIORIDADES_OPTIONS.map((item) => ({
-                          value: item,
-                          label: formatPrioridadeLabel(item),
-                        }))}
-                        isRequired
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-                        Data de atendimento
-                      </label>
-                      <div className="flex items-center justify-between rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2">
-                        <span className="text-sm text-[var(--color-text)]">
-                          {editForm.dataAtendimentoBr || "—"}
-                        </span>
-                        <AppButton
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onPress={() => setIsEditDateModalOpen(true)}
-                        >
-                          Alterar
-                        </AppButton>
-                      </div>
-                    </div>
-                  </div>
-
-                  {editForm.motivo === "Outro" ? (
-                    <div className="space-y-2">
-                      <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-                        Descrição do motivo (Outro)
-                      </label>
-                      <AppTextarea
-                        name="motivo_outro_descricao"
-                        value={editForm.motivoOutro}
-                        onChange={(event) =>
-                          setEditForm((prev) =>
-                            prev
-                              ? { ...prev, motivoOutro: event.target.value }
-                              : prev
-                          )
-                        }
-                        isRequired
-                      />
-                    </div>
-                  ) : null}
-                </section>
-
-                <AppDivider />
-
-                <section className="space-y-3">
-                  <h4 className="text-sm font-semibold text-[var(--color-text)]">
-                    Dados do Cliente
-                  </h4>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-                        Nome
-                      </label>
-                      <AppInput
-                        name="cliente_nome"
-                        value={editForm.clienteNome}
-                        onChange={(event) =>
-                          setEditForm((prev) =>
-                            prev
-                              ? { ...prev, clienteNome: event.target.value }
-                              : prev
-                          )
-                        }
-                        isRequired
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-                        CPF (não editável)
-                      </label>
-                      <AppInput
-                        value={formatCpf(editForm.clienteCpfDigits)}
-                        isReadOnly
-                        className="bg-[var(--color-muted-soft)]"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-                        Cidade
-                      </label>
-                      <AppInput
-                        name="cliente_cidade"
-                        value={editForm.clienteCidade}
-                        onChange={(event) =>
-                          setEditForm((prev) =>
-                            prev
-                              ? { ...prev, clienteCidade: event.target.value }
-                              : prev
-                          )
-                        }
-                        list={CIDADES_LIST_ID}
-                        isRequired
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-xs font-medium text-[var(--color-muted-strong)]">UF</label>
-                      <AppInput
-                        name="cliente_estado"
-                        value={editForm.clienteEstado || UF_PADRAO}
-                        isReadOnly
-                        className="bg-[var(--color-muted-soft)]"
-                        isRequired
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-                        Uso da plataforma
-                      </label>
-                      <AppSelect
-                        name="uso_plataforma"
-                        value={editForm.clienteUsoPlataforma}
-                        onValueChange={(value) =>
-                          setEditForm((prev) =>
-                            prev
-                              ? {
-                                  ...prev,
-                                  clienteUsoPlataforma: value,
-                                }
-                              : prev
-                          )
-                        }
-                        options={USO_PLATAFORMA_OPTIONS.map((item) => ({
-                          value: item,
-                          label: item,
-                        }))}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-                        Área de atuação
-                      </label>
-                      <AppSelect
-                        name="cliente_area_atuacao"
-                        value={editForm.clienteAreaAtuacao}
-                        onValueChange={(value) =>
-                          setEditForm((prev) => {
-                            if (!prev) return prev;
-                            return {
-                              ...prev,
-                              clienteAreaAtuacao: value,
-                              clienteAreaAtuacaoOutro:
-                                value === "Outro" ? prev.clienteAreaAtuacaoOutro : "",
-                            };
-                          })
-                        }
-                        options={AREA_ATUACAO_OPTIONS.map((item) => ({
-                          value: item,
-                          label: item,
-                        }))}
-                        isRequired
-                      />
-                      {editForm.clienteAreaAtuacao === "Outro" ? (
-                        <div className="space-y-2">
-                          <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-                            Descreva a área de atuação
-                          </label>
-                          <AppInput
-                            name="cliente_area_atuacao_outro"
-                            value={editForm.clienteAreaAtuacaoOutro}
-                            onChange={(event) =>
-                              setEditForm((prev) =>
-                                prev
-                                  ? {
-                                      ...prev,
-                                      clienteAreaAtuacaoOutro: event.target.value,
-                                    }
-                                  : prev
-                              )
-                            }
-                            placeholder="Ex.: Agropecuária"
-                            isRequired
-                          />
-                        </div>
-                      ) : null}
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-                        Unidade
-                      </label>
-                      <AppInput
-                        name="cliente_unidade"
-                        value={editForm.clienteUnidade}
-                        onChange={(event) =>
-                          setEditForm((prev) =>
-                            prev
-                              ? { ...prev, clienteUnidade: event.target.value }
-                              : prev
-                          )
-                        }
-                        isRequired
-                      />
-                    </div>
-                  </div>
-                </section>
-
-                <AppDivider />
-
-                <section className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-semibold text-[var(--color-text)]">Retroativo</h4>
-                    <AppBadge tone={editRetroativo ? "warning" : "default"} variant="soft" size="sm">
-                      {editRetroativo ? "Retroativo" : "Normal"}
-                    </AppBadge>
-                  </div>
-                  {editRetroativo ? (
-                    <div className="space-y-2">
-                      <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-                        Motivo do retroativo
-                      </label>
-                      <AppTextarea
-                        name="retroativo_motivo"
-                        value={editForm.retroativoMotivo}
-                        onChange={(event) =>
-                          setEditForm((prev) =>
-                            prev
-                              ? {
-                                  ...prev,
-                                  retroativoMotivo: event.target.value,
-                                }
-                              : prev
-                          )
-                        }
-                        isRequired
-                      />
-                    </div>
-                  ) : (
-                    <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-muted-soft)] px-4 py-3 text-sm text-[var(--color-muted-strong)]">
-                      Este chamado não é retroativo.
-                    </div>
-                  )}
-                </section>
-
-                <div className="sticky bottom-0 -mx-6 mt-6 border-t border-[var(--color-border)] bg-[var(--color-surface)] px-6 py-4">
-                  <div className="flex items-center justify-end gap-2">
-                    <AppButton variant="ghost" type="button" onPress={closeEdit}>
-                      Cancelar
+                <AppInput
+                  label="Data de atendimento"
+                  value={editForm.dataAtendimentoBr || "?"}
+                  isReadOnly
+                  className="bg-[var(--color-muted-soft)]"
+                  endContent={
+                    <AppButton
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onPress={() => setIsEditDateModalOpen(true)}
+                    >
+                      Alterar
                     </AppButton>
-                    <UpdateButton />
-                  </div>
+                  }
+                />
+              </div>
+
+              {editForm.motivo === "Outro" ? (
+                <AppTextarea
+                  label="Descri??o do motivo (Outro)"
+                  name="motivo_outro_descricao"
+                  value={editForm.motivoOutro}
+                  onChange={(event) =>
+                    setEditForm((prev) =>
+                      prev
+                        ? { ...prev, motivoOutro: event.target.value }
+                        : prev
+                    )
+                  }
+                  isRequired
+                />
+              ) : null}
+            </Section>
+
+            <Section
+              title="Dados do Cliente"
+              description="Informa??es cadastrais do cliente atendido."
+            >
+              <div className="grid gap-4 md:gap-6 md:grid-cols-2">
+                <AppInput
+                  label="Nome"
+                  name="cliente_nome"
+                  value={editForm.clienteNome}
+                  onChange={(event) =>
+                    setEditForm((prev) =>
+                      prev ? { ...prev, clienteNome: event.target.value } : prev
+                    )
+                  }
+                  isRequired
+                />
+
+                <AppInput
+                  label="CPF (n?o edit?vel)"
+                  value={formatCpf(editForm.clienteCpfDigits)}
+                  isReadOnly
+                  className="bg-[var(--color-muted-soft)]"
+                />
+
+                <AppInput
+                  label="Cidade"
+                  name="cliente_cidade"
+                  value={editForm.clienteCidade}
+                  onChange={(event) =>
+                    setEditForm((prev) =>
+                      prev ? { ...prev, clienteCidade: event.target.value } : prev
+                    )
+                  }
+                  list={CIDADES_LIST_ID}
+                  isRequired
+                />
+
+                <AppInput
+                  label="UF"
+                  name="cliente_estado"
+                  value={editForm.clienteEstado || UF_PADRAO}
+                  isReadOnly
+                  className="bg-[var(--color-muted-soft)]"
+                  isRequired
+                />
+
+                <AppSelect
+                  name="uso_plataforma"
+                  label="Uso da plataforma"
+                  value={editForm.clienteUsoPlataforma}
+                  onValueChange={(value) =>
+                    setEditForm((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            clienteUsoPlataforma: value,
+                          }
+                        : prev
+                    )
+                  }
+                  options={USO_PLATAFORMA_OPTIONS.map((item) => ({
+                    value: item,
+                    label: item,
+                  }))}
+                />
+
+                <div className="space-y-4">
+                  <AppSelect
+                    name="cliente_area_atuacao"
+                    label="?rea de atua??o"
+                    value={editForm.clienteAreaAtuacao}
+                    onValueChange={(value) =>
+                      setEditForm((prev) => {
+                        if (!prev) return prev;
+                        return {
+                          ...prev,
+                          clienteAreaAtuacao: value,
+                          clienteAreaAtuacaoOutro:
+                            value === "Outro" ? prev.clienteAreaAtuacaoOutro : "",
+                        };
+                      })
+                    }
+                    options={AREA_ATUACAO_OPTIONS.map((item) => ({
+                      value: item,
+                      label: item,
+                    }))}
+                    isRequired
+                  />
+                  {editForm.clienteAreaAtuacao === "Outro" ? (
+                    <AppInput
+                      label="Descreva a ?rea de atua??o"
+                      name="cliente_area_atuacao_outro"
+                      value={editForm.clienteAreaAtuacaoOutro}
+                      onChange={(event) =>
+                        setEditForm((prev) =>
+                          prev
+                            ? {
+                                ...prev,
+                                clienteAreaAtuacaoOutro: event.target.value,
+                              }
+                            : prev
+                        )
+                      }
+                      placeholder="Ex.: Agropecu?ria"
+                      isRequired
+                    />
+                  ) : null}
                 </div>
-              </form>
-            </div>
-          </div>
-        </div>
+
+                <AppInput
+                  label="Unidade"
+                  name="cliente_unidade"
+                  value={editForm.clienteUnidade}
+                  onChange={(event) =>
+                    setEditForm((prev) =>
+                      prev ? { ...prev, clienteUnidade: event.target.value } : prev
+                    )
+                  }
+                  isRequired
+                />
+              </div>
+            </Section>
+
+            <Section
+              title="Retroativo"
+              aside={
+                <AppBadge
+                  tone={editRetroativo ? "warning" : "success"}
+                  variant="soft"
+                  size="sm"
+                >
+                  {editRetroativo ? "Retroativo" : "Normal"}
+                </AppBadge>
+              }
+            >
+              {editRetroativo ? (
+                <AppTextarea
+                  label="Motivo do retroativo"
+                  name="retroativo_motivo"
+                  value={editForm.retroativoMotivo}
+                  onChange={(event) =>
+                    setEditForm((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            retroativoMotivo: event.target.value,
+                          }
+                        : prev
+                    )
+                  }
+                  isRequired
+                />
+              ) : (
+                <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-muted-soft)] px-4 py-3 text-sm text-[var(--color-muted-strong)]">
+                  Este chamado não é retroativo.
+                </div>
+              )}
+            </Section>
+          </form>
+        </AppModal>
       ) : null}
 
       {isEditDateModalOpen ? (
@@ -1322,4 +1291,10 @@ export default function TicketsClient({
     </div>
   );
 }
+
+
+
+
+
+
 

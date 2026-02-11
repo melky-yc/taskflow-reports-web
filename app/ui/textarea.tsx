@@ -1,3 +1,5 @@
+"use client";
+
 import { Textarea, type TextAreaProps } from "@heroui/react";
 import { cn } from "@/lib/utils";
 
@@ -52,3 +54,4 @@ export function AppTextarea({
     />
   );
 }
+

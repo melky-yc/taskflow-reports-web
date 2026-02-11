@@ -1,10 +1,17 @@
 ﻿import { redirect } from "next/navigation";
 import Image from "next/image";
-import { Mail, Lock } from "lucide-react";
+import { Lock, Mail } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import {
+  AppAlert,
+  AppButton,
+  AppCard,
+  AppCardBody,
+  AppCardDescription,
+  AppCardHeader,
+  AppCardTitle,
+  AppInput,
+} from "@/app/ui";
 
 type LoginPageProps = {
   searchParams?: Promise<{ error?: string }>;
@@ -39,9 +46,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
-      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-16">
+      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-4 py-12 sm:px-6">
         <div className="mb-6 flex items-center justify-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--color-surface)]">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-card)]">
             <Image
               src="/logotsf.svg"
               alt="Taskflow Reports"
@@ -52,55 +59,49 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             />
           </div>
         </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Acesso ao sistema</CardTitle>
-            <CardDescription>
-              Entre com suas credenciais para continuar.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form action={signIn} className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-[var(--color-muted)]">E-mail</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-[var(--color-muted)]" />
-                  <Input
-                    className="pl-9"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                  />
-                </div>
-              </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-[var(--color-muted)]">Senha</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-[var(--color-muted)]" />
-                  <Input
-                    className="pl-9"
-                    name="password"
-                    type="password"
-                    autoComplete="current-password"
-                    required
-                  />
-                </div>
-              </div>
+        <AppCard>
+          <AppCardHeader className="p-4 pb-0 md:p-6 md:pb-0">
+            <AppCardTitle className="text-xl">Acesso ao sistema</AppCardTitle>
+            <AppCardDescription>
+              Entre com suas credenciais para continuar.
+            </AppCardDescription>
+          </AppCardHeader>
+          <AppCardBody className="p-4 pt-4 md:p-6 md:pt-4">
+            <form action={signIn} className="space-y-4">
+              <AppInput
+                label="E-mail"
+                name="email"
+                type="email"
+                autoComplete="email"
+                startContent={<Mail className="h-4 w-4 text-[var(--color-muted)]" />}
+                isRequired
+              />
+
+              <AppInput
+                label="Senha"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                startContent={<Lock className="h-4 w-4 text-[var(--color-muted)]" />}
+                isRequired
+              />
 
               {hasError ? (
-                <div className="rounded-lg border border-[var(--color-danger)] bg-[var(--color-danger-soft)] px-3 py-2 text-xs text-[var(--color-danger)]">
-                  E-mail ou senha inválidos.
-                </div>
+                <AppAlert
+                  tone="danger"
+                  title="Acesso inválido"
+                  description="E-mail ou senha inválidos."
+                />
               ) : null}
 
-              <Button className="w-full" type="submit">
+              <AppButton className="w-full" type="submit">
                 Entrar
-              </Button>
+              </AppButton>
             </form>
-          </CardContent>
-        </Card>
+          </AppCardBody>
+        </AppCard>
+
         <p className="mt-6 text-center text-xs text-[var(--color-muted)]">
           Suporte interno. Use apenas contas autorizadas.
         </p>
@@ -108,3 +109,5 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     </div>
   );
 }
+
+

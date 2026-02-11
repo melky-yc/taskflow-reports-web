@@ -1,3 +1,5 @@
+"use client";
+
 import { Tab, Tabs, type TabItemProps, type TabsProps } from "@heroui/react";
 import { cn } from "@/lib/utils";
 
@@ -9,16 +11,20 @@ export function AppTabs({ classNames, ...props }: AppTabsProps) {
       variant="light"
       radius="md"
       classNames={{
-        base: "w-full",
+        base: cn("w-full", classNames?.base),
         tabList: cn(
           "rounded-[var(--radius-md)] border border-[var(--color-border)]",
-          "bg-[var(--color-muted-soft)] p-1"
+          "bg-[var(--color-muted-soft)] p-1",
+          classNames?.tabList
         ),
-        tab: "text-[var(--color-muted-strong)]",
-        tabContent: "text-sm font-medium",
-        cursor: "bg-[var(--color-surface)] shadow-[var(--shadow-card)]",
-        panel: "pt-4",
-        ...classNames,
+        tab: cn(
+          "text-[var(--color-muted-strong)]",
+          "data-[selected=true]:text-[var(--color-text)] data-[selected=true]:shadow-sm",
+          classNames?.tab
+        ),
+        tabContent: cn("text-sm font-medium", classNames?.tabContent),
+        cursor: cn("bg-[var(--color-surface)] shadow-[var(--shadow-card)]", classNames?.cursor),
+        panel: cn("pt-4", classNames?.panel),
       }}
       {...props}
     />
@@ -27,15 +33,5 @@ export function AppTabs({ classNames, ...props }: AppTabsProps) {
 
 export type AppTabProps = TabItemProps;
 
-export function AppTab({ className, ...props }: AppTabProps) {
-  return (
-    <Tab
-      className={cn(
-        "data-[selected=true]:text-[var(--color-text)]",
-        "data-[selected=true]:shadow-sm",
-        className
-      )}
-      {...props}
-    />
-  );
-}
+export const AppTab = Tab;
+

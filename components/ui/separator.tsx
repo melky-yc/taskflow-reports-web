@@ -1,16 +1,8 @@
-﻿import * as React from "react";
-import { cn } from "@/lib/utils";
+import type { ComponentProps } from "react";
+import { AppDivider } from "@/app/ui";
 
-const Separator = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("h-px w-full bg-[var(--color-border)]", className)}
-    {...props}
-  />
-));
-Separator.displayName = "Separator";
+function Separator(props: ComponentProps<typeof AppDivider>) {
+  return <AppDivider {...props} />;
+}
 
 export { Separator };

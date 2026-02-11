@@ -1,3 +1,5 @@
+"use client";
+
 import { AppCard, AppCardBody } from "@/app/ui/card";
 import type { ReactNode } from "react";
 
@@ -54,3 +56,4 @@ export function StatCard({
     </AppCard>
   );
 }
+

@@ -69,7 +69,7 @@ const PRIORIDADES_CHART = ["Baixa", "Media", "Alta", "Critica"];
 const CIDADES_PI = cidadesPi.cidades;
 const CIDADES_LIST_ID = "cidades-dashboard";
 
-const MOTIVO_COLOR = "var(--color-chart-1)";
+const MOTIVO_COLOR = "var(--color-primary)";
 const CHART_GRID_COLOR = "var(--color-chart-track)";
 const CHART_AXIS_COLOR = "var(--color-muted)";
 const CHART_TOOLTIP_STYLE = {
@@ -560,34 +560,36 @@ export default function DashboardClient() {
         <ActiveFiltersChips items={activeFilterChips} />
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 shadow-[var(--shadow-card)]">
-        <FilterModal
-          isOpen={isFiltersOpen}
-          onOpenChange={setIsFiltersOpen}
-          description="Ajuste os filtros e aplique para atualizar o dashboard."
-          onApply={handleApply}
-          onClear={handleClear}
-          isLoading={loading}
-          size="lg"
-        >
-          <DashboardFiltersForm
-            filters={filters}
-            periodOptions={PERIOD_OPTIONS}
-            motivos={MOTIVOS_OPTIONS}
-            prioridades={PRIORIDADES_OPTIONS}
-            usoPlataforma={USO_PLATAFORMA_OPTIONS}
-            ufOptions={[UF_PADRAO]}
-            cidadesListId={CIDADES_LIST_ID}
-            onFilterChange={handleFilterChange}
-            maskDateInput={maskDateInput}
-          />
-        </FilterModal>
+      <AppCard>
+        <AppCardBody className="flex flex-wrap items-center justify-between gap-4 p-4 md:p-6">
+          <FilterModal
+            isOpen={isFiltersOpen}
+            onOpenChange={setIsFiltersOpen}
+            description="Ajuste os filtros e aplique para atualizar o dashboard."
+            onApply={handleApply}
+            onClear={handleClear}
+            isLoading={loading}
+            size="lg"
+          >
+            <DashboardFiltersForm
+              filters={filters}
+              periodOptions={PERIOD_OPTIONS}
+              motivos={MOTIVOS_OPTIONS}
+              prioridades={PRIORIDADES_OPTIONS}
+              usoPlataforma={USO_PLATAFORMA_OPTIONS}
+              ufOptions={[UF_PADRAO]}
+              cidadesListId={CIDADES_LIST_ID}
+              onFilterChange={handleFilterChange}
+              maskDateInput={maskDateInput}
+            />
+          </FilterModal>
 
-        <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--color-muted)]">
-          <span>Última atualização: {formatTime(lastUpdated)}</span>
-          <span>Registros encontrados: {recordLabel}</span>
-        </div>
-      </div>
+          <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--color-muted)]">
+            <span>Última atualização: {formatTime(lastUpdated)}</span>
+            <span>Registros encontrados: {recordLabel}</span>
+          </div>
+        </AppCardBody>
+      </AppCard>
 
       {error ? (
         <AppCard className="border-[var(--color-danger)] bg-[var(--color-danger-soft)]">
@@ -609,14 +611,14 @@ export default function DashboardClient() {
       ) : null}
 
       {loading ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:gap-6 md:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, index) => (
             <Skeleton key={index} className="h-28 w-full" />
           ))}
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 md:gap-6 md:grid-cols-2 lg:grid-cols-4">
             <StatCard
               icon={<Activity className="h-5 w-5" />}
               title="Total de chamados"
@@ -651,7 +653,7 @@ export default function DashboardClient() {
             />
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid gap-4 md:gap-6 lg:grid-cols-2">
             <HighlightCard
               title="Motivo mais recorrente"
               value={
@@ -708,7 +710,7 @@ export default function DashboardClient() {
         </div>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 md:gap-6 lg:grid-cols-2">
         <ChartCard
           title="Série temporal"
           description={periodLabel}
@@ -867,7 +869,7 @@ export default function DashboardClient() {
         </ChartCard>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 md:gap-6 lg:grid-cols-3">
         <ChartCard
           title="Top motivos"
           description="Chamados mais recorrentes"
@@ -912,7 +914,7 @@ export default function DashboardClient() {
         </ChartCard>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 md:gap-6 lg:grid-cols-2">
         <ChartCard
           title="Top unidades"
           description="Volume por unidade"
@@ -975,7 +977,7 @@ export default function DashboardClient() {
                     </div>
                     <div className="mt-2 h-2 w-full rounded-full bg-[var(--color-chart-track)]">
                       <div
-                        className="h-2 rounded-full bg-[var(--color-chart-1)]"
+                        className="h-2 rounded-full bg-[var(--color-primary)]"
                         style={{ width: `${percent}%` }}
                       />
                     </div>
@@ -1048,7 +1050,7 @@ export default function DashboardClient() {
                     </div>
                     <div className="mt-2 h-2 w-full rounded-full bg-[var(--color-chart-track)]">
                       <div
-                        className="h-2 rounded-full bg-[var(--color-chart-2)]"
+                        className="h-2 rounded-full bg-[var(--color-primary)]"
                         style={{ width: `${percent}%` }}
                       />
                     </div>

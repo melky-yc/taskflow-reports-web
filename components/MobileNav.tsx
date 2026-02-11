@@ -1,95 +1,36 @@
 ﻿"use client";
 
-import Link from "next/link";
-import { useEffect, useState } from "react";
-import { BarChart3, LayoutDashboard, Menu, Settings, Ticket, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-
-const NAV_ITEMS = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, key: "dashboard" },
-  { href: "/tickets", label: "Tickets", icon: Ticket, key: "tickets" },
-  { href: "/reports", label: "Relatórios", icon: BarChart3, key: "reports" },
-  { href: "/config", label: "Configuração", icon: Settings, key: "config" },
-] as const;
+import { useState } from "react";
+import { Menu } from "lucide-react";
+import { AppButton } from "@/app/ui";
+import { SidebarDrawer, type SidebarItem } from "@/components/ui/sidebar";
 
 type MobileNavProps = {
   active: string;
+  items: SidebarItem[];
 };
 
-export default function MobileNav({ active }: MobileNavProps) {
+export default function MobileNav({ active, items }: MobileNavProps) {
   const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    if (!open) {
-      document.body.style.overflow = "";
-      return;
-    }
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [open]);
 
   return (
     <>
-      <Button
+      <AppButton
         variant="ghost"
+        size="sm"
         className="h-10 w-10 p-0 lg:hidden"
-        onClick={() => setOpen(true)}
+        onPress={() => setOpen(true)}
         aria-label="Abrir menu"
       >
         <Menu className="h-5 w-5" />
-      </Button>
+      </AppButton>
 
-      {open ? (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-overlay" onClick={() => setOpen(false)} />
-          <div className="absolute left-0 top-0 h-full w-72 border-r border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[var(--color-shadow)]">
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-semibold text-[var(--color-text)]">
-                Menu
-              </div>
-              <Button
-                variant="ghost"
-                className="h-9 w-9 p-0"
-                onClick={() => setOpen(false)}
-                aria-label="Fechar menu"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-
-            <nav className="mt-6 flex flex-col gap-2 text-sm">
-              {NAV_ITEMS.map((item) => {
-                const Icon = item.icon;
-                const isActive = active === item.key;
-                return (
-                  <Link
-                    key={item.key}
-                    href={item.href}
-                    onClick={() => setOpen(false)}
-                    className={`flex items-center gap-2 rounded-xl px-3 py-2 font-medium transition ${
-                      isActive
-                        ? "bg-[var(--color-primary-soft)] text-[var(--color-primary)]"
-                        : "text-[var(--color-muted-strong)] hover:bg-[var(--color-muted-soft)]"
-                    }`}
-                  >
-                    <span
-                      className={`h-4 w-1 rounded-full ${
-                        isActive
-                          ? "bg-[var(--color-primary)]"
-                          : "bg-transparent"
-                      }`}
-                    />
-                    <Icon className="h-4 w-4" />
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </nav>
-          </div>
-        </div>
-      ) : null}
+      <SidebarDrawer
+        isOpen={open}
+        onOpenChange={setOpen}
+        items={items}
+        activeKey={active}
+      />
     </>
   );
 }

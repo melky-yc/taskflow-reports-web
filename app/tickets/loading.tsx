@@ -22,7 +22,7 @@ export default function TicketsLoading() {
             <Skeleton className="mt-2 h-4 w-72" />
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:gap-6 md:grid-cols-3">
               {Array.from({ length: 6 }).map((_, index) => (
                 <Skeleton key={index} className="h-11 w-full" />
               ))}

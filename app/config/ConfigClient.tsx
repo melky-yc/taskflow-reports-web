@@ -6,15 +6,15 @@ import { Moon, Settings, Sun, User } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useAlerts } from "@/components/alerts/AlertsProvider";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+  AppButton,
+  AppCard,
+  AppCardBody,
+  AppSwitch,
+  AppTab,
+  AppTabs,
+  FormCard,
+  PageHeader,
+} from "@/app/ui";
 
 const THEME_STORAGE_KEY = "taskflow-theme";
 const PREFS_STORAGE_KEY = "taskflow-preferences";
@@ -34,6 +34,9 @@ const DEFAULT_PREFS: Preferences = {
 };
 
 function applyTheme(theme: ThemeOption) {
+  if (typeof document === "undefined") {
+    return;
+  }
   document.documentElement.dataset.theme = theme;
   if (theme === "dark") {
     document.documentElement.classList.add("dark");
@@ -43,20 +46,34 @@ function applyTheme(theme: ThemeOption) {
 }
 
 export default function ConfigClient() {
-  const supabase = useMemo(() => createClient(), []);
+  const supabase = useMemo(() => {
+    try {
+      return createClient();
+    } catch {
+      return null;
+    }
+  }, []);
   const router = useRouter();
   const { notify } = useAlerts();
 
   const [theme, setTheme] = useState<ThemeOption>(() => {
     if (typeof window === "undefined") return "light";
-    const storedTheme = localStorage.getItem(THEME_STORAGE_KEY) as ThemeOption | null;
-    return storedTheme === "dark" || storedTheme === "light" ? storedTheme : "light";
+    try {
+      const storedTheme = localStorage.getItem(THEME_STORAGE_KEY) as
+        | ThemeOption
+        | null;
+      return storedTheme === "dark" || storedTheme === "light"
+        ? storedTheme
+        : "light";
+    } catch {
+      return "light";
+    }
   });
   const [prefs, setPrefs] = useState<Preferences>(() => {
     if (typeof window === "undefined") return DEFAULT_PREFS;
-    const storedPrefs = localStorage.getItem(PREFS_STORAGE_KEY);
-    if (!storedPrefs) return DEFAULT_PREFS;
     try {
+      const storedPrefs = localStorage.getItem(PREFS_STORAGE_KEY);
+      if (!storedPrefs) return DEFAULT_PREFS;
       const parsed = JSON.parse(storedPrefs) as Preferences;
       return { ...DEFAULT_PREFS, ...parsed };
     } catch {
@@ -70,15 +87,23 @@ export default function ConfigClient() {
   }, [theme]);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setEmail(data.user?.email ?? "-");
-    });
+    if (!supabase) return;
+    supabase.auth
+      .getUser()
+      .then(({ data }) => {
+        setEmail(data.user?.email ?? "-");
+      })
+      .catch(() => {
+        setEmail("-");
+      });
   }, [supabase]);
 
   const handleThemeChange = (nextTheme: ThemeOption) => {
     setTheme(nextTheme);
     applyTheme(nextTheme);
-    localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+    } catch {}
     notify({
       title: "Tema atualizado",
       description: "Preferências salvas com sucesso.",
@@ -89,7 +114,9 @@ export default function ConfigClient() {
   const handlePrefChange = (key: keyof Preferences) => (value: boolean) => {
     const next = { ...prefs, [key]: value };
     setPrefs(next);
-    localStorage.setItem(PREFS_STORAGE_KEY, JSON.stringify(next));
+    try {
+      localStorage.setItem(PREFS_STORAGE_KEY, JSON.stringify(next));
+    } catch {}
     notify({
       title: "Preferências atualizadas",
       description: "As alterações foram salvas.",
@@ -98,172 +125,169 @@ export default function ConfigClient() {
   };
 
   const handleLogout = async () => {
+    if (!supabase) return;
     await supabase.auth.signOut();
     router.push("/login");
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="rounded-lg bg-[var(--color-muted-soft)] p-2 text-[var(--color-muted-strong)]">
+      <div className="flex items-start gap-3">
+        <div className="rounded-xl bg-[var(--color-muted-soft)] p-2 text-[var(--color-muted-strong)]">
           <Settings className="h-5 w-5" />
         </div>
-        <div>
-          <h1 className="text-2xl font-semibold text-[var(--color-text)]">
-            Configuração
-          </h1>
-          <p className="text-sm text-[var(--color-muted)]">
-            Preferências da plataforma e configurações de sessão.
-          </p>
-        </div>
+        <PageHeader
+          title="Configuração"
+          subtitle="Preferências da plataforma e configurações de sessão."
+          className="flex-1"
+        />
       </div>
 
-      <Tabs defaultValue="themes">
-        <TabsList>
-          <TabsTrigger value="themes">Aparência</TabsTrigger>
-          <TabsTrigger value="prefs">Preferências avançadas</TabsTrigger>
-          <TabsTrigger value="session">Sessão</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="themes">
-          <Card>
-            <CardHeader>
-              <CardTitle>Aparência</CardTitle>
-              <CardDescription>
-                Defina o tema que melhor se adapta ao seu ambiente.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-2">
-                <button
-                  type="button"
-                  onClick={() => handleThemeChange("light")}
-                  className={`rounded-xl border px-4 py-4 text-left transition ${
-                    theme === "light"
-                      ? "border-[var(--color-primary)] bg-[var(--color-primary-soft)]"
-                      : "border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-primary)]"
-                  }`}
-                >
+      <AppTabs defaultSelectedKey="themes" aria-label="Configurações">
+        <AppTab key="themes" title="Aparência">
+          <FormCard
+            title="Aparência"
+            description="Defina o tema que melhor se adapta ao seu ambiente."
+          >
+            <div className="grid gap-4 md:gap-6 md:grid-cols-2">
+              <AppCard
+                isPressable
+                onPress={() => handleThemeChange("light")}
+                className={`transition ${
+                  theme === "light"
+                    ? "border-[var(--color-primary)] bg-[var(--color-primary-soft)]"
+                    : "border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-primary)]"
+                }`}
+              >
+                <AppCardBody className="p-4 md:p-6">
                   <div className="flex items-center gap-2 text-sm font-semibold text-[var(--color-text)]">
                     <Sun className="h-4 w-4 text-[var(--color-warning)]" />
                     Claro
                   </div>
-                  <p className="mt-1 text-xs text-[var(--color-muted)]">
+                  <p className="mt-2 text-xs text-[var(--color-muted)]">
                     Tema padrão para ambientes corporativos.
                   </p>
-                </button>
+                </AppCardBody>
+              </AppCard>
 
-                <button
-                  type="button"
-                  onClick={() => handleThemeChange("dark")}
-                  className={`rounded-xl border px-4 py-4 text-left transition ${
-                    theme === "dark"
-                      ? "border-[var(--color-primary)] bg-[var(--color-surface)]"
-                      : "border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-primary)]"
-                  }`}
-                >
+              <AppCard
+                isPressable
+                onPress={() => handleThemeChange("dark")}
+                className={`transition ${
+                  theme === "dark"
+                    ? "border-[var(--color-primary)] bg-[var(--color-muted-soft)]"
+                    : "border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-primary)]"
+                }`}
+              >
+                <AppCardBody className="p-4 md:p-6">
                   <div className="flex items-center gap-2 text-sm font-semibold text-[var(--color-text)]">
                     <Moon className="h-4 w-4 text-[var(--color-primary)]" />
                     Escuro
                   </div>
-                  <p className="mt-1 text-xs text-[var(--color-muted)]">
+                  <p className="mt-2 text-xs text-[var(--color-muted)]">
                     Interface otimizada para uso noturno.
                   </p>
-                </button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+                </AppCardBody>
+              </AppCard>
+            </div>
+          </FormCard>
+        </AppTab>
 
-        <TabsContent value="prefs">
-          <Card>
-            <CardHeader>
-              <CardTitle>Preferências avançadas</CardTitle>
-              <CardDescription>
-                Ajuste comportamentos e opções de exibição da interface.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3">
-                  <div className="text-xs text-[var(--color-muted)]">
-                    Idioma
-                  </div>
+        <AppTab key="prefs" title="Preferências avançadas">
+          <FormCard
+            title="Preferências avançadas"
+            description="Ajuste comportamentos e opções de exibição da interface."
+          >
+            <div className="grid gap-4 md:gap-6 md:grid-cols-2">
+              <AppCard>
+                <AppCardBody className="p-4 md:p-6">
+                  <div className="text-xs text-[var(--color-muted)]">Idioma</div>
                   <div className="mt-1 text-sm font-medium text-[var(--color-text)]">
                     Português (Brasil)
                   </div>
-                </div>
-                <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3">
+                </AppCardBody>
+              </AppCard>
+              <AppCard>
+                <AppCardBody className="p-4 md:p-6">
                   <div className="text-xs text-[var(--color-muted)]">
                     Formato de data
                   </div>
                   <div className="mt-1 text-sm font-medium text-[var(--color-text)]">
                     DD/MM/AAAA
                   </div>
-                </div>
-              </div>
+                </AppCardBody>
+              </AppCard>
+            </div>
 
-              <div className="flex items-center justify-between rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3">
-                <div>
-                  <div className="text-sm font-medium text-[var(--color-text)]">
-                    Mostrar dicas na interface
+            <div className="mt-4 space-y-3">
+              <AppCard>
+                <AppCardBody className="flex items-center justify-between gap-4 p-4 md:p-6">
+                  <div>
+                    <div className="text-sm font-medium text-[var(--color-text)]">
+                      Mostrar dicas na interface
+                    </div>
+                    <div className="text-xs text-[var(--color-muted)]">
+                      Exibe sugestões rápidas nos formulários.
+                    </div>
                   </div>
-                  <div className="text-xs text-[var(--color-muted)]">
-                    Exibe sugestões rápidas nos formulários.
-                  </div>
-                </div>
-                <Switch
-                  checked={prefs.showTips}
-                  onCheckedChange={handlePrefChange("showTips")}
-                />
-              </div>
+                  <AppSwitch
+                    checked={prefs.showTips}
+                    onCheckedChange={handlePrefChange("showTips")}
+                  />
+                </AppCardBody>
+              </AppCard>
 
-              <div className="flex items-center justify-between rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3">
-                <div>
-                  <div className="text-sm font-medium text-[var(--color-text)]">
-                    Confirmar antes de excluir registros
+              <AppCard>
+                <AppCardBody className="flex items-center justify-between gap-4 p-4 md:p-6">
+                  <div>
+                    <div className="text-sm font-medium text-[var(--color-text)]">
+                      Confirmar antes de excluir registros
+                    </div>
+                    <div className="text-xs text-[var(--color-muted)]">
+                      Exibe confirmação antes de ações críticas.
+                    </div>
                   </div>
-                  <div className="text-xs text-[var(--color-muted)]">
-                    Exibe confirmação antes de ações críticas.
-                  </div>
-                </div>
-                <Switch
-                  checked={prefs.confirmDelete}
-                  onCheckedChange={handlePrefChange("confirmDelete")}
-                />
-              </div>
+                  <AppSwitch
+                    checked={prefs.confirmDelete}
+                    onCheckedChange={handlePrefChange("confirmDelete")}
+                  />
+                </AppCardBody>
+              </AppCard>
 
-              <div className="flex items-center justify-between rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3">
-                <div>
-                  <div className="text-sm font-medium text-[var(--color-text)]">
-                    Abrir dashboard ao fazer login
+              <AppCard>
+                <AppCardBody className="flex items-center justify-between gap-4 p-4 md:p-6">
+                  <div>
+                    <div className="text-sm font-medium text-[var(--color-text)]">
+                      Abrir dashboard ao fazer login
+                    </div>
+                    <div className="text-xs text-[var(--color-muted)]">
+                      Mantém a home no painel de métricas.
+                    </div>
                   </div>
-                  <div className="text-xs text-[var(--color-muted)]">
-                    Mantém a home no painel de métricas.
-                  </div>
-                </div>
-                <Switch
-                  checked={prefs.openDashboard}
-                  onCheckedChange={handlePrefChange("openDashboard")}
-                />
-              </div>
+                  <AppSwitch
+                    checked={prefs.openDashboard}
+                    onCheckedChange={handlePrefChange("openDashboard")}
+                  />
+                </AppCardBody>
+              </AppCard>
 
-              <div className="rounded-lg border border-dashed border-[var(--color-border)] bg-[var(--color-muted-soft)] px-4 py-3 text-xs text-[var(--color-muted)]">
-                Em breve: notificações por e-mail, preferências de exportação e
-                regras de aprovação.
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+              <AppCard className="border-dashed bg-[var(--color-muted-soft)]">
+                <AppCardBody className="p-4 md:p-6 text-xs text-[var(--color-muted)]">
+                  Em breve: notificações por e-mail, preferências de exportação e
+                  regras de aprovação.
+                </AppCardBody>
+              </AppCard>
+            </div>
+          </FormCard>
+        </AppTab>
 
-        <TabsContent value="session">
-          <Card>
-            <CardHeader>
-              <CardTitle>Sessão</CardTitle>
-              <CardDescription>Informações da conta autenticada.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3">
+        <AppTab key="session" title="Sessão">
+          <FormCard
+            title="Sessão"
+            description="Informações da conta autenticada."
+          >
+            <AppCard>
+              <AppCardBody className="flex items-center gap-3 p-4 md:p-6">
                 <div className="rounded-full bg-[var(--color-muted-soft)] p-2 text-[var(--color-muted-strong)]">
                   <User className="h-4 w-4" />
                 </div>
@@ -275,20 +299,25 @@ export default function ConfigClient() {
                     {email}
                   </div>
                 </div>
-              </div>
+              </AppCardBody>
+            </AppCard>
 
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="text-xs text-[var(--color-muted)]">
-                  Encerre a sessão para trocar de conta.
-                </div>
-                <Button variant="secondary" onClick={handleLogout}>
-                  Logout
-                </Button>
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+              <div className="text-xs text-[var(--color-muted)]">
+                Encerre a sessão para trocar de conta.
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+              <AppButton variant="soft" onPress={handleLogout}>
+                Logout
+              </AppButton>
+            </div>
+          </FormCard>
+        </AppTab>
+      </AppTabs>
     </div>
   );
+
 }
+
+
+
+

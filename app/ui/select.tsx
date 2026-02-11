@@ -1,3 +1,5 @@
+"use client";
+
 import { Select, SelectItem, type SelectProps } from "@heroui/react";
 import { useMemo } from "react";
 
@@ -100,3 +102,4 @@ export function AppSelect({
     </Select>
   );
 }
+

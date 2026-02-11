@@ -2,20 +2,29 @@
 
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { useAlerts } from "@/components/alerts/AlertsProvider";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
+  AppAlert,
+  AppBadge,
+  AppButton,
+  AppCard,
+  AppCardBody,
+  AppDivider,
+  AppInput,
+  AppSelect,
+  AppSkeleton,
+  AppTable,
+  AppTableBody,
+  AppTableCell,
+  AppTableColumn,
+  AppTableHeader,
+  AppTableRow,
+  FormCard,
+  PageHeader,
+  Section,
+  StatusBadge,
+  type AppBadgeTone,
+} from "@/app/ui";
 import {
   exportReportCSV,
   formatDateBR,
@@ -23,7 +32,6 @@ import {
   type ReportSummary,
   type ReportTicket,
 } from "@/utils/exportReports";
-import { getPriorityBadgeVariant } from "@/app/tickets/constants";
 
 const LIMIT = 2000;
 
@@ -127,7 +135,7 @@ function buildFilename(periodLabel: string) {
   )}_${pad(now.getHours())}-${pad(now.getMinutes())}`;
   const slug = periodLabel
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[`\-?]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
@@ -136,6 +144,17 @@ function buildFilename(periodLabel: string) {
 
 function formatPrioridadeLabel(prioridade: string) {
   return prioridade === "Media" ? "Média" : prioridade;
+}
+
+const PRIORITY_TONE_MAP: Record<string, AppBadgeTone> = {
+  Baixa: "default",
+  Media: "warning",
+  Alta: "danger",
+  Critica: "critical",
+};
+
+function priorityTone(label: string): AppBadgeTone {
+  return PRIORITY_TONE_MAP[label] ?? "default";
 }
 
 type ReportState = {
@@ -284,7 +303,7 @@ export default function ReportsClient() {
           ? ticket.clients[0]
           : ticket.clients;
         return {
-          id: ticket.id,
+          id: ticket.id,  
           created_at: ticket.created_at,
           data_atendimento: ticket.data_atendimento,
           motivo: ticket.motivo,
@@ -335,142 +354,132 @@ export default function ReportsClient() {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Relatórios</CardTitle>
-          <CardDescription>
-            Gere relatórios por período e acompanhe as principais métricas.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-                Período
-              </label>
-              <Select
-                value={period}
-                onChange={(event) => setPeriod(event.target.value as Period)}
-              >
-                {PERIOD_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </Select>
-            </div>
+      <PageHeader
+        title="Relatórios"
+        subtitle="Gere relatórios por período e acompanhe as principais métricas."
+      />
 
-            {(period === "daily" || period === "weekly") && (
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-                  Data base
-                </label>
-                <Input
-                  value={baseDate}
-                  onChange={(event) => setBaseDate(maskDateInput(event.target.value))}
-                  placeholder="DD/MM/AAAA"
-                  inputMode="numeric"
-                />
-              </div>
-            )}
+      <FormCard
+        title="Gerador de relatórios"
+        description="Selecione o período e filtre os dados antes de gerar."
+      >
+        <div className="grid gap-4 md:items-end md:gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+          <AppSelect
+            label="Período"
+            value={period}
+            onValueChange={(value) => setPeriod(value as Period)}
+            options={PERIOD_OPTIONS.map((option) => ({
+              value: option.value,
+              label: option.label,
+            }))}
+          />
 
-            {period === "monthly" && (
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-                  Mês/Ano
-                </label>
-                <Input
-                  value={monthValue}
-                  onChange={(event) =>
-                    setMonthValue(maskMonthInput(event.target.value))
-                  }
-                  placeholder="MM/AAAA"
-                  inputMode="numeric"
-                />
-              </div>
-            )}
+          {(period === "daily" || period === "weekly") && (
+            <AppInput
+              label="Data base"
+              value={baseDate}
+              onValueChange={(value) => setBaseDate(maskDateInput(value))}
+              placeholder="DD/MM/AAAA"
+              inputMode="numeric"
+            />
+          )}
 
-            {period === "yearly" && (
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-[var(--color-muted-strong)]">
-                  Ano
-                </label>
-                <Input
-                  value={yearValue}
-                  onChange={(event) =>
-                    setYearValue(event.target.value.replace(/\D/g, "").slice(0, 4))
-                  }
-                  placeholder="AAAA"
-                  inputMode="numeric"
-                />
-              </div>
-            )}
-          </div>
+          {period === "monthly" && (
+            <AppInput
+              label="Mês/Ano"
+              value={monthValue}
+              onValueChange={(value) => setMonthValue(maskMonthInput(value))}
+              placeholder="MM/AAAA"
+              inputMode="numeric"
+            />
+          )}
 
-          <div className="mt-4 flex justify-end">
-            <Button type="button" onClick={handleGenerate} disabled={loading}>
+          {period === "yearly" && (
+            <AppInput
+              label="Ano"
+              value={yearValue}
+              onValueChange={(value) =>
+                setYearValue(value.replace(/\D/g, "").slice(0, 4))
+              }
+              placeholder="AAAA"
+              inputMode="numeric"
+            />
+          )}
+
+          <div className="flex md:justify-end">
+            <AppButton
+              type="button"
+              onPress={handleGenerate}
+              isLoading={loading}
+              isDisabled={loading}
+              className="w-full md:w-auto"
+            >
               {loading ? "Gerando..." : "Gerar relatório"}
-            </Button>
+            </AppButton>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </FormCard>
 
       {error ? (
-        <div className="rounded-lg border border-[var(--color-danger)] bg-[var(--color-danger-soft)] px-4 py-2 text-sm text-[var(--color-danger)]">
-          {error}
-        </div>
+        <AppAlert
+          tone="danger"
+          title="Não foi possível gerar"
+          description={error}
+        />
       ) : null}
 
-      <Card>
-        <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <CardTitle>Resultados</CardTitle>
-            <CardDescription>
-              {report
-                ? `${report.summary.periodLabel} • ${report.summary.rangeLabel}`
-                : "Selecione um período para gerar o relatório."}
-            </CardDescription>
-          </div>
-          <Button
+      <FormCard
+        title="Resultados"
+        description={
+          report
+            ? `${report.summary.periodLabel} • ${report.summary.rangeLabel}`
+            : "Selecione um período para gerar o relatório."
+        }
+        actions={
+          <AppButton
             type="button"
-            variant="outline"
-            className="h-9"
-            onClick={handleExport}
-            disabled={!report || report.tickets.length === 0}
+            variant="ghost"
+            size="sm"
+            onPress={handleExport}
+            isDisabled={!report || report.tickets.length === 0}
           >
             Exportar CSV
-          </Button>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {loading ? (
-            <div className="space-y-4">
-              <Skeleton className="h-24 w-full" />
-              <Skeleton className="h-32 w-full" />
+          </AppButton>
+        }
+      >
+        {loading ? (
+          <div className="space-y-4">
+            <AppSkeleton className="h-24 w-full" />
+            <AppSkeleton className="h-32 w-full" />
+          </div>
+        ) : report ? (
+          report.tickets.length === 0 ? (
+            <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-muted-soft)] px-4 py-6 text-sm text-[var(--color-muted-strong)]">
+              Nenhum chamado encontrado no período selecionado.
             </div>
-          ) : report ? (
-            report.tickets.length === 0 ? (
-              <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-muted-soft)] px-4 py-6 text-sm text-[var(--color-muted-strong)]">
-                Nenhum chamado encontrado no período selecionado.
-              </div>
-            ) : (
-              <>
-                {report.hasMore ? (
-                  <div className="rounded-lg border border-[var(--color-warning)] bg-[var(--color-warning-soft)] px-4 py-2 text-sm text-[var(--color-warning)]">
-                    Limite de {LIMIT} registros atingido. Refine o período para
-                    ver todos os chamados.
-                  </div>
-                ) : null}
+          ) : (
+            <>
+              {report.hasMore ? (
+                <AppAlert
+                  tone="warning"
+                  title="Limite de registros atingido"
+                  description={`Limite de ${LIMIT} registros atingido. Refine o período para ver todos os chamados.`}
+                />
+              ) : null}
 
-                <div className="grid gap-4 md:grid-cols-3">
-                  <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-sm">
+              <div className="grid gap-4 md:gap-6 md:grid-cols-3">
+                <AppCard>
+                  <AppCardBody className="p-4 md:p-6">
                     <div className="text-xs font-medium text-[var(--color-muted)]">
                       Total de chamados
                     </div>
                     <div className="mt-2 text-2xl font-semibold text-[var(--color-text)]">
                       {report.summary.total}
                     </div>
-                  </div>
-                  <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-sm">
+                  </AppCardBody>
+                </AppCard>
+                <AppCard>
+                  <AppCardBody className="p-4 md:p-6">
                     <div className="text-xs font-medium text-[var(--color-muted)]">
                       Retroativos
                     </div>
@@ -482,20 +491,24 @@ export default function ReportsClient() {
                         ({report.summary.retroativos})
                       </span>
                     </div>
-                  </div>
-                  <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-sm">
+                  </AppCardBody>
+                </AppCard>
+                <AppCard>
+                  <AppCardBody className="p-4 md:p-6">
                     <div className="text-xs font-medium text-[var(--color-muted)]">
                       Período
                     </div>
                     <div className="mt-2 text-sm font-semibold text-[var(--color-text)]">
                       {report.summary.rangeLabel}
                     </div>
-                  </div>
-                </div>
+                  </AppCardBody>
+                </AppCard>
+              </div>
 
-                <div className="grid gap-4 lg:grid-cols-3">
-                  <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-sm">
-                    <div className  ="text-sm font-semibold text-[var(--color-text)]">
+              <div className="grid gap-4 md:gap-6 lg:grid-cols-3">
+                <AppCard>
+                  <AppCardBody className="p-4 md:p-6">
+                    <div className="text-sm font-semibold text-[var(--color-text)]">
                       Distribuição por prioridade
                     </div>
                     <div className="mt-3 space-y-2 text-sm text-[var(--color-muted-strong)]">
@@ -503,16 +516,22 @@ export default function ReportsClient() {
                         ([label, count]) => (
                           <div key={label} className="flex items-center justify-between">
                             <span>{formatPrioridadeLabel(label)}</span>
-                            <Badge variant={getPriorityBadgeVariant(label)}>
+                            <AppBadge
+                              tone={priorityTone(label)}
+                              variant="soft"
+                              size="sm"
+                            >
                               {count}
-                            </Badge>
+                            </AppBadge>
                           </div>
                         )
                       )}
                     </div>
-                  </div>
+                  </AppCardBody>
+                </AppCard>
 
-                  <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-sm">
+                <AppCard>
+                  <AppCardBody className="p-4 md:p-6">
                     <div className="text-sm font-semibold text-[var(--color-text)]">
                       Top 5 motivos
                     </div>
@@ -531,9 +550,11 @@ export default function ReportsClient() {
                             </div>
                           ))}
                     </div>
-                  </div>
+                  </AppCardBody>
+                </AppCard>
 
-                  <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-sm">
+                <AppCard>
+                  <AppCardBody className="p-4 md:p-6">
                     <div className="text-sm font-semibold text-[var(--color-text)]">
                       Top 5 cidades
                     </div>
@@ -552,76 +573,69 @@ export default function ReportsClient() {
                             </div>
                           ))}
                     </div>
-                  </div>
-                </div>
+                  </AppCardBody>
+                </AppCard>
+              </div>
 
-                <Separator />
+              <AppDivider />
 
-                <div>
-                  <div className="mb-3 text-sm font-semibold text-[var(--color-text)]">
-                    Listagem resumida ({report.tickets.length})
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full border-collapse text-sm">
-                      <thead className="sticky top-0 bg-[var(--color-muted-soft)]">
-                        <tr className="border-b border-[var(--color-border)] text-left text-xs uppercase tracking-wide text-[var(--color-muted)]">
-                          <th className="px-3 py-2">ID</th>
-                          <th className="px-3 py-2">Data atendimento</th>
-                          <th className="px-3 py-2">Profissional</th>
-                          <th className="px-3 py-2">Motivo</th>
-                          <th className="px-3 py-2">Prioridade</th>
-                          <th className="px-3 py-2">Cliente</th>
-                          <th className="px-3 py-2">Cidade</th>
-                          <th className="px-3 py-2">UF</th>
-                          <th className="px-3 py-2">Unidade</th>
-                          <th className="px-3 py-2">Retroativo</th>
-                          <th className="px-3 py-2">Criado em</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {report.tickets.map((ticket) => (
-                          <tr
-                            key={ticket.id}
-                            className="border-b border-[var(--color-border)] text-[var(--color-text)] hover:bg-[var(--color-muted-soft)]"
-                          >
-                            <td className="px-3 py-3 font-medium">#{ticket.id}</td>
-                            <td className="px-3 py-3">
-                              {formatDateBR(ticket.data_atendimento)}
-                            </td>
-                            <td className="px-3 py-3">
-                              {ticket.profissional_nome}
-                            </td>
-                            <td className="px-3 py-3">{ticket.motivo}</td>
-                            <td className="px-3 py-3">
-                              <Badge variant={getPriorityBadgeVariant(ticket.prioridade)}>
-                                {formatPrioridadeLabel(ticket.prioridade)}
-                              </Badge>
-                            </td>
-                            <td className="px-3 py-3">{ticket.client.nome}</td>
-                            <td className="px-3 py-3">{ticket.client.cidade}</td>
-                            <td className="px-3 py-3">{ticket.client.estado_uf}</td>
-                            <td className="px-3 py-3">{ticket.client.unidade}</td>
-                            <td className="px-3 py-3">
-                              {ticket.retroativo ? "Sim" : "Não"}
-                            </td>
-                            <td className="px-3 py-3">
-                              {formatDateBR(ticket.created_at)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </>
-            )
-          ) : (
-            <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-muted-soft)] px-4 py-6 text-sm text-[var(--color-muted-strong)]">
-              Selecione um período e clique em “Gerar relatório”.
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              <Section
+                title={`Listagem resumida (${report.tickets.length})`}
+                showDivider={false}
+              >
+                <AppTable
+                  aria-label="Listagem resumida"
+                  stickyHeader
+                  classNames={{ base: "overflow-x-auto" }}
+                >
+                  <AppTableHeader>
+                    <AppTableColumn>ID</AppTableColumn>
+                    <AppTableColumn>Data atendimento</AppTableColumn>
+                    <AppTableColumn>Profissional</AppTableColumn>
+                    <AppTableColumn>Motivo</AppTableColumn>
+                    <AppTableColumn>Prioridade</AppTableColumn>
+                    <AppTableColumn>Cliente</AppTableColumn>
+                    <AppTableColumn>Cidade</AppTableColumn>
+                    <AppTableColumn>UF</AppTableColumn>
+                    <AppTableColumn>Unidade</AppTableColumn>
+                    <AppTableColumn>Retroativo</AppTableColumn>
+                    <AppTableColumn>Criado em</AppTableColumn>
+                  </AppTableHeader>
+                  <AppTableBody>
+                    {report.tickets.map((ticket) => (
+                      <AppTableRow key={ticket.id}>
+                        <AppTableCell className="font-medium">#{ticket.id}</AppTableCell>
+                        <AppTableCell>{formatDateBR(ticket.data_atendimento)}</AppTableCell>
+                        <AppTableCell>{ticket.profissional_nome}</AppTableCell>
+                        <AppTableCell>{ticket.motivo}</AppTableCell>
+                        <AppTableCell>
+                          <StatusBadge status={ticket.prioridade} size="sm" />
+                        </AppTableCell>
+                        <AppTableCell>{ticket.client.nome}</AppTableCell>
+                        <AppTableCell>{ticket.client.cidade}</AppTableCell>
+                        <AppTableCell>{ticket.client.estado_uf}</AppTableCell>
+                        <AppTableCell>{ticket.client.unidade}</AppTableCell>
+                        <AppTableCell>
+                          {ticket.retroativo ? "Sim" : "Não"}
+                        </AppTableCell>
+                        <AppTableCell>{formatDateBR(ticket.created_at)}</AppTableCell>
+                      </AppTableRow>
+                    ))}
+                  </AppTableBody>
+                </AppTable>
+              </Section>
+            </>
+          )
+        ) : (
+          <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-muted-soft)] px-4 py-6 text-sm text-[var(--color-muted-strong)]">
+            Selecione um período e clique em &quot;Gerar relatório&quot;.
+          </div>
+        )}
+      </FormCard>
     </div>
   );
+
 }
+
+
+

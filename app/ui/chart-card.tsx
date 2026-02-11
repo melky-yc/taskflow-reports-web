@@ -1,3 +1,5 @@
+"use client";
+
 import type { ReactNode } from "react";
 import { AppCard, AppCardBody, AppCardHeader, AppCardTitle, AppCardDescription } from "@/app/ui/card";
 import { cn } from "@/lib/utils";
@@ -45,3 +47,4 @@ export function ChartCard({
     </AppCard>
   );
 }
+

@@ -1,3 +1,5 @@
+"use client";
+
 export * from "./tokens";
 export * from "./providers";
 export * from "./button";
@@ -20,7 +22,9 @@ export * from "./highlight-card";
 export * from "./tooltip";
 export * from "./form-card";
 export * from "./form-section";
+export * from "./section";
 export * from "./kpi-card";
 export * from "./status-badge";
 export * from "./page-header";
 export * from "./filter-modal";
+

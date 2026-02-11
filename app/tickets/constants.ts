@@ -1,4 +1,4 @@
-export const MOTIVOS_OPTIONS = [
+﻿export const MOTIVOS_OPTIONS = [
   "Alteração de Perfil",
   "Atualização de dados cadastrais",
   "Cadastro não localizado",
@@ -22,12 +22,14 @@ export const PRIORITY_BADGE_VARIANTS = {
   Baixa: "muted",
   Media: "warning",
   Alta: "danger",
+  Critica: "critical",
 } as const;
 
 export const PRIORITY_COLOR_MAP = {
   Baixa: "var(--color-muted-strong)",
   Media: "var(--color-warning)",
   Alta: "var(--color-danger)",
+  Critica: "var(--color-critical)",
 } as const;
 
 export const USO_PLATAFORMA_OPTIONS = [
@@ -56,3 +58,5 @@ export function getPriorityBadgeVariant(prioridade: string) {
     PRIORITY_BADGE_VARIANTS[prioridade as PrioridadeOption] ?? "muted"
   );
 }
+
+

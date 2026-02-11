@@ -1,3 +1,5 @@
+"use client";
+
 import { Switch, type SwitchProps } from "@heroui/react";
 import { cn } from "@/lib/utils";
 
@@ -57,3 +59,4 @@ export function AppSwitch({
     />
   );
 }
+

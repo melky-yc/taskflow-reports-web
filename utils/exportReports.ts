@@ -1,4 +1,4 @@
-export type ReportTicket = {
+﻿export type ReportTicket = {
   id: number;
   created_at: string;
   data_atendimento: string | null;
@@ -153,3 +153,5 @@ export function exportReportCSV(
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 }
+
+

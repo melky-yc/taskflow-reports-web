@@ -1,3 +1,5 @@
+"use client";
+
 import { cn } from "@/lib/utils";
 
 export type PageHeaderProps = {
@@ -25,3 +27,4 @@ export function PageHeader({ title, subtitle, actions, className }: PageHeaderPr
     </div>
   );
 }
+

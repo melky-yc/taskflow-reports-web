@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 type ButtonVariant = "primary" | "secondary" | "ghost" | "outline";
 
-type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+type ButtonProps = Omit<AppButtonProps, "variant"> & {
   variant?: ButtonVariant;
   asChild?: boolean;
 };

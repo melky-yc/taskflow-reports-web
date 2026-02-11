@@ -1,3 +1,5 @@
+"use client";
+
 import type { ReactNode } from "react";
 import {
   AppCard,
@@ -54,3 +56,4 @@ export function FormCard({
     </AppCard>
   );
 }
+

@@ -1,3 +1,5 @@
+"use client";
+
 import { Chip, type ChipProps } from "@heroui/react";
 import { cn } from "@/lib/utils";
 
@@ -7,7 +9,8 @@ export type AppBadgeTone =
   | "primary"
   | "success"
   | "warning"
-  | "danger";
+  | "danger"
+  | "critical";
 
 export type AppBadgeProps = Omit<ChipProps, "variant" | "color" | "radius" | "size"> & {
   variant?: AppBadgeVariant;
@@ -28,6 +31,14 @@ const toneMap: Record<AppBadgeTone, ChipProps["color"]> = {
   success: "success",
   warning: "warning",
   danger: "danger",
+  critical: "default",
+};
+
+const criticalToneClasses: Record<AppBadgeVariant, string> = {
+  solid: "bg-[var(--color-critical)] text-white",
+  soft: "bg-[var(--color-critical-soft)] text-[var(--color-critical)]",
+  outline: "border border-[var(--color-critical)] text-[var(--color-critical)]",
+  ghost: "text-[var(--color-critical)]",
 };
 
 export function AppBadge({
@@ -37,14 +48,21 @@ export function AppBadge({
   className,
   ...props
 }: AppBadgeProps) {
+  const criticalClasses =
+    tone === "critical" ? criticalToneClasses[variant] : undefined;
+
   return (
     <Chip
       radius="full"
       variant={variantMap[variant]}
       color={toneMap[tone]}
       size={size}
-      className={cn("font-medium", className)}
+      className={cn("font-medium", criticalClasses, className)}
       {...props}
     />
   );
 }
+
+export type AppChipProps = AppBadgeProps;
+export const AppChip = AppBadge;
+

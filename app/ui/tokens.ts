@@ -1,3 +1,5 @@
+"use client";
+
 export const tokens = {
   radii: {
     sm: "var(--radius-sm)",
@@ -34,6 +36,8 @@ export const tokens = {
     success: "var(--color-success)",
     warning: "var(--color-warning)",
     danger: "var(--color-danger)",
+    critical: "var(--color-critical)",
+    criticalSoft: "var(--color-critical-soft)",
   },
 } as const;
 
@@ -54,3 +58,4 @@ export const ui = {
   focusRing:
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface)]",
 } as const;
+

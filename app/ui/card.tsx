@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Card,
   CardBody,
@@ -10,6 +12,7 @@ import { cn } from "@/lib/utils";
 export function AppCard({ className, ...props }: CardProps) {
   return (
     <Card
+      radius="lg"
       className={cn(
         "border border-[var(--color-border)] bg-[var(--color-surface)]",
         "shadow-[var(--shadow-card)]",
@@ -26,7 +29,7 @@ export function AppCardHeader({
 }: React.ComponentProps<typeof CardHeader>) {
   return (
     <CardHeader
-      className={cn("flex flex-col gap-1", className)}
+      className={cn("flex flex-col gap-2", className)}
       {...props}
     />
   );
@@ -36,7 +39,7 @@ export function AppCardBody({
   className,
   ...props
 }: React.ComponentProps<typeof CardBody>) {
-  return <CardBody className={cn("gap-2", className)} {...props} />;
+  return <CardBody className={cn("gap-4", className)} {...props} />;
 }
 
 export function AppCardFooter({
@@ -71,3 +74,4 @@ export function AppCardDescription({
 }
 
 export { CardBody as AppCardContent };
+

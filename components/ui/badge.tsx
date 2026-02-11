@@ -2,7 +2,7 @@ import * as React from "react";
 import { AppBadge, type AppBadgeProps, type AppBadgeTone } from "@/app/ui";
 import { cn } from "@/lib/utils";
 
-type BadgeVariant = "default" | "muted" | "success" | "warning" | "danger";
+type BadgeVariant = "default" | "muted" | "success" | "warning" | "danger" | "critical";
 
 type BadgeProps = Omit<AppBadgeProps, "variant" | "tone"> & {
   variant?: BadgeVariant;
@@ -14,6 +14,7 @@ const TONE_MAP: Record<BadgeVariant, AppBadgeTone> = {
   success: "success",
   warning: "warning",
   danger: "danger",
+  critical: "critical",
 };
 
 const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { AppInput, AppSelect } from "@/app/ui";
 
@@ -43,7 +43,7 @@ export default function DashboardFiltersForm({
     <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end">
       <div className="min-w-[160px] flex-1">
         <AppSelect
-          label="Periodo"
+          label="Período"
           value={filters.period}
           onValueChange={(value) =>
             onFilterChange({ period: value as PeriodOption })
@@ -70,7 +70,7 @@ export default function DashboardFiltersForm({
               inputMode="numeric"
             />
             <AppInput
-              label="Ate"
+              label="Até"
               value={filters.endDate}
               onValueChange={(value) =>
                 onFilterChange({
@@ -139,3 +139,5 @@ export default function DashboardFiltersForm({
     </div>
   );
 }
+
+

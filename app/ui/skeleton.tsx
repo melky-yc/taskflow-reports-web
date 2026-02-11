@@ -1,3 +1,5 @@
+"use client";
+
 import { Skeleton, type SkeletonProps } from "@heroui/react";
 import { cn } from "@/lib/utils";
 
@@ -14,3 +16,4 @@ export function AppSkeleton({ className, ...props }: SkeletonProps) {
     />
   );
 }
+
