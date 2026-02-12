@@ -1,51 +1,84 @@
-﻿import AppShell from "@/components/AppShell";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import AppShell from "@/components/AppShell";
+import {
+  AppCard,
+  AppCardBody,
+  AppCardHeader,
+  AppSkeleton,
+} from "@/app/ui";
 
 export default function TicketsLoading() {
   return (
     <AppShell active="tickets" breadcrumb="Tickets">
       <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-5 w-40" />
-            <Skeleton className="mt-2 h-4 w-64" />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-10 w-full" />
-          </CardContent>
-        </Card>
+        <div className="space-y-3">
+          <AppSkeleton className="h-7 w-40 sm:h-8 sm:w-48" />
+          <AppSkeleton className="h-4 w-full max-w-[480px]" />
+        </div>
 
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-5 w-40" />
-            <Skeleton className="mt-2 h-4 w-72" />
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:gap-6 md:grid-cols-3">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <Skeleton key={index} className="h-11 w-full" />
-              ))}
+        <AppCard>
+          <AppCardHeader className="p-4 pb-0 md:p-6 md:pb-0">
+            <AppSkeleton className="h-5 w-40" />
+            <AppSkeleton className="h-4 w-full max-w-[340px]" />
+          </AppCardHeader>
+          <AppCardBody className="space-y-6 p-4 pt-4 md:p-6 md:pt-4">
+            <div className="space-y-4">
+              <AppSkeleton className="h-4 w-40" />
+              <div className="grid gap-4 md:grid-cols-2">
+                <AppSkeleton className="h-11 w-full" />
+                <AppSkeleton className="h-11 w-full" />
+              </div>
             </div>
-            <Skeleton className="mt-6 h-11 w-40 ml-auto" />
-          </CardContent>
-        </Card>
+            <div className="space-y-4">
+              <AppSkeleton className="h-4 w-44" />
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <AppSkeleton key={`ticket-form-${index}`} className="h-11 w-full" />
+                ))}
+              </div>
+              <AppSkeleton className="h-24 w-full" />
+            </div>
+            <div className="space-y-4">
+              <AppSkeleton className="h-4 w-36" />
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <AppSkeleton key={`ticket-client-${index}`} className="h-11 w-full" />
+                ))}
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <AppSkeleton className="h-10 w-36" />
+            </div>
+          </AppCardBody>
+        </AppCard>
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <Skeleton className="h-5 w-48" />
-              <Skeleton className="h-9 w-56" />
+        <AppCard>
+          <AppCardHeader className="p-4 pb-0 md:p-6 md:pb-0">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="space-y-2">
+                <AppSkeleton className="h-5 w-44" />
+                <AppSkeleton className="h-4 w-full max-w-[360px]" />
+              </div>
+              <div className="flex gap-2">
+                <AppSkeleton className="h-9 w-24" />
+                <AppSkeleton className="h-9 w-24" />
+              </div>
             </div>
-          </CardHeader>
-          <CardContent>
+          </AppCardHeader>
+          <AppCardBody className="space-y-4 p-4 pt-4 md:p-6 md:pt-4">
             <div className="space-y-3">
-              {Array.from({ length: 5 }).map((_, index) => (
-                <Skeleton key={index} className="h-10 w-full" />
+              {Array.from({ length: 6 }).map((_, index) => (
+                <AppSkeleton key={`ticket-table-${index}`} className="h-11 w-full" />
               ))}
             </div>
-          </CardContent>
-        </Card>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <AppSkeleton className="h-4 w-36" />
+              <div className="flex gap-2">
+                <AppSkeleton className="h-8 w-20" />
+                <AppSkeleton className="h-8 w-20" />
+              </div>
+            </div>
+          </AppCardBody>
+        </AppCard>
       </div>
     </AppShell>
   );
