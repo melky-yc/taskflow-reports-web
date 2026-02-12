@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { formatPrioridadeLabel } from "@/app/tickets/constants";
 import { useAlerts } from "@/components/alerts/AlertsProvider";
 import {
   AppAlert,
@@ -140,10 +141,6 @@ function buildFilename(periodLabel: string) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
   return `relatorio_${stamp}_${slug}.csv`;
-}
-
-function formatPrioridadeLabel(prioridade: string) {
-  return prioridade === "Media" ? "Média" : prioridade;
 }
 
 const PRIORITY_TONE_MAP: Record<string, AppBadgeTone> = {

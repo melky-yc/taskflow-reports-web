@@ -29,6 +29,7 @@ import {
 import cidadesPi from "@/data/cidades_pi.json";
 import { createClient } from "@/lib/supabase/client";
 import {
+  formatPrioridadeLabel,
   MOTIVOS_OPTIONS,
   PRIORIDADES_OPTIONS,
   PRIORITY_COLOR_MAP,
@@ -409,11 +410,9 @@ export default function DashboardClient() {
 
   const priorityData = PRIORIDADES_CHART.map((label) => ({
     name:
-      label === "Media"
-        ? "Média"
-        : label === "Critica"
+      label === "Critica"
         ? "Crítica"
-        : label,
+        : formatPrioridadeLabel(label),
     value: priorityMap[label] ?? 0,
     color:
       PRIORITY_COLOR_MAP[label as keyof typeof PRIORITY_COLOR_MAP] ??
@@ -497,11 +496,7 @@ export default function DashboardClient() {
     if (appliedFilters.prioridade) {
       chips.push({
         id: "prioridade",
-        label: `Prioridade: ${
-          appliedFilters.prioridade === "Media"
-            ? "Média"
-            : appliedFilters.prioridade
-        }`,
+        label: `Prioridade: ${formatPrioridadeLabel(appliedFilters.prioridade)}`,
         onRemove: () => handleRemoveFilter("prioridade"),
       });
     }

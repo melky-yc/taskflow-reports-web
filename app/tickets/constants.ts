@@ -1,18 +1,28 @@
 ﻿export const MOTIVOS_OPTIONS = [
   "Alteração de Perfil",
+  "Apresentação",
   "Atualização de dados cadastrais",
+  "Auxílio em capacitações",
   "Cadastro não localizado",
+  "Criação de documentos",
   "Dados divergentes",
   "Dúvida sobre uso do sistema",
   "Erro ao salvar informações",
   "Erro no sistema",
+  "Eventos (auxílio)",
   "Funcionalidade indisponível",
+  "Kanban/Power BI",
   "Problema de acesso",
   "Problema de cadastro",
+  "Problemas com conexões e impressoras",
   "Recuperação de senha",
   "Sistema lento ou instável",
   "Solicitação de Cadastro",
   "Solicitação de informação",
+  "Suporte remoto",
+  "Suporte técnico",
+  "Treinamento",
+  "Workshop",
   "Outro",
 ] as const;
 
@@ -59,4 +69,11 @@ export function getPriorityBadgeVariant(prioridade: string) {
   );
 }
 
+export function isPrioridadeOption(value: string): value is PrioridadeOption {
+  return PRIORIDADES_OPTIONS.includes(value as PrioridadeOption);
+}
+
+export function formatPrioridadeLabel(prioridade: string) {
+  return prioridade === "Media" ? "Média" : prioridade;
+}
 

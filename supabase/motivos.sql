@@ -1,22 +1,34 @@
--- Permitir novo motivo
+-- Permitir novos motivos
 alter table public.tickets
   drop constraint if exists tickets_motivo_chk;
 
 alter table public.tickets
   add constraint tickets_motivo_chk check (
     motivo in (
-      'Problema de cadastro',
-      'Problema de acesso',
-      'Recuperação de senha',
-      'Cadastro não localizado',
-      'Dados divergentes',
+      'Alteração de Perfil',
+      'Apresentação',
       'Atualização de dados cadastrais',
-      'Erro no sistema',
-      'Funcionalidade indisponível',
-      'Sistema lento ou instável',
-      'Erro ao salvar informações',
+      'Auxílio em capacitações',
+      'Cadastro não localizado',
+      'Criação de documentos',
+      'Dados divergentes',
       'Dúvida sobre uso do sistema',
+      'Erro ao salvar informações',
+      'Erro no sistema',
+      'Eventos (auxílio)',
+      'Funcionalidade indisponível',
+      'Kanban/Power BI',
+      'Problema de acesso',
+      'Problema de cadastro',
+      'Problemas com conexões e impressoras',
+      'Recuperação de senha',
+      'Sistema lento ou instável',
+      'Solicitação de Cadastro',
       'Solicitação de informação',
+      'Suporte remoto',
+      'Suporte técnico',
+      'Treinamento',
+      'Workshop',
       'Outro'
     )
   );

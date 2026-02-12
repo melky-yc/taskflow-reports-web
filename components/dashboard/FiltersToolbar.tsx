@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { formatPrioridadeLabel } from "@/app/tickets/constants";
 import { AppInput, AppSelect } from "@/app/ui";
 
 type PeriodOption = "7" | "30" | "90" | "365" | "custom";
@@ -102,7 +103,7 @@ export default function DashboardFiltersForm({
           onValueChange={(value) => onFilterChange({ prioridade: value })}
           options={prioridades.map((item) => ({
             value: item,
-            label: item === "Media" ? "Media" : item,
+            label: formatPrioridadeLabel(item),
           }))}
         />
       </div>

@@ -6,8 +6,10 @@ import { createClient } from "@/lib/supabase/server";
 import {
   AREA_ATUACAO_OPTIONS,
   MOTIVOS_OPTIONS,
+  isPrioridadeOption,
   type MotivoOption,
 } from "@/app/tickets/constants";
+import type { TicketErrorCode } from "@/app/tickets/error-messages";
 
 function onlyDigits(value: string) {
   return value.replace(/\D/g, "").slice(0, 11);
@@ -45,6 +47,52 @@ function getProfissionalNome(user: { email?: string | null; user_metadata?: Reco
     user.email ||
     "Usuario";
   return normalizeText(nome) || "Usuario";
+}
+
+type RequiredTicketData = {
+  motivo: string;
+  prioridade: string;
+  nome: string;
+  cpf: string;
+  cidade: string;
+  estadoUf: string;
+  unidade: string;
+  areaAtuacao: string;
+};
+
+function isRequiredTicketDataValid(input: RequiredTicketData) {
+  return Boolean(
+    input.motivo &&
+    MOTIVOS_OPTIONS.includes(input.motivo as MotivoOption) &&
+    input.prioridade &&
+    isPrioridadeOption(input.prioridade) &&
+    input.nome &&
+    input.cpf &&
+    input.cidade &&
+    input.estadoUf &&
+    input.unidade &&
+    AREA_ATUACAO_OPTIONS.includes(
+      input.areaAtuacao as (typeof AREA_ATUACAO_OPTIONS)[number]
+    )
+  );
+}
+
+function redirectWithTicketError(code: TicketErrorCode): never {
+  redirect(`/tickets?error=${code}`);
+}
+
+function logSupabaseError(
+  code: "ticket_insert_error" | "ticket_update_error",
+  error: unknown
+) {
+  const parsed =
+    typeof error === "object" && error !== null
+      ? (error as { code?: unknown; message?: unknown })
+      : {};
+  console.error(code, {
+    code: typeof parsed.code === "string" ? parsed.code : "unknown",
+    message: typeof parsed.message === "string" ? parsed.message : "unknown",
+  });
 }
 
 export async function createTicketAction(formData: FormData) {
@@ -87,35 +135,36 @@ export async function createTicketAction(formData: FormData) {
   const clientIdFromForm = Number(formData.get("client_id") || 0);
 
   if (
-    !motivo ||
-    !MOTIVOS_OPTIONS.includes(motivo as MotivoOption) ||
-    !prioridade ||
-    !nome ||
-    !cpf ||
-    !cidade ||
-    !estadoUf ||
-    !unidade ||
-    !AREA_ATUACAO_OPTIONS.includes(areaAtuacao as (typeof AREA_ATUACAO_OPTIONS)[number])
+    !isRequiredTicketDataValid({
+      motivo,
+      prioridade,
+      nome,
+      cpf,
+      cidade,
+      estadoUf,
+      unidade,
+      areaAtuacao,
+    })
   ) {
-    redirect("/tickets?error=campos");
+    redirectWithTicketError("campos");
   }
 
   if (cpf.length !== 11) {
-    redirect("/tickets?error=cpf");
+    redirectWithTicketError("cpf");
   }
 
   if (estadoUf.length !== 2) {
-    redirect("/tickets?error=estado");
+    redirectWithTicketError("estado");
   }
 
   if (motivo === "Outro" && !motivoOutro) {
-    redirect("/tickets?error=motivo");
+    redirectWithTicketError("motivo");
   }
 
   const retroativo = isRetroativo(dataAtendimento || null);
 
   if (retroativo && !retroativoMotivo) {
-    redirect("/tickets?error=retroativo");
+    redirectWithTicketError("retroativo");
   }
 
   let clientId: number | null = null;
@@ -140,7 +189,7 @@ export async function createTicketAction(formData: FormData) {
       .maybeSingle();
 
     if (existingError) {
-      redirect("/tickets?error=cliente");
+      redirectWithTicketError("cliente");
     }
 
     if (existingClient?.id) {
@@ -156,7 +205,7 @@ export async function createTicketAction(formData: FormData) {
         .eq("id", existingClient.id);
 
       if (updateError) {
-        redirect("/tickets?error=cliente");
+        redirectWithTicketError("cliente");
       }
 
       clientId = existingClient.id;
@@ -175,7 +224,7 @@ export async function createTicketAction(formData: FormData) {
         .single();
 
       if (insertError || !insertedClient) {
-        redirect("/tickets?error=cliente");
+        redirectWithTicketError("cliente");
       }
 
       clientId = insertedClient.id;
@@ -196,8 +245,8 @@ export async function createTicketAction(formData: FormData) {
   });
 
   if (ticketError) {
-    console.error("ticket_insert_error", ticketError);
-    redirect("/tickets?error=ticket");
+    logSupabaseError("ticket_insert_error", ticketError);
+    redirectWithTicketError("ticket");
   }
 
   revalidatePath("/tickets");
@@ -246,39 +295,40 @@ export async function updateTicketAction(formData: FormData) {
   const unidade = normalizeText(String(formData.get("cliente_unidade") || ""));
 
   if (!ticketId || !clientId) {
-    redirect("/tickets?error=editar");
+    redirectWithTicketError("editar");
   }
 
   if (
-    !motivo ||
-    !MOTIVOS_OPTIONS.includes(motivo as MotivoOption) ||
-    !prioridade ||
-    !nome ||
-    !cpf ||
-    !cidade ||
-    !estadoUf ||
-    !unidade ||
-    !AREA_ATUACAO_OPTIONS.includes(areaAtuacao as (typeof AREA_ATUACAO_OPTIONS)[number])
+    !isRequiredTicketDataValid({
+      motivo,
+      prioridade,
+      nome,
+      cpf,
+      cidade,
+      estadoUf,
+      unidade,
+      areaAtuacao,
+    })
   ) {
-    redirect("/tickets?error=campos");
+    redirectWithTicketError("campos");
   }
 
   if (cpf.length !== 11) {
-    redirect("/tickets?error=cpf");
+    redirectWithTicketError("cpf");
   }
 
   if (estadoUf.length !== 2) {
-    redirect("/tickets?error=estado");
+    redirectWithTicketError("estado");
   }
 
   if (motivo === "Outro" && !motivoOutro) {
-    redirect("/tickets?error=motivo");
+    redirectWithTicketError("motivo");
   }
 
   const retroativo = isRetroativo(dataAtendimento || null);
 
   if (retroativo && !retroativoMotivo) {
-    redirect("/tickets?error=retroativo");
+    redirectWithTicketError("retroativo");
   }
 
   const { error: clientError } = await supabase
@@ -293,7 +343,7 @@ export async function updateTicketAction(formData: FormData) {
     .eq("id", clientId);
 
   if (clientError) {
-    redirect("/tickets?error=cliente");
+    redirectWithTicketError("cliente");
   }
 
   const { error: ticketError } = await supabase
@@ -310,8 +360,8 @@ export async function updateTicketAction(formData: FormData) {
     .eq("id", ticketId);
 
   if (ticketError) {
-    console.error("ticket_update_error", ticketError);
-    redirect("/tickets?error=ticket");
+    logSupabaseError("ticket_update_error", ticketError);
+    redirectWithTicketError("ticket");
   }
 
   revalidatePath("/tickets");

@@ -10,11 +10,13 @@ import { createClient } from "@/lib/supabase/client";
 import { useAlerts } from "@/components/alerts/AlertsProvider";
 import {
   AREA_ATUACAO_OPTIONS,
+  formatPrioridadeLabel,
   MOTIVOS_OPTIONS,
   PRIORIDADES_OPTIONS,
   USO_PLATAFORMA_OPTIONS,
   UF_PADRAO,
 } from "@/app/tickets/constants";
+import { getTicketErrorMessage } from "@/app/tickets/error-messages";
 import { getTodayLocalISODate } from "@/utils/date";
 import {
   AppBadge,
@@ -150,10 +152,6 @@ function isRetroativoIso(dateValue: string) {
     return false;
   }
   return dateValue < getTodayLocalISODate();
-}
-
-function formatPrioridadeLabel(prioridade: string) {
-  return prioridade === "Media" ? "Média" : prioridade;
 }
 
 function motivoTone(motivo: string) {
@@ -321,28 +319,7 @@ export default function TicketsClient({
     }
   }, [status, notify]);
 
-  const errorMessage = (() => {
-    switch (error) {
-      case "campos":
-        return "Preencha todos os campos obrigatórios.";
-      case "cpf":
-        return "CPF deve conter 11 dígitos.";
-      case "estado":
-        return "UF deve conter 2 letras.";
-      case "motivo":
-        return "Descreva o motivo quando selecionar Outro.";
-      case "retroativo":
-        return "Informe o motivo do retroativo.";
-      case "cliente":
-        return "Não foi possível salvar o cliente.";
-      case "ticket":
-        return "Não foi possível salvar o chamado.";
-      case "editar":
-        return "Não foi possível editar o chamado.";
-      default:
-        return "";
-    }
-  })();
+  const errorMessage = getTicketErrorMessage(error);
 
   const cpfDisplay = formatCpf(cpfDigits);
 
