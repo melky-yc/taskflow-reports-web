@@ -10,6 +10,17 @@ import {
   type MotivoOption,
 } from "@/app/tickets/constants";
 import type { TicketErrorCode } from "@/app/tickets/error-messages";
+import { normalizeUnidadeInput } from "@/utils/unidade";
+
+type ClientTicketContext = {
+  multiUnidade: boolean;
+  clientDefaultUnidade: string | null;
+};
+
+type ResolvedUnidade = {
+  ticketUnidade: string;
+  clientDefaultUnidade: string | null;
+};
 
 function onlyDigits(value: string) {
   return value.replace(/\D/g, "").slice(0, 11);
@@ -39,7 +50,10 @@ function isRetroativo(dataAtendimento?: string | null) {
   return dataAtendimento < getTodayIso();
 }
 
-function getProfissionalNome(user: { email?: string | null; user_metadata?: Record<string, unknown> }) {
+function getProfissionalNome(user: {
+  email?: string | null;
+  user_metadata?: Record<string, unknown>;
+}) {
   const metadata = user.user_metadata ?? {};
   const nome =
     (metadata.name as string | undefined) ||
@@ -56,25 +70,54 @@ type RequiredTicketData = {
   cpf: string;
   cidade: string;
   estadoUf: string;
-  unidade: string;
   areaAtuacao: string;
 };
 
 function isRequiredTicketDataValid(input: RequiredTicketData) {
   return Boolean(
     input.motivo &&
-    MOTIVOS_OPTIONS.includes(input.motivo as MotivoOption) &&
-    input.prioridade &&
-    isPrioridadeOption(input.prioridade) &&
-    input.nome &&
-    input.cpf &&
-    input.cidade &&
-    input.estadoUf &&
-    input.unidade &&
-    AREA_ATUACAO_OPTIONS.includes(
-      input.areaAtuacao as (typeof AREA_ATUACAO_OPTIONS)[number]
-    )
+      MOTIVOS_OPTIONS.includes(input.motivo as MotivoOption) &&
+      input.prioridade &&
+      isPrioridadeOption(input.prioridade) &&
+      input.nome &&
+      input.cpf &&
+      input.cidade &&
+      input.estadoUf &&
+      AREA_ATUACAO_OPTIONS.includes(
+        input.areaAtuacao as (typeof AREA_ATUACAO_OPTIONS)[number]
+      )
   );
+}
+
+function resolveTicketUnidade(
+  ticketInputUnidade: string | null,
+  context: ClientTicketContext
+): ResolvedUnidade {
+  if (context.multiUnidade) {
+    if (!ticketInputUnidade) {
+      redirectWithTicketError("unidade_multi");
+    }
+    return {
+      ticketUnidade: ticketInputUnidade,
+      clientDefaultUnidade: context.clientDefaultUnidade,
+    };
+  }
+
+  if (ticketInputUnidade) {
+    return {
+      ticketUnidade: ticketInputUnidade,
+      clientDefaultUnidade: ticketInputUnidade,
+    };
+  }
+
+  if (context.clientDefaultUnidade) {
+    return {
+      ticketUnidade: context.clientDefaultUnidade,
+      clientDefaultUnidade: context.clientDefaultUnidade,
+    };
+  }
+
+  redirectWithTicketError("unidade_padrao");
 }
 
 function redirectWithTicketError(code: TicketErrorCode): never {
@@ -109,7 +152,9 @@ export async function createTicketAction(formData: FormData) {
   const motivoOutro = normalizeText(
     String(formData.get("motivo_outro_descricao") || "")
   );
-  const prioridade = normalizePrioridade(String(formData.get("prioridade") || ""));
+  const prioridade = normalizePrioridade(
+    String(formData.get("prioridade") || "")
+  );
   const dataAtendimento = normalizeText(
     String(formData.get("data_atendimento") || "")
   );
@@ -120,7 +165,9 @@ export async function createTicketAction(formData: FormData) {
   const nome = normalizeText(String(formData.get("cliente_nome") || ""));
   const cpf = onlyDigits(String(formData.get("cliente_cpf") || ""));
   const cidade = normalizeText(String(formData.get("cliente_cidade") || ""));
-  const estadoUf = normalizeText(String(formData.get("cliente_estado") || "")).toUpperCase();
+  const estadoUf = normalizeText(
+    String(formData.get("cliente_estado") || "")
+  ).toUpperCase();
   const usoPlataforma = normalizeText(
     String(
       formData.get("uso_plataforma") ||
@@ -131,7 +178,13 @@ export async function createTicketAction(formData: FormData) {
   const areaAtuacao = normalizeText(
     String(formData.get("cliente_area_atuacao") || "")
   );
-  const unidade = normalizeText(String(formData.get("cliente_unidade") || ""));
+  const ticketUnidadeInput = normalizeUnidadeInput(
+    String(
+      formData.get("ticket_unidade") ||
+        formData.get("cliente_unidade") ||
+        ""
+    )
+  );
   const clientIdFromForm = Number(formData.get("client_id") || 0);
 
   if (
@@ -142,7 +195,6 @@ export async function createTicketAction(formData: FormData) {
       cpf,
       cidade,
       estadoUf,
-      unidade,
       areaAtuacao,
     })
   ) {
@@ -168,23 +220,31 @@ export async function createTicketAction(formData: FormData) {
   }
 
   let clientId: number | null = null;
+  let clientContext: ClientTicketContext = {
+    multiUnidade: false,
+    clientDefaultUnidade: null,
+  };
 
   if (clientIdFromForm) {
     const { data: clientById, error: clientByIdError } = await supabase
       .from("clients")
-      .select("id, cpf")
+      .select("id, cpf, unidade, multi_unidade")
       .eq("id", clientIdFromForm)
       .maybeSingle();
 
     if (!clientByIdError && clientById?.id && clientById.cpf === cpf) {
       clientId = clientById.id;
+      clientContext = {
+        multiUnidade: Boolean(clientById.multi_unidade),
+        clientDefaultUnidade: normalizeUnidadeInput(clientById.unidade),
+      };
     }
   }
 
   if (!clientId) {
     const { data: existingClient, error: existingError } = await supabase
       .from("clients")
-      .select("id")
+      .select("id, unidade, multi_unidade")
       .eq("cpf", cpf)
       .maybeSingle();
 
@@ -193,42 +253,55 @@ export async function createTicketAction(formData: FormData) {
     }
 
     if (existingClient?.id) {
-      const { error: updateError } = await supabase
-        .from("clients")
-        .update({
-          nome,
-          cidade,
-          estado_uf: estadoUf,
-          area_atuacao: areaAtuacao,
-          unidade,
-        })
-        .eq("id", existingClient.id);
-
-      if (updateError) {
-        redirectWithTicketError("cliente");
-      }
-
       clientId = existingClient.id;
-    } else {
-      const { data: insertedClient, error: insertError } = await supabase
-        .from("clients")
-        .insert({
-          cpf,
-          nome,
-          cidade,
-          estado_uf: estadoUf,
-          area_atuacao: areaAtuacao,
-          unidade,
-        })
-        .select("id")
-        .single();
-
-      if (insertError || !insertedClient) {
-        redirectWithTicketError("cliente");
-      }
-
-      clientId = insertedClient.id;
+      clientContext = {
+        multiUnidade: Boolean(existingClient.multi_unidade),
+        clientDefaultUnidade: normalizeUnidadeInput(existingClient.unidade),
+      };
     }
+  }
+
+  const resolvedUnidade = resolveTicketUnidade(ticketUnidadeInput, clientContext);
+
+  if (clientId) {
+    const { error: updateError } = await supabase
+      .from("clients")
+      .update({
+        nome,
+        cidade,
+        estado_uf: estadoUf,
+        uso_plataforma: usoPlataforma || null,
+        area_atuacao: areaAtuacao,
+        unidade: clientContext.multiUnidade
+          ? clientContext.clientDefaultUnidade ?? resolvedUnidade.ticketUnidade
+          : resolvedUnidade.clientDefaultUnidade,
+      })
+      .eq("id", clientId);
+
+    if (updateError) {
+      redirectWithTicketError("cliente");
+    }
+  } else {
+    const { data: insertedClient, error: insertError } = await supabase
+      .from("clients")
+      .insert({
+        cpf,
+        nome,
+        cidade,
+        estado_uf: estadoUf,
+        uso_plataforma: usoPlataforma || null,
+        area_atuacao: areaAtuacao,
+        multi_unidade: false,
+        unidade: resolvedUnidade.clientDefaultUnidade,
+      })
+      .select("id")
+      .single();
+
+    if (insertError || !insertedClient) {
+      redirectWithTicketError("cliente");
+    }
+
+    clientId = insertedClient.id;
   }
 
   const { error: ticketError } = await supabase.from("tickets").insert({
@@ -242,6 +315,7 @@ export async function createTicketAction(formData: FormData) {
     retroativo,
     retroativo_motivo: retroativo ? retroativoMotivo : null,
     client_id: clientId,
+    unidade: resolvedUnidade.ticketUnidade,
   });
 
   if (ticketError) {
@@ -250,6 +324,8 @@ export async function createTicketAction(formData: FormData) {
   }
 
   revalidatePath("/tickets");
+  revalidatePath("/dashboard");
+  revalidatePath("/reports");
   redirect("/tickets?status=created");
 }
 
@@ -270,7 +346,9 @@ export async function updateTicketAction(formData: FormData) {
   const motivoOutro = normalizeText(
     String(formData.get("motivo_outro_descricao") || "")
   );
-  const prioridade = normalizePrioridade(String(formData.get("prioridade") || ""));
+  const prioridade = normalizePrioridade(
+    String(formData.get("prioridade") || "")
+  );
   const dataAtendimento = normalizeText(
     String(formData.get("data_atendimento") || "")
   );
@@ -281,7 +359,9 @@ export async function updateTicketAction(formData: FormData) {
   const nome = normalizeText(String(formData.get("cliente_nome") || ""));
   const cpf = onlyDigits(String(formData.get("cliente_cpf") || ""));
   const cidade = normalizeText(String(formData.get("cliente_cidade") || ""));
-  const estadoUf = normalizeText(String(formData.get("cliente_estado") || "")).toUpperCase();
+  const estadoUf = normalizeText(
+    String(formData.get("cliente_estado") || "")
+  ).toUpperCase();
   const usoPlataforma = normalizeText(
     String(
       formData.get("uso_plataforma") ||
@@ -292,7 +372,13 @@ export async function updateTicketAction(formData: FormData) {
   const areaAtuacao = normalizeText(
     String(formData.get("cliente_area_atuacao") || "")
   );
-  const unidade = normalizeText(String(formData.get("cliente_unidade") || ""));
+  const ticketUnidadeInput = normalizeUnidadeInput(
+    String(
+      formData.get("ticket_unidade") ||
+        formData.get("cliente_unidade") ||
+        ""
+    )
+  );
 
   if (!ticketId || !clientId) {
     redirectWithTicketError("editar");
@@ -306,7 +392,6 @@ export async function updateTicketAction(formData: FormData) {
       cpf,
       cidade,
       estadoUf,
-      unidade,
       areaAtuacao,
     })
   ) {
@@ -331,14 +416,33 @@ export async function updateTicketAction(formData: FormData) {
     redirectWithTicketError("retroativo");
   }
 
+  const { data: currentClient, error: currentClientError } = await supabase
+    .from("clients")
+    .select("id, cpf, unidade, multi_unidade")
+    .eq("id", clientId)
+    .maybeSingle();
+
+  if (currentClientError || !currentClient || currentClient.cpf !== cpf) {
+    redirectWithTicketError("editar");
+  }
+
+  const resolvedUnidade = resolveTicketUnidade(ticketUnidadeInput, {
+    multiUnidade: Boolean(currentClient.multi_unidade),
+    clientDefaultUnidade: normalizeUnidadeInput(currentClient.unidade),
+  });
+
   const { error: clientError } = await supabase
     .from("clients")
     .update({
       nome,
       cidade,
       estado_uf: estadoUf,
+      uso_plataforma: usoPlataforma || null,
       area_atuacao: areaAtuacao,
-      unidade,
+      unidade: currentClient.multi_unidade
+        ? normalizeUnidadeInput(currentClient.unidade) ??
+          resolvedUnidade.ticketUnidade
+        : resolvedUnidade.clientDefaultUnidade,
     })
     .eq("id", clientId);
 
@@ -356,6 +460,7 @@ export async function updateTicketAction(formData: FormData) {
       data_atendimento: dataAtendimento || null,
       retroativo,
       retroativo_motivo: retroativo ? retroativoMotivo : null,
+      unidade: resolvedUnidade.ticketUnidade,
     })
     .eq("id", ticketId);
 
@@ -365,6 +470,7 @@ export async function updateTicketAction(formData: FormData) {
   }
 
   revalidatePath("/tickets");
+  revalidatePath("/dashboard");
+  revalidatePath("/reports");
   redirect("/tickets?status=updated");
 }
-

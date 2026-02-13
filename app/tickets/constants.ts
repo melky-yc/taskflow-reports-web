@@ -58,15 +58,24 @@ export const AREA_ATUACAO_OPTIONS = [
   "Outro",
 ] as const;
 
+export const UNIDADE_AFETADA_LABEL = "Unidade afetada";
+export const UNIDADE_AFETADA_HELPER =
+  "Unidade onde ocorreu o problema. Para clientes comuns, será preenchida automaticamente.";
+export const UNIDADE_MULTI_REQUIRED_HELPER =
+  "Obrigatório para este cliente: informe a unidade afetada.";
+export const UNIDADE_SUGGESTIONS_LIST_ID = "unidades-sugeridas";
+
+export function getUnidadeHistoryStorageKey(userId: string) {
+  return `taskflow:unidades:${userId}`;
+}
+
 export type MotivoOption = (typeof MOTIVOS_OPTIONS)[number];
 export type PrioridadeOption = (typeof PRIORIDADES_OPTIONS)[number];
 export type UsoPlataformaOption = (typeof USO_PLATAFORMA_OPTIONS)[number];
 export type AreaAtuacaoOption = (typeof AREA_ATUACAO_OPTIONS)[number];
 
 export function getPriorityBadgeVariant(prioridade: string) {
-  return (
-    PRIORITY_BADGE_VARIANTS[prioridade as PrioridadeOption] ?? "muted"
-  );
+  return PRIORITY_BADGE_VARIANTS[prioridade as PrioridadeOption] ?? "muted";
 }
 
 export function isPrioridadeOption(value: string): value is PrioridadeOption {
@@ -76,4 +85,3 @@ export function isPrioridadeOption(value: string): value is PrioridadeOption {
 export function formatPrioridadeLabel(prioridade: string) {
   return prioridade === "Media" ? "Média" : prioridade;
 }
-

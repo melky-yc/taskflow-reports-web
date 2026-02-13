@@ -9,6 +9,7 @@
   retroativo_motivo: string | null;
   uso_plataforma: string | null;
   client_id: number;
+  unidade: string | null;
   client: {
     id: number;
     nome: string;
@@ -17,6 +18,7 @@
     estado_uf: string;
     uso_plataforma: string | null;
     area_atuacao: string | null;
-    unidade: string;
+    unidade: string | null;
+    multi_unidade: boolean;
   };
 };

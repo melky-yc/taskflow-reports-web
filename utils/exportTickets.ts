@@ -1,5 +1,6 @@
 import * as XLSX from "xlsx";
 import type { TicketClient } from "@/app/tickets/types";
+import { formatUnidade } from "@/utils/unidade";
 
 export const EXPORT_HEADERS = [
   "id",
@@ -12,7 +13,7 @@ export const EXPORT_HEADERS = [
   "cliente_cidade",
   "cliente_estado_uf",
   "cliente_uso_plataforma",
-  "cliente_unidade",
+  "unidade_afetada",
   "created_at",
 ] as string[];
 
@@ -66,7 +67,7 @@ export function mapToExportRow(ticket: TicketClient): ExportRow {
     ticket.client.cidade || "",
     ticket.client.estado_uf || "",
     usoPlataforma,
-    ticket.client.unidade || "",
+    formatUnidade(ticket.unidade),
     formatDateBR(ticket.created_at),
   ];
 }

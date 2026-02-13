@@ -1,4 +1,4 @@
-create or replace function public.dashboard_metrics(filters jsonb)
+﻿create or replace function public.dashboard_metrics(filters jsonb)
 returns jsonb
 language plpgsql
 security invoker
@@ -11,6 +11,7 @@ declare
   v_end date;
   v_motivo text := nullif(filters->>'motivo', '');
   v_prioridade text := nullif(filters->>'prioridade', '');
+  v_unidade text := nullif(filters->>'unidade', '');
   v_uso text := nullif(filters->>'uso_plataforma', '');
   v_uf text := nullif(filters->>'uf', '');
   v_cidade text := nullif(filters->>'cidade', '');
@@ -21,6 +22,9 @@ begin
   end if;
   if v_prioridade = 'all' then
     v_prioridade := null;
+  end if;
+  if v_unidade = 'all' then
+    v_unidade := null;
   end if;
   if v_uso = 'all' then
     v_uso := null;
@@ -58,13 +62,19 @@ begin
         c.estado_uf,
         coalesce(nullif(t.uso_plataforma, ''), c.uso_plataforma) as uso_plataforma,
         c.area_atuacao,
-        c.unidade,
+        t.unidade,
+        coalesce(nullif(btrim(t.unidade), ''), 'Sem classificação') as unidade_label,
         coalesce(t.data_atendimento, t.created_at::date) as base_date
       from tickets t
       join clients c on c.id = t.client_id
       where coalesce(t.data_atendimento, t.created_at::date) between v_start and v_end
         and (v_motivo is null or t.motivo = v_motivo)
         and (v_prioridade is null or t.prioridade = v_prioridade)
+        and (
+          v_unidade is null
+          or (upper(v_unidade) = 'SEM_CLASSIFICACAO' and nullif(btrim(t.unidade), '') is null)
+          or (upper(v_unidade) <> 'SEM_CLASSIFICACAO' and t.unidade ilike ('%' || v_unidade || '%'))
+        )
         and (v_uso is null or t.uso_plataforma = v_uso)
         and (v_uf is null or c.estado_uf = v_uf)
         and (v_cidade is null or c.cidade = v_cidade)
@@ -73,7 +83,8 @@ begin
       select
         count(*) as total_count,
         count(*) filter (where retroativo) as retro_count,
-        count(*) filter (where base_date = current_date) as today_count
+        count(*) filter (where base_date = current_date) as today_count,
+        count(*) filter (where nullif(btrim(unidade), '') is null) as without_unit_count
       from base
     ),
     top_motivo as (
@@ -98,6 +109,7 @@ begin
           else round((totals.retro_count::numeric / totals.total_count) * 100, 1)
         end,
         'today_count', coalesce(totals.today_count, 0),
+        'without_unit_count', coalesce(totals.without_unit_count, 0),
         'top_motivo', coalesce((select motivo from top_motivo), ''),
         'top_area_atuacao', coalesce((select area_atuacao_label from top_area_atuacao), '')
       ),
@@ -148,10 +160,10 @@ begin
       'top_unidades', coalesce(
         (
           select jsonb_agg(item) from (
-            select jsonb_build_object('unidade', unidade, 'count', count(*)) as item
+            select jsonb_build_object('unidade', unidade_label, 'count', count(*)) as item
             from base
-            group by unidade
-            order by count(*) desc, unidade asc
+            group by unidade_label
+            order by count(*) desc, unidade_label asc
             limit 5
           ) s
         ),

@@ -8,7 +8,7 @@ import { Sidebar } from "@/components/ui/sidebar";
 import { NAV_ITEMS } from "@/components/navigation";
 
 type AppShellProps = {
-  active: "dashboard" | "tickets" | "reports" | "config" | "home";
+  active: "dashboard" | "tickets" | "reports" | "faq" | "config" | "home";
   breadcrumb?: string;
   children: React.ReactNode;
 };

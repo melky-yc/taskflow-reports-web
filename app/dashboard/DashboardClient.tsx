@@ -102,6 +102,7 @@ type FiltersState = {
   period: PeriodOption;
   motivo: string;
   prioridade: string;
+  unidade: string;
   uso: string;
   uf: string;
   cidade: string;
@@ -205,6 +206,7 @@ export default function DashboardClient() {
       period: "7",
       motivo: "",
       prioridade: "",
+      unidade: "",
       uso: "",
       uf: UF_PADRAO,
       cidade: "",
@@ -231,6 +233,7 @@ export default function DashboardClient() {
       period: currentFilters.period,
       motivo: currentFilters.motivo,
       prioridade: currentFilters.prioridade,
+      unidade: currentFilters.unidade,
       uso_plataforma: currentFilters.uso,
       uf: currentFilters.uf,
       cidade: currentFilters.cidade,
@@ -306,6 +309,9 @@ export default function DashboardClient() {
           break;
         case "prioridade":
           nextFilters.prioridade = "";
+          break;
+        case "unidade":
+          nextFilters.unidade = "";
           break;
         case "uso":
           nextFilters.uso = "";
@@ -498,6 +504,14 @@ export default function DashboardClient() {
         id: "prioridade",
         label: `Prioridade: ${formatPrioridadeLabel(appliedFilters.prioridade)}`,
         onRemove: () => handleRemoveFilter("prioridade"),
+      });
+    }
+    if (appliedFilters.unidade) {
+      const unidadeFilterValue = appliedFilters.unidade.trim();
+      chips.push({
+        id: "unidade",
+        label: `Unidade: ${unidadeFilterValue}`,
+        onRemove: () => handleRemoveFilter("unidade"),
       });
     }
     if (appliedFilters.uso) {

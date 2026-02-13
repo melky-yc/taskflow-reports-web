@@ -4,6 +4,7 @@ import AppShell from "@/components/AppShell";
 import TicketsClient from "@/app/tickets/TicketsClient";
 import type { TicketClient } from "@/app/tickets/types";
 import { MOTIVOS_OPTIONS, type MotivoOption } from "@/app/tickets/constants";
+import { normalizeUnidadeInput } from "@/utils/unidade";
 
 const PAGE_SIZE = 10;
 
@@ -66,7 +67,7 @@ export default async function TicketsPage({
   let query = supabase
     .from("tickets")
     .select(
-      "id, created_at, data_atendimento, motivo, motivo_outro_descricao, prioridade, uso_plataforma, profissional_nome, retroativo_motivo, client_id, clients(id, nome, cpf, cidade, estado_uf, uso_plataforma, area_atuacao, unidade)",
+      "id, created_at, data_atendimento, motivo, motivo_outro_descricao, prioridade, uso_plataforma, profissional_nome, retroativo_motivo, client_id, unidade, clients(id, nome, cpf, cidade, estado_uf, uso_plataforma, area_atuacao, unidade, multi_unidade)",
       { count: "exact" }
     )
     .order("created_at", { ascending: false })
@@ -94,6 +95,7 @@ export default async function TicketsPage({
       retroativo_motivo: ticket.retroativo_motivo,
       uso_plataforma: ticket.uso_plataforma ?? null,
       client_id: ticket.client_id,
+      unidade: normalizeUnidadeInput(ticket.unidade ?? null),
       client: {
         id: clientData?.id ?? ticket.client_id,
         nome: clientData?.nome ?? "",
@@ -102,7 +104,8 @@ export default async function TicketsPage({
         estado_uf: clientData?.estado_uf ?? "",
         uso_plataforma: clientData?.uso_plataforma ?? null,
         area_atuacao: clientData?.area_atuacao ?? null,
-        unidade: clientData?.unidade ?? "",
+        unidade: normalizeUnidadeInput(clientData?.unidade ?? null),
+        multi_unidade: Boolean(clientData?.multi_unidade),
       },
     };
   });
@@ -124,6 +127,7 @@ export default async function TicketsPage({
   return (
     <AppShell active="tickets" breadcrumb="Tickets">
       <TicketsClient
+        currentUserId={user.id}
         currentUserName={getProfissionalNome(user)}
         tickets={tickets}
         filters={{ period, motivo }}

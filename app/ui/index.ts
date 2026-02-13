@@ -9,6 +9,7 @@ export * from "./textarea";
 export * from "./modal";
 export * from "./card";
 export * from "./badge";
+export * from "./accordion";
 export * from "./table";
 export * from "./divider";
 export * from "./skeleton";

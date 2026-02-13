@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {
   BarChart3,
+  CircleHelp,
   Home,
   LayoutDashboard,
   Settings,
@@ -12,7 +13,13 @@ import type { ComponentType } from "react";
 import { AppCard, AppCardBody, AppModal } from "@/app/ui";
 import { cn } from "@/lib/utils";
 
-type SidebarIcon = "dashboard" | "tickets" | "reports" | "config" | "home";
+type SidebarIcon =
+  | "dashboard"
+  | "tickets"
+  | "reports"
+  | "config"
+  | "home"
+  | "help";
 
 const ICONS: Record<SidebarIcon, ComponentType<{ className?: string }>> = {
   dashboard: LayoutDashboard,
@@ -20,6 +27,7 @@ const ICONS: Record<SidebarIcon, ComponentType<{ className?: string }>> = {
   reports: BarChart3,
   config: Settings,
   home: Home,
+  help: CircleHelp,
 };
 
 export type SidebarItem = {

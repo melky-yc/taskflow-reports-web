@@ -11,8 +11,13 @@ import { useAlerts } from "@/components/alerts/AlertsProvider";
 import {
   AREA_ATUACAO_OPTIONS,
   formatPrioridadeLabel,
+  getUnidadeHistoryStorageKey,
   MOTIVOS_OPTIONS,
   PRIORIDADES_OPTIONS,
+  UNIDADE_AFETADA_HELPER,
+  UNIDADE_AFETADA_LABEL,
+  UNIDADE_MULTI_REQUIRED_HELPER,
+  UNIDADE_SUGGESTIONS_LIST_ID,
   USO_PLATAFORMA_OPTIONS,
   UF_PADRAO,
 } from "@/app/tickets/constants";
@@ -50,6 +55,7 @@ import {
   exportToXLSX,
   mapToExportRow,
 } from "@/utils/exportTickets";
+import { formatUnidade } from "@/utils/unidade";
 
 const CIDADES_PI = cidadesPi.cidades;
 const CIDADES_LIST_ID = "cidades-pi";
@@ -57,6 +63,7 @@ const CREATE_FORM_ID = "create-ticket-form";
 const EDIT_FORM_ID = "edit-ticket-form";
 
 type TicketsClientProps = {
+  currentUserId: string;
   currentUserName: string;
   tickets: TicketClient[];
   filters: { period: string; motivo: string };
@@ -85,6 +92,7 @@ type EditFormState = {
   clienteAreaAtuacao: string;
   clienteAreaAtuacaoOutro: string;
   clienteUnidade: string;
+  clienteMultiUnidade: boolean;
 };
 
 function formatCpf(digits: string) {
@@ -214,6 +222,7 @@ function EditPendingObserver({
 }
 
 export default function TicketsClient({
+  currentUserId,
   currentUserName,
   tickets,
   filters,
@@ -235,10 +244,13 @@ export default function TicketsClient({
   const [cpfDigits, setCpfDigits] = useState("");
   const [clienteNome, setClienteNome] = useState("");
   const [clienteCidade, setClienteCidade] = useState("");
+  const [clienteEstado, setClienteEstado] = useState(UF_PADRAO);
   const [clienteUsoPlataforma, setClienteUsoPlataforma] = useState("");
   const [clienteAreaAtuacao, setClienteAreaAtuacao] = useState("");
   const [clienteAreaAtuacaoOutro, setClienteAreaAtuacaoOutro] = useState("");
   const [clienteUnidade, setClienteUnidade] = useState("");
+  const [isClienteMultiUnidade, setIsClienteMultiUnidade] = useState(false);
+  const [unidadeSuggestions, setUnidadeSuggestions] = useState<string[]>([]);
   const [isClientLocked, setIsClientLocked] = useState(false);
   const [cpfLookupState, setCpfLookupState] = useState<
     "idle" | "loading" | "found" | "not_found" | "error"
@@ -254,6 +266,34 @@ export default function TicketsClient({
   const filtersFormRef = useRef<HTMLFormElement | null>(null);
   const lastLookupCpfRef = useRef("");
   const lastNotifiedStatusRef = useRef<string | null>(null);
+  const unidadeStorageKey = useMemo(
+    () => getUnidadeHistoryStorageKey(currentUserId),
+    [currentUserId]
+  );
+
+  const mergeUnidadeSuggestions = useCallback((incoming: Array<string | null | undefined>) => {
+    const unique = new Set<string>();
+    incoming.forEach((item) => {
+      const value = (item ?? "").trim();
+      if (value) {
+        unique.add(value);
+      }
+    });
+    return Array.from(unique).slice(0, 20);
+  }, []);
+
+  const rememberUnidade = useCallback(
+    (rawUnidade: string) => {
+      if (!rawUnidade.trim()) return;
+      if (typeof window === "undefined") return;
+      const current = window.localStorage.getItem(unidadeStorageKey);
+      const parsed = current ? (JSON.parse(current) as string[]) : [];
+      const next = mergeUnidadeSuggestions([rawUnidade, ...parsed]);
+      window.localStorage.setItem(unidadeStorageKey, JSON.stringify(next));
+      setUnidadeSuggestions((prev) => mergeUnidadeSuggestions([rawUnidade, ...prev]));
+    },
+    [mergeUnidadeSuggestions, unidadeStorageKey]
+  );
 
   const retroativo = useMemo(
     () => isRetroativoIso(dataAtendimentoIso),
@@ -282,7 +322,8 @@ export default function TicketsClient({
         ticket.uso_plataforma ?? ticket.client.uso_plataforma ?? "",
       clienteAreaAtuacao: ticket.client.area_atuacao ?? "",
       clienteAreaAtuacaoOutro: "",
-      clienteUnidade: ticket.client.unidade,
+      clienteUnidade: ticket.unidade ?? ticket.client.unidade ?? "",
+      clienteMultiUnidade: ticket.client.multi_unidade,
     });
   };
 
@@ -319,6 +360,34 @@ export default function TicketsClient({
     }
   }, [status, notify]);
 
+  useEffect(() => {
+    const loadUnidadeSuggestions = async () => {
+      let localHistory: string[] = [];
+      if (typeof window !== "undefined") {
+        const stored = window.localStorage.getItem(unidadeStorageKey);
+        if (stored) {
+          try {
+            localHistory = JSON.parse(stored) as string[];
+          } catch {
+            localHistory = [];
+          }
+        }
+      }
+
+      const { data } = await supabase
+        .from("tickets")
+        .select("unidade")
+        .not("unidade", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(200);
+
+      const dbSuggestions = (data ?? []).map((item) => item.unidade as string | null);
+      setUnidadeSuggestions(mergeUnidadeSuggestions([...localHistory, ...dbSuggestions]));
+    };
+
+    void loadUnidadeSuggestions();
+  }, [mergeUnidadeSuggestions, supabase, unidadeStorageKey]);
+
   const errorMessage = getTicketErrorMessage(error);
 
   const cpfDisplay = formatCpf(cpfDigits);
@@ -345,25 +414,32 @@ export default function TicketsClient({
   const resetClientFields = useCallback(() => {
     setClienteNome("");
     setClienteCidade("");
+    setClienteEstado(UF_PADRAO);
     setClienteUsoPlataforma("");
     setClienteAreaAtuacao("");
     setClienteAreaAtuacaoOutro("");
     setClienteUnidade("");
+    setIsClienteMultiUnidade(false);
   }, []);
 
   const applyClientData = useCallback((client: {
     nome?: string | null;
     cidade?: string | null;
+    estado_uf?: string | null;
     uso_plataforma?: string | null;
     area_atuacao?: string | null;
     unidade?: string | null;
+    multi_unidade?: boolean | null;
   }) => {
+    const isMultiUnidadeClient = Boolean(client.multi_unidade);
     setClienteNome(client.nome ?? "");
     setClienteCidade(client.cidade ?? "");
+    setClienteEstado((client.estado_uf ?? UF_PADRAO).toUpperCase());
     setClienteUsoPlataforma(client.uso_plataforma ?? "");
     setClienteAreaAtuacao(client.area_atuacao ?? "");
     setClienteAreaAtuacaoOutro("");
-    setClienteUnidade(client.unidade ?? "");
+    setClienteUnidade(isMultiUnidadeClient ? "" : (client.unidade ?? ""));
+    setIsClienteMultiUnidade(isMultiUnidadeClient);
   }, []);
 
   const handleCpfLookup = useCallback(
@@ -397,6 +473,7 @@ export default function TicketsClient({
         setCpfLookupState("error");
         setIsClientLocked(false);
         setMatchedClientId(null);
+        setIsClienteMultiUnidade(false);
         return;
       }
 
@@ -484,6 +561,7 @@ export default function TicketsClient({
             action={createTicketAction}
             className="space-y-6"
             onInput={handleCreateInput}
+            onSubmit={() => rememberUnidade(clienteUnidade)}
           >
             {errorMessage ? (
               <AppAlert
@@ -693,7 +771,7 @@ export default function TicketsClient({
                 <AppInput
                   label="UF"
                   name="cliente_estado"
-                  value={UF_PADRAO}
+                  value={clienteEstado || UF_PADRAO}
                   isReadOnly
                   className="bg-[var(--color-muted-soft)]"
                   isRequired
@@ -755,15 +833,27 @@ export default function TicketsClient({
                   />
                 ) : null}
 
-                <AppInput
-                  label="Unidade"
-                  name="cliente_unidade"
-                  value={clienteUnidade}
-                  onChange={(event) => setClienteUnidade(event.target.value)}
-                  isReadOnly={isClientLocked}
-                  className={isClientLocked ? "bg-[var(--color-muted-soft)]" : ""}
-                  isRequired
-                />
+                <div className="space-y-2 md:col-span-2 lg:col-span-3">
+                  <AppInput
+                    label={UNIDADE_AFETADA_LABEL}
+                    name="ticket_unidade"
+                    value={clienteUnidade}
+                    onChange={(event) => setClienteUnidade(event.target.value)}
+                    list={UNIDADE_SUGGESTIONS_LIST_ID}
+                    isRequired={isClienteMultiUnidade}
+                    placeholder="Informe a unidade afetada"
+                    helperText={
+                      isClienteMultiUnidade
+                        ? UNIDADE_MULTI_REQUIRED_HELPER
+                        : UNIDADE_AFETADA_HELPER
+                    }
+                  />
+                  {isClienteMultiUnidade ? (
+                    <p className="text-xs font-medium text-[var(--color-warning)]">
+                      Obrigatório para este cliente.
+                    </p>
+                  ) : null}
+                </div>
               </div>
             </Section>
           </form>
@@ -868,7 +958,7 @@ export default function TicketsClient({
               <AppTableColumn>Prioridade</AppTableColumn>
               <AppTableColumn>Cliente</AppTableColumn>
               <AppTableColumn>CPF</AppTableColumn>
-              <AppTableColumn>Unidade</AppTableColumn>
+              <AppTableColumn>Unidade afetada</AppTableColumn>
               <AppTableColumn>Criado em</AppTableColumn>
               <AppTableColumn className="text-right">Ações</AppTableColumn>
             </AppTableHeader>
@@ -909,7 +999,7 @@ export default function TicketsClient({
                     <AppTableCell className="font-mono text-xs">
                       {maskCpf(ticket.client.cpf)}
                     </AppTableCell>
-                    <AppTableCell>{ticket.client.unidade}</AppTableCell>
+                    <AppTableCell>{formatUnidade(ticket.unidade)}</AppTableCell>
                     <AppTableCell>
                       {formatDateTime(ticket.created_at)}
                     </AppTableCell>
@@ -992,6 +1082,7 @@ export default function TicketsClient({
             id={EDIT_FORM_ID}
             action={updateTicketAction}
             className="space-y-6"
+            onSubmit={() => rememberUnidade(editForm.clienteUnidade)}
           >
             <EditPendingObserver onPendingChange={setIsEditPending} />
             <input type="hidden" name="ticket_id" value={editTicket.id} />
@@ -1071,7 +1162,7 @@ export default function TicketsClient({
 
               {editForm.motivo === "Outro" ? (
                 <AppTextarea
-                  label="Descri??o do motivo (Outro)"
+                  label="Descricao do motivo (Outro)"
                   name="motivo_outro_descricao"
                   value={editForm.motivoOutro}
                   onChange={(event) =>
@@ -1088,7 +1179,7 @@ export default function TicketsClient({
 
             <Section
               title="Dados do Cliente"
-              description="Informa??es cadastrais do cliente atendido."
+              description="Informacoes cadastrais do cliente atendido."
             >
               <div className="grid gap-4 md:gap-6 md:grid-cols-2">
                 <AppInput
@@ -1104,7 +1195,7 @@ export default function TicketsClient({
                 />
 
                 <AppInput
-                  label="CPF (n?o edit?vel)"
+                  label="CPF (nao editavel)"
                   value={formatCpf(editForm.clienteCpfDigits)}
                   isReadOnly
                   className="bg-[var(--color-muted-soft)]"
@@ -1155,7 +1246,7 @@ export default function TicketsClient({
                 <div className="space-y-4">
                   <AppSelect
                     name="cliente_area_atuacao"
-                    label="?rea de atua??o"
+                    label="Area de atuacao"
                     value={editForm.clienteAreaAtuacao}
                     onValueChange={(value) =>
                       setEditForm((prev) => {
@@ -1176,7 +1267,7 @@ export default function TicketsClient({
                   />
                   {editForm.clienteAreaAtuacao === "Outro" ? (
                     <AppInput
-                      label="Descreva a ?rea de atua??o"
+                      label="Descreva a area de atuacao"
                       name="cliente_area_atuacao_outro"
                       value={editForm.clienteAreaAtuacaoOutro}
                       onChange={(event) =>
@@ -1189,23 +1280,32 @@ export default function TicketsClient({
                             : prev
                         )
                       }
-                      placeholder="Ex.: Agropecu?ria"
+                      placeholder="Ex.: Agropecuaria"
                       isRequired
                     />
                   ) : null}
                 </div>
 
-                <AppInput
-                  label="Unidade"
-                  name="cliente_unidade"
-                  value={editForm.clienteUnidade}
-                  onChange={(event) =>
-                    setEditForm((prev) =>
-                      prev ? { ...prev, clienteUnidade: event.target.value } : prev
-                    )
-                  }
-                  isRequired
-                />
+                <div className="md:col-span-2">
+                  <AppInput
+                    label={UNIDADE_AFETADA_LABEL}
+                    name="ticket_unidade"
+                    value={editForm.clienteUnidade}
+                    onChange={(event) =>
+                      setEditForm((prev) =>
+                        prev ? { ...prev, clienteUnidade: event.target.value } : prev
+                      )
+                    }
+                    list={UNIDADE_SUGGESTIONS_LIST_ID}
+                    isRequired={editForm.clienteMultiUnidade}
+                    placeholder="Informe a unidade afetada"
+                    helperText={
+                      editForm.clienteMultiUnidade
+                        ? UNIDADE_MULTI_REQUIRED_HELPER
+                        : UNIDADE_AFETADA_HELPER
+                    }
+                  />
+                </div>
               </div>
             </Section>
 
@@ -1260,6 +1360,12 @@ export default function TicketsClient({
           }}
         />
       ) : null}
+
+      <datalist id={UNIDADE_SUGGESTIONS_LIST_ID}>
+        {unidadeSuggestions.map((unidade) => (
+          <option key={unidade} value={unidade} />
+        ))}
+      </datalist>
 
       <datalist id={CIDADES_LIST_ID}>
         {CIDADES_PI.map((cidade) => (

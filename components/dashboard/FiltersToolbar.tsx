@@ -10,6 +10,7 @@ type FiltersState = {
   period: PeriodOption;
   motivo: string;
   prioridade: string;
+  unidade: string;
   uso: string;
   uf: string;
   cidade: string;
@@ -108,6 +109,15 @@ export default function DashboardFiltersForm({
         />
       </div>
 
+      <div className="min-w-[220px] flex-1">
+        <AppInput
+          label="Unidade"
+          value={filters.unidade}
+          onValueChange={(value) => onFilterChange({ unidade: value })}
+          placeholder="Ex.: UBS Centro"
+        />
+      </div>
+
       <div className="min-w-[170px] flex-1">
         <AppSelect
           label="Uso da plataforma"
@@ -140,5 +150,3 @@ export default function DashboardFiltersForm({
     </div>
   );
 }
-
-

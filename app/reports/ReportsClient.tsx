@@ -33,6 +33,7 @@ import {
   type ReportSummary,
   type ReportTicket,
 } from "@/utils/exportReports";
+import { formatUnidade, normalizeUnidadeInput } from "@/utils/unidade";
 
 const LIMIT = 2000;
 
@@ -281,7 +282,7 @@ export default function ReportsClient() {
       const { data, error: queryError, count } = await supabase
         .from("tickets")
         .select(
-          "id, created_at, data_atendimento, motivo, prioridade, uso_plataforma, profissional_nome, retroativo, clients(nome, cpf, cidade, estado_uf, uso_plataforma, unidade)",
+          "id, created_at, data_atendimento, motivo, prioridade, uso_plataforma, profissional_nome, retroativo, unidade, clients(nome, cpf, cidade, estado_uf, uso_plataforma, unidade)",
           { count: "exact" }
         )
         .or(
@@ -308,13 +309,14 @@ export default function ReportsClient() {
           profissional_nome: ticket.profissional_nome,
           retroativo: Boolean(ticket.retroativo),
           uso_plataforma: ticket.uso_plataforma ?? null,
+          unidade: normalizeUnidadeInput(ticket.unidade ?? null),
           client: {
             nome: clientData?.nome ?? "",
             cpf: clientData?.cpf ?? "",
             cidade: clientData?.cidade ?? "",
             estado_uf: clientData?.estado_uf ?? "",
             uso_plataforma: clientData?.uso_plataforma ?? null,
-            unidade: clientData?.unidade ?? "",
+            unidade: normalizeUnidadeInput(clientData?.unidade ?? null),
           },
         };
       });
@@ -604,7 +606,7 @@ export default function ReportsClient() {
                     <AppTableColumn>Cliente</AppTableColumn>
                     <AppTableColumn>Cidade</AppTableColumn>
                     <AppTableColumn>UF</AppTableColumn>
-                    <AppTableColumn>Unidade</AppTableColumn>
+                    <AppTableColumn>Unidade afetada</AppTableColumn>
                     <AppTableColumn>Retroativo</AppTableColumn>
                     <AppTableColumn>Criado em</AppTableColumn>
                   </AppTableHeader>
@@ -621,7 +623,7 @@ export default function ReportsClient() {
                         <AppTableCell>{ticket.client.nome}</AppTableCell>
                         <AppTableCell>{ticket.client.cidade}</AppTableCell>
                         <AppTableCell>{ticket.client.estado_uf}</AppTableCell>
-                        <AppTableCell>{ticket.client.unidade}</AppTableCell>
+                        <AppTableCell>{formatUnidade(ticket.unidade)}</AppTableCell>
                         <AppTableCell>
                           {ticket.retroativo ? "Sim" : "Não"}
                         </AppTableCell>

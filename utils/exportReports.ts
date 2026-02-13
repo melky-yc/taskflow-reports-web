@@ -1,4 +1,6 @@
-﻿export type ReportTicket = {
+﻿import { formatUnidade } from "@/utils/unidade";
+
+export type ReportTicket = {
   id: number;
   created_at: string;
   data_atendimento: string | null;
@@ -7,13 +9,14 @@
   profissional_nome: string;
   retroativo: boolean;
   uso_plataforma: string | null;
+  unidade: string | null;
   client: {
     nome: string;
     cpf: string;
     cidade: string;
     estado_uf: string;
     uso_plataforma: string | null;
-    unidade: string;
+    unidade: string | null;
   };
 };
 
@@ -39,7 +42,7 @@ export const REPORT_HEADERS = [
   "cliente_cidade",
   "cliente_estado_uf",
   "cliente_uso_plataforma",
-  "cliente_unidade",
+  "unidade_afetada",
   "created_at",
 ] as const;
 
@@ -96,7 +99,7 @@ export function mapReportRow(ticket: ReportTicket): string[] {
     ticket.client.cidade || "",
     ticket.client.estado_uf || "",
     usoPlataforma,
-    ticket.client.unidade || "",
+    formatUnidade(ticket.unidade),
     formatDateBR(ticket.created_at),
   ];
 }
@@ -113,14 +116,14 @@ export function exportReportCSV(
   filename: string
 ) {
   const lines: string[][] = [];
-  lines.push(["Relatório", "Tickets"]);
-  lines.push(["Período", summary.periodLabel]);
+  lines.push(["Relatorio", "Tickets"]);
+  lines.push(["Periodo", summary.periodLabel]);
   lines.push(["Intervalo", summary.rangeLabel]);
   lines.push(["Total de chamados", String(summary.total)]);
   lines.push(["Retroativos (qtde)", String(summary.retroativos)]);
   lines.push(["Retroativos (%)", summary.retroativoPercent]);
   lines.push([""]);
-  lines.push(["Distribuição por prioridade"]);
+  lines.push(["Distribuicao por prioridade"]);
   Object.entries(summary.prioridades).forEach(([label, count]) => {
     lines.push([label, String(count)]);
   });
@@ -153,5 +156,3 @@ export function exportReportCSV(
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 }
-
-

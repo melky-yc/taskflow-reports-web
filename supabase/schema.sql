@@ -12,14 +12,19 @@ create table if not exists public.clients (
   estado_uf text not null,
   uso_plataforma text,
   area_atuacao text not null,
-  unidade text not null
+  unidade text not null,
+  multi_unidade boolean not null default false
 );
+
+alter table public.clients
+  add column if not exists multi_unidade boolean not null default false;
 
 alter table public.clients
   drop constraint if exists clients_cpf_digits_chk,
   drop constraint if exists clients_estado_uf_len_chk,
   drop constraint if exists clients_uso_plataforma_chk,
-  drop constraint if exists clients_area_atuacao_chk;
+  drop constraint if exists clients_area_atuacao_chk,
+  drop constraint if exists clients_unidade_not_blank_chk;
 
 alter table public.clients
   add constraint clients_cpf_digits_chk check (cpf ~ '^[0-9]{11}$'),
@@ -29,7 +34,8 @@ alter table public.clients
   ),
   add constraint clients_area_atuacao_chk check (
     area_atuacao in ('Saúde', 'Educação', 'Assistência Social', 'Outro')
-  );
+  ),
+  add constraint clients_unidade_not_blank_chk check (btrim(unidade) <> '');
 
 create unique index if not exists clients_cpf_uidx on public.clients (cpf);
 create index if not exists clients_nome_idx on public.clients (nome);
@@ -46,14 +52,23 @@ create table if not exists public.tickets (
   data_atendimento date,
   retroativo boolean not null default false,
   retroativo_motivo text,
-  client_id bigint not null references public.clients (id)
+  uso_plataforma text,
+  client_id bigint not null references public.clients (id),
+  unidade text
 );
+
+alter table public.tickets
+  add column if not exists unidade text,
+  add column if not exists uso_plataforma text;
 
 alter table public.tickets
   drop constraint if exists tickets_motivo_chk,
   drop constraint if exists tickets_motivo_outro_chk,
   drop constraint if exists tickets_prioridade_chk,
-  drop constraint if exists tickets_retroativo_motivo_chk;
+  drop constraint if exists tickets_retroativo_motivo_chk,
+  drop constraint if exists tickets_uso_plataforma_chk,
+  drop constraint if exists tickets_unidade_not_blank_chk,
+  drop constraint if exists tickets_unidade_not_blank_check;
 
 alter table public.tickets
   add constraint tickets_motivo_chk check (
@@ -93,12 +108,19 @@ alter table public.tickets
   add constraint tickets_retroativo_motivo_chk check (
     retroativo = false
     or (retroativo_motivo is not null and btrim(retroativo_motivo) <> '')
+  ),
+  add constraint tickets_uso_plataforma_chk check (
+    uso_plataforma is null or uso_plataforma in ('Mobile', 'Web', 'Ambos', 'Não informado')
+  ),
+  add constraint tickets_unidade_not_blank_chk check (
+    unidade is null or btrim(unidade) <> ''
   );
 
 create index if not exists tickets_client_id_idx on public.tickets (client_id);
 create index if not exists tickets_profissional_id_idx on public.tickets (profissional_id);
 create index if not exists tickets_created_at_idx on public.tickets (created_at);
 create index if not exists tickets_data_atendimento_idx on public.tickets (data_atendimento);
+create index if not exists idx_tickets_unidade on public.tickets (unidade);
 
 -- Profiles (placeholder for future user metadata)
 create table if not exists public.profiles (
@@ -189,4 +211,3 @@ create policy "profiles_delete_auth" on public.profiles
   using (true);
 
 commit;
-
