@@ -39,6 +39,7 @@ alter table public.clients
 
 create unique index if not exists clients_cpf_uidx on public.clients (cpf);
 create index if not exists clients_nome_idx on public.clients (nome);
+create index if not exists idx_clients_area_atuacao on public.clients (area_atuacao);
 
 -- Tickets (chamados)
 create table if not exists public.tickets (

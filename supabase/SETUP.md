@@ -13,6 +13,7 @@
 1. Abra o arquivo `supabase/client_lookup_rpc.sql` e execute no SQL Editor.
 2. Abra o arquivo `supabase/dashboard_rpc.sql` e execute no SQL Editor.
 3. Abra o arquivo `supabase/unidade_triagem.sql` e execute no SQL Editor.
+4. Abra o arquivo `supabase/reports_filters_indexes.sql` e execute no SQL Editor.
 
 ## 4) (Opcional) Rodar o seed
 1. Abra o arquivo `supabase/seed.sql` e copie todo o conteúdo.

@@ -1,4 +1,5 @@
-﻿import { formatUnidade } from "@/utils/unidade";
+import * as XLSX from "xlsx";
+import { formatUnidade } from "@/utils/unidade";
 
 export type ReportTicket = {
   id: number;
@@ -6,6 +7,7 @@ export type ReportTicket = {
   data_atendimento: string | null;
   motivo: string;
   prioridade: string;
+  profissional_id: string;
   profissional_nome: string;
   retroativo: boolean;
   uso_plataforma: string | null;
@@ -15,6 +17,7 @@ export type ReportTicket = {
     cpf: string;
     cidade: string;
     estado_uf: string;
+    area_atuacao: string | null;
     uso_plataforma: string | null;
     unidade: string | null;
   };
@@ -34,15 +37,18 @@ export type ReportSummary = {
 export const REPORT_HEADERS = [
   "id",
   "data_atendimento",
-  "profissional",
+  "profissional_id",
+  "profissional_responsavel",
   "motivo",
   "prioridade",
   "cliente_nome",
   "cliente_cpf",
   "cliente_cidade",
   "cliente_estado_uf",
+  "area_atuacao",
   "cliente_uso_plataforma",
   "unidade_afetada",
+  "retroativo",
   "created_at",
 ] as const;
 
@@ -91,6 +97,7 @@ export function mapReportRow(ticket: ReportTicket): string[] {
   return [
     String(ticket.id),
     formatDateBR(ticket.data_atendimento),
+    ticket.profissional_id || "",
     ticket.profissional_nome || "",
     ticket.motivo || "",
     ticket.prioridade || "",
@@ -98,8 +105,10 @@ export function mapReportRow(ticket: ReportTicket): string[] {
     maskCpf(ticket.client.cpf || ""),
     ticket.client.cidade || "",
     ticket.client.estado_uf || "",
+    ticket.client.area_atuacao || "",
     usoPlataforma,
     formatUnidade(ticket.unidade),
+    ticket.retroativo ? "Sim" : "Não",
     formatDateBR(ticket.created_at),
   ];
 }
@@ -110,11 +119,7 @@ function escapeCsvValue(value: string) {
   return needsQuote ? `"${escaped}"` : escaped;
 }
 
-export function exportReportCSV(
-  rows: string[][],
-  summary: ReportSummary,
-  filename: string
-) {
+function buildReportExportLines(rows: string[][], summary: ReportSummary) {
   const lines: string[][] = [];
   lines.push(["Relatorio", "Tickets"]);
   lines.push(["Periodo", summary.periodLabel]);
@@ -140,7 +145,15 @@ export function exportReportCSV(
   lines.push([""]);
   lines.push([...REPORT_HEADERS]);
   rows.forEach((row) => lines.push(row));
+  return lines;
+}
 
+export function exportReportCSV(
+  rows: string[][],
+  summary: ReportSummary,
+  filename: string
+) {
+  const lines = buildReportExportLines(rows, summary);
   const csvLines = lines.map((row) =>
     row.map((cell) => escapeCsvValue(String(cell ?? ""))).join(";")
   );
@@ -155,4 +168,39 @@ export function exportReportCSV(
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+}
+
+export function exportReportXLSX(
+  rows: string[][],
+  summary: ReportSummary,
+  filename: string
+) {
+  const data = buildReportExportLines(rows, summary);
+  const worksheet = XLSX.utils.aoa_to_sheet(data);
+
+  const colWidths = REPORT_HEADERS.map((_, colIndex) => {
+    const maxLength = data.reduce((max, row) => {
+      const cellValue = row[colIndex] ? String(row[colIndex]) : "";
+      return Math.max(max, cellValue.length);
+    }, 10);
+    return { wch: Math.min(42, maxLength + 2) };
+  });
+  worksheet["!cols"] = colWidths;
+
+  const headerRowIndex = data.findIndex(
+    (row) => row.length === REPORT_HEADERS.length && row[0] === REPORT_HEADERS[0]
+  );
+  if (headerRowIndex >= 0) {
+    REPORT_HEADERS.forEach((_, colIndex) => {
+      const cellAddress = XLSX.utils.encode_cell({ r: headerRowIndex, c: colIndex });
+      const cell = worksheet[cellAddress];
+      if (cell) {
+        cell.s = { font: { bold: true } };
+      }
+    });
+  }
+
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Relatorio");
+  XLSX.writeFile(workbook, filename);
 }

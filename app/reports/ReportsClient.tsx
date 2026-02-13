@@ -1,8 +1,11 @@
-﻿"use client";
+"use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { formatPrioridadeLabel } from "@/app/tickets/constants";
+import {
+  AREA_ATUACAO_OPTIONS,
+  formatPrioridadeLabel,
+} from "@/app/tickets/constants";
 import { useAlerts } from "@/components/alerts/AlertsProvider";
 import {
   AppAlert,
@@ -28,6 +31,7 @@ import {
 } from "@/app/ui";
 import {
   exportReportCSV,
+  exportReportXLSX,
   formatDateBR,
   mapReportRow,
   type ReportSummary,
@@ -36,8 +40,23 @@ import {
 import { formatUnidade, normalizeUnidadeInput } from "@/utils/unidade";
 
 const LIMIT = 2000;
+const ALL_SEGMENT_OPTION = "all";
 
 type Period = "daily" | "weekly" | "monthly" | "yearly";
+
+type ProfessionalOption = {
+  id: string;
+  name: string;
+};
+
+type ReportQueryParams = {
+  startDateIso: string;
+  endDateIso: string;
+  startTimeIso: string;
+  endTimeIso: string;
+  profissionalId: string;
+  areaAtuacao: string;
+};
 
 const PERIOD_OPTIONS: { value: Period; label: string }[] = [
   { value: "daily", label: "Diário" },
@@ -130,7 +149,7 @@ function parseYear(value: string) {
   return year;
 }
 
-function buildFilename(periodLabel: string) {
+function buildFilename(periodLabel: string, extension: "csv" | "xlsx") {
   const now = new Date();
   const stamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(
     now.getDate()
@@ -141,7 +160,7 @@ function buildFilename(periodLabel: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
-  return `relatorio_${stamp}_${slug}.csv`;
+  return `relatorio_${stamp}_${slug}.${extension}`;
 }
 
 const PRIORITY_TONE_MAP: Record<string, AppBadgeTone> = {
@@ -159,6 +178,7 @@ type ReportState = {
   tickets: ReportTicket[];
   summary: ReportSummary;
   hasMore: boolean;
+  segmentLabel: string;
 };
 
 export default function ReportsClient() {
@@ -170,6 +190,14 @@ export default function ReportsClient() {
   const [baseDate, setBaseDate] = useState(formatDateBrFromDate(today));
   const [monthValue, setMonthValue] = useState(formatMonthYear(today));
   const [yearValue, setYearValue] = useState(String(today.getFullYear()));
+  const [selectedProfissionalId, setSelectedProfissionalId] = useState(
+    ALL_SEGMENT_OPTION
+  );
+  const [selectedAreaAtuacao, setSelectedAreaAtuacao] = useState(
+    ALL_SEGMENT_OPTION
+  );
+  const [professionals, setProfessionals] = useState<ProfessionalOption[]>([]);
+  const [isLoadingProfessionals, setIsLoadingProfessionals] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [report, setReport] = useState<ReportState | null>(null);
@@ -177,6 +205,103 @@ export default function ReportsClient() {
   const periodLabel = useMemo(() => {
     return PERIOD_OPTIONS.find((item) => item.value === period)?.label ?? "Diário";
   }, [period]);
+
+  const professionalSelectOptions = useMemo(
+    () => [
+      { value: ALL_SEGMENT_OPTION, label: "Todos" },
+      ...professionals.map((professional) => ({
+        value: professional.id,
+        label: professional.name,
+      })),
+    ],
+    [professionals]
+  );
+
+  const areaSelectOptions = useMemo(
+    () => [
+      { value: ALL_SEGMENT_OPTION, label: "Todas" },
+      ...AREA_ATUACAO_OPTIONS.map((area) => ({ value: area, label: area })),
+    ],
+    []
+  );
+
+  const selectedProfessionalName = useMemo(
+    () =>
+      professionals.find((professional) => professional.id === selectedProfissionalId)
+        ?.name ?? "",
+    [professionals, selectedProfissionalId]
+  );
+
+  const segmentLabel = useMemo(() => {
+    const labels: string[] = [];
+    if (selectedProfissionalId !== ALL_SEGMENT_OPTION) {
+      labels.push(
+        `Profissional: ${selectedProfessionalName || selectedProfissionalId}`
+      );
+    }
+    if (selectedAreaAtuacao !== ALL_SEGMENT_OPTION) {
+      labels.push(`Área: ${selectedAreaAtuacao}`);
+    }
+    return labels.length > 0
+      ? labels.join(" • ")
+      : "Todos os profissionais • Todas as áreas";
+  }, [
+    selectedAreaAtuacao,
+    selectedProfessionalName,
+    selectedProfissionalId,
+  ]);
+
+  const hasActiveSegmentationFilters =
+    selectedProfissionalId !== ALL_SEGMENT_OPTION ||
+    selectedAreaAtuacao !== ALL_SEGMENT_OPTION;
+
+  const clearSegmentationFilters = () => {
+    setSelectedProfissionalId(ALL_SEGMENT_OPTION);
+    setSelectedAreaAtuacao(ALL_SEGMENT_OPTION);
+  };
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadProfessionals = async () => {
+      setIsLoadingProfessionals(true);
+      const { data, error: professionalsError } = await supabase
+        .from("tickets")
+        .select("profissional_id, profissional_nome, created_at")
+        .order("created_at", { ascending: false })
+        .limit(5000);
+
+      if (!mounted) {
+        return;
+      }
+
+      if (professionalsError) {
+        setIsLoadingProfessionals(false);
+        return;
+      }
+
+      const uniqueById = new Map<string, string>();
+      (data ?? []).forEach((item) => {
+        const id = String(item.profissional_id ?? "").trim();
+        if (!id || uniqueById.has(id)) return;
+        const name = String(item.profissional_nome ?? "").trim();
+        uniqueById.set(id, name || "Sem nome");
+      });
+
+      const options = Array.from(uniqueById.entries())
+        .map(([id, name]) => ({ id, name }))
+        .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+
+      setProfessionals(options);
+      setIsLoadingProfessionals(false);
+    };
+
+    void loadProfessionals();
+
+    return () => {
+      mounted = false;
+    };
+  }, [supabase]);
 
   const getRange = () => {
     if (period === "daily" || period === "weekly") {
@@ -254,6 +379,77 @@ export default function ReportsClient() {
     };
   };
 
+  const buildReportQuery = useCallback(
+    (params: ReportQueryParams) => {
+      let query = supabase
+        .from("tickets")
+        .select(
+          "id, created_at, data_atendimento, motivo, prioridade, uso_plataforma, profissional_id, profissional_nome, retroativo, unidade, clients!inner(nome, cpf, cidade, estado_uf, area_atuacao, uso_plataforma, unidade)",
+          { count: "exact" }
+        )
+        .or(
+          `and(data_atendimento.gte.${params.startDateIso},data_atendimento.lte.${params.endDateIso}),and(data_atendimento.is.null,created_at.gte.${params.startTimeIso},created_at.lte.${params.endTimeIso})`
+        );
+
+      if (params.profissionalId !== ALL_SEGMENT_OPTION) {
+        query = query.eq("profissional_id", params.profissionalId);
+      }
+      if (params.areaAtuacao !== ALL_SEGMENT_OPTION) {
+        query = query.eq("clients.area_atuacao", params.areaAtuacao);
+      }
+
+      return query.order("created_at", { ascending: false }).range(0, LIMIT - 1);
+    },
+    [supabase]
+  );
+
+  const fetchReportTickets = useCallback(
+    async (params: ReportQueryParams) => {
+      const { data, error: queryError, count } = await buildReportQuery(params);
+      if (queryError) {
+        return {
+          tickets: [] as ReportTicket[],
+          count: 0,
+          queryError,
+        };
+      }
+
+      const tickets: ReportTicket[] = (data ?? []).map((ticket) => {
+        const clientData = Array.isArray(ticket.clients)
+          ? ticket.clients[0]
+          : ticket.clients;
+        return {
+          id: ticket.id,
+          created_at: ticket.created_at,
+          data_atendimento: ticket.data_atendimento,
+          motivo: ticket.motivo,
+          prioridade: ticket.prioridade,
+          profissional_id: String(ticket.profissional_id ?? ""),
+          profissional_nome: ticket.profissional_nome,
+          retroativo: Boolean(ticket.retroativo),
+          uso_plataforma: ticket.uso_plataforma ?? null,
+          unidade: normalizeUnidadeInput(ticket.unidade ?? null),
+          client: {
+            nome: clientData?.nome ?? "",
+            cpf: clientData?.cpf ?? "",
+            cidade: clientData?.cidade ?? "",
+            estado_uf: clientData?.estado_uf ?? "",
+            area_atuacao: clientData?.area_atuacao ?? null,
+            uso_plataforma: clientData?.uso_plataforma ?? null,
+            unidade: normalizeUnidadeInput(clientData?.unidade ?? null),
+          },
+        };
+      });
+
+      return {
+        tickets,
+        count: count ?? 0,
+        queryError: null,
+      };
+    },
+    [buildReportQuery]
+  );
+
   const handleGenerate = async () => {
     setError("");
     setLoading(true);
@@ -279,58 +475,31 @@ export default function ReportsClient() {
               range.end
             )}`;
 
-      const { data, error: queryError, count } = await supabase
-        .from("tickets")
-        .select(
-          "id, created_at, data_atendimento, motivo, prioridade, uso_plataforma, profissional_nome, retroativo, unidade, clients(nome, cpf, cidade, estado_uf, uso_plataforma, unidade)",
-          { count: "exact" }
-        )
-        .or(
-          `and(data_atendimento.gte.${startDateIso},data_atendimento.lte.${endDateIso}),and(data_atendimento.is.null,created_at.gte.${startTime.toISOString()},created_at.lte.${endTime.toISOString()})`
-        )
-        .order("created_at", { ascending: false })
-        .range(0, LIMIT - 1);
+      const { tickets, count, queryError } = await fetchReportTickets({
+        startDateIso,
+        endDateIso,
+        startTimeIso: startTime.toISOString(),
+        endTimeIso: endTime.toISOString(),
+        profissionalId: selectedProfissionalId,
+        areaAtuacao: selectedAreaAtuacao,
+      });
 
       if (queryError) {
         setError("Não foi possível gerar o relatório. Tente novamente.");
         return;
       }
 
-      const tickets: ReportTicket[] = (data ?? []).map((ticket) => {
-        const clientData = Array.isArray(ticket.clients)
-          ? ticket.clients[0]
-          : ticket.clients;
-        return {
-          id: ticket.id,  
-          created_at: ticket.created_at,
-          data_atendimento: ticket.data_atendimento,
-          motivo: ticket.motivo,
-          prioridade: ticket.prioridade,
-          profissional_nome: ticket.profissional_nome,
-          retroativo: Boolean(ticket.retroativo),
-          uso_plataforma: ticket.uso_plataforma ?? null,
-          unidade: normalizeUnidadeInput(ticket.unidade ?? null),
-          client: {
-            nome: clientData?.nome ?? "",
-            cpf: clientData?.cpf ?? "",
-            cidade: clientData?.cidade ?? "",
-            estado_uf: clientData?.estado_uf ?? "",
-            uso_plataforma: clientData?.uso_plataforma ?? null,
-            unidade: normalizeUnidadeInput(clientData?.unidade ?? null),
-          },
-        };
-      });
-
       const summary = buildSummary(tickets, rangeLabel);
-
       setReport({
         tickets,
         summary,
-        hasMore: (count ?? 0) > LIMIT,
+        hasMore: count > LIMIT,
+        segmentLabel,
       });
+
       notify({
         title: "Relatório gerado",
-        description: `Período ${periodLabel} selecionado.`,
+        description: `${periodLabel} • ${segmentLabel}`,
         tone: "success",
       });
     } catch {
@@ -340,13 +509,20 @@ export default function ReportsClient() {
     }
   };
 
-  const handleExport = () => {
+  const handleExport = (type: "csv" | "xlsx") => {
     if (!report) return;
     const rows = report.tickets.map(mapReportRow);
-    exportReportCSV(rows, report.summary, buildFilename(periodLabel));
+    const filename = buildFilename(periodLabel, type);
+
+    if (type === "csv") {
+      exportReportCSV(rows, report.summary, filename);
+    } else {
+      exportReportXLSX(rows, report.summary, filename);
+    }
+
     notify({
       title: "Exportação concluída",
-      description: "Arquivo CSV gerado.",
+      description: `Arquivo ${type.toUpperCase()} gerado.`,
       tone: "success",
     });
   };
@@ -360,72 +536,134 @@ export default function ReportsClient() {
 
       <FormCard
         title="Gerador de relatórios"
-        description="Selecione o período e filtre os dados antes de gerar."
+        description="Selecione o período e aplique filtros para segmentar os dados."
       >
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between md:gap-6">
-          <div className="flex flex-1 flex-col gap-4 md:flex-row md:flex-wrap md:items-end md:gap-6">
-            <div className="min-w-[200px] flex-1">
+        <div className="space-y-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between md:gap-6">
+            <div className="flex flex-1 flex-col gap-4 md:flex-row md:flex-wrap md:items-end md:gap-6">
+              <div className="min-w-[200px] flex-1">
+                <AppSelect
+                  label="Período"
+                  value={period}
+                  onValueChange={(value) => setPeriod(value as Period)}
+                  options={PERIOD_OPTIONS.map((option) => ({
+                    value: option.value,
+                    label: option.label,
+                  }))}
+                />
+              </div>
+
+              {(period === "daily" || period === "weekly") && (
+                <div className="min-w-[200px] flex-1">
+                  <AppInput
+                    label="Data base"
+                    value={baseDate}
+                    onValueChange={(value) => setBaseDate(maskDateInput(value))}
+                    placeholder="DD/MM/AAAA"
+                    inputMode="numeric"
+                  />
+                </div>
+              )}
+
+              {period === "monthly" && (
+                <div className="min-w-[200px] flex-1">
+                  <AppInput
+                    label="Mês/Ano"
+                    value={monthValue}
+                    onValueChange={(value) =>
+                      setMonthValue(maskMonthInput(value))
+                    }
+                    placeholder="MM/AAAA"
+                    inputMode="numeric"
+                  />
+                </div>
+              )}
+
+              {period === "yearly" && (
+                <div className="min-w-[160px] flex-1">
+                  <AppInput
+                    label="Ano"
+                    value={yearValue}
+                    onValueChange={(value) =>
+                      setYearValue(value.replace(/\D/g, "").slice(0, 4))
+                    }
+                    placeholder="AAAA"
+                    inputMode="numeric"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="flex md:justify-end">
+              <AppButton
+                type="button"
+                onPress={handleGenerate}
+                isLoading={loading}
+                isDisabled={loading}
+                className="w-full md:w-auto"
+              >
+                {loading ? "Gerando..." : "Gerar relatório"}
+              </AppButton>
+            </div>
+          </div>
+
+          <Section
+            title="Segmentação"
+            description="Filtre por profissional e área de atuação. Esses filtros são aplicados junto com o período."
+            showDivider={false}
+          >
+            <div className="grid gap-4 md:grid-cols-2">
               <AppSelect
-                label="Período"
-                value={period}
-                onValueChange={(value) => setPeriod(value as Period)}
-                options={PERIOD_OPTIONS.map((option) => ({
-                  value: option.value,
-                  label: option.label,
-                }))}
+                label="Profissional"
+                placeholder="Todos"
+                value={selectedProfissionalId}
+                onValueChange={setSelectedProfissionalId}
+                options={professionalSelectOptions}
+                helperText={
+                  isLoadingProfessionals
+                    ? "Carregando profissionais..."
+                    : "Com o menu aberto, digite para navegação rápida (typeahead)."
+                }
+                isDisabled={isLoadingProfessionals}
+              />
+              <AppSelect
+                label="Área de atuação"
+                placeholder="Todas"
+                value={selectedAreaAtuacao}
+                onValueChange={setSelectedAreaAtuacao}
+                options={areaSelectOptions}
               />
             </div>
 
-            {(period === "daily" || period === "weekly") && (
-              <div className="min-w-[200px] flex-1">
-                <AppInput
-                  label="Data base"
-                  value={baseDate}
-                  onValueChange={(value) => setBaseDate(maskDateInput(value))}
-                  placeholder="DD/MM/AAAA"
-                  inputMode="numeric"
-                />
-              </div>
-            )}
-
-            {period === "monthly" && (
-              <div className="min-w-[200px] flex-1">
-                <AppInput
-                  label="Mês/Ano"
-                  value={monthValue}
-                  onValueChange={(value) => setMonthValue(maskMonthInput(value))}
-                  placeholder="MM/AAAA"
-                  inputMode="numeric"
-                />
-              </div>
-            )}
-
-            {period === "yearly" && (
-              <div className="min-w-[160px] flex-1">
-                <AppInput
-                  label="Ano"
-                  value={yearValue}
-                  onValueChange={(value) =>
-                    setYearValue(value.replace(/\D/g, "").slice(0, 4))
-                  }
-                  placeholder="AAAA"
-                  inputMode="numeric"
-                />
-              </div>
-            )}
-          </div>
-
-          <div className="flex md:justify-end">
-            <AppButton
-              type="button"
-              onPress={handleGenerate}
-              isLoading={loading}
-              isDisabled={loading}
-              className="w-full md:w-auto"
-            >
-              {loading ? "Gerando..." : "Gerar relatório"}
-            </AppButton>
-          </div>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {hasActiveSegmentationFilters ? (
+                <>
+                  {selectedProfissionalId !== ALL_SEGMENT_OPTION ? (
+                    <AppBadge tone="primary" variant="soft" size="sm">
+                      Profissional: {selectedProfessionalName || selectedProfissionalId}
+                    </AppBadge>
+                  ) : null}
+                  {selectedAreaAtuacao !== ALL_SEGMENT_OPTION ? (
+                    <AppBadge tone="warning" variant="soft" size="sm">
+                      Área: {selectedAreaAtuacao}
+                    </AppBadge>
+                  ) : null}
+                  <AppButton
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onPress={clearSegmentationFilters}
+                  >
+                    Limpar filtros
+                  </AppButton>
+                </>
+              ) : (
+                <AppBadge tone="default" variant="soft" size="sm">
+                  Sem segmentação ativa
+                </AppBadge>
+              )}
+            </div>
+          </Section>
         </div>
       </FormCard>
 
@@ -441,19 +679,30 @@ export default function ReportsClient() {
         title="Resultados"
         description={
           report
-            ? `${report.summary.periodLabel} • ${report.summary.rangeLabel}`
-            : "Selecione um período para gerar o relatório."
+            ? `${report.summary.periodLabel} • ${report.summary.rangeLabel} • ${report.segmentLabel}`
+            : "Selecione um período e segmentação para gerar o relatório."
         }
         actions={
-          <AppButton
-            type="button"
-            variant="ghost"
-            size="sm"
-            onPress={handleExport}
-            isDisabled={!report || report.tickets.length === 0}
-          >
-            Exportar CSV
-          </AppButton>
+          <div className="flex items-center gap-2">
+            <AppButton
+              type="button"
+              variant="ghost"
+              size="sm"
+              onPress={() => handleExport("csv")}
+              isDisabled={!report || report.tickets.length === 0}
+            >
+              Exportar CSV
+            </AppButton>
+            <AppButton
+              type="button"
+              variant="ghost"
+              size="sm"
+              onPress={() => handleExport("xlsx")}
+              isDisabled={!report || report.tickets.length === 0}
+            >
+              Exportar XLSX
+            </AppButton>
+          </div>
         }
       >
         {loading ? (
@@ -464,7 +713,7 @@ export default function ReportsClient() {
         ) : report ? (
           report.tickets.length === 0 ? (
             <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-muted-soft)] px-4 py-6 text-sm text-[var(--color-muted-strong)]">
-              Nenhum chamado encontrado no período selecionado.
+              Nenhum chamado encontrado no período e segmentação selecionados.
             </div>
           ) : (
             <>
@@ -472,7 +721,7 @@ export default function ReportsClient() {
                 <AppAlert
                   tone="warning"
                   title="Limite de registros atingido"
-                  description={`Limite de ${LIMIT} registros atingido. Refine o período para ver todos os chamados.`}
+                  description={`Limite de ${LIMIT} registros atingido. Refine os filtros para ver todos os chamados.`}
                 />
               ) : null}
 
@@ -505,10 +754,10 @@ export default function ReportsClient() {
                 <AppCard>
                   <AppCardBody className="p-4 md:p-6">
                     <div className="text-xs font-medium text-[var(--color-muted)]">
-                      Período
+                      Segmentação aplicada
                     </div>
                     <div className="mt-2 text-sm font-semibold text-[var(--color-text)]">
-                      {report.summary.rangeLabel}
+                      {report.segmentLabel}
                     </div>
                   </AppCardBody>
                 </AppCard>
@@ -595,7 +844,7 @@ export default function ReportsClient() {
                 <AppTable
                   aria-label="Listagem resumida"
                   stickyHeader
-                  classNames={{ base: "overflow-x-auto", table: "min-w-[1080px]" }}
+                  classNames={{ base: "overflow-x-auto", table: "min-w-[1160px]" }}
                 >
                   <AppTableHeader>
                     <AppTableColumn>ID</AppTableColumn>
@@ -604,6 +853,7 @@ export default function ReportsClient() {
                     <AppTableColumn>Motivo</AppTableColumn>
                     <AppTableColumn>Prioridade</AppTableColumn>
                     <AppTableColumn>Cliente</AppTableColumn>
+                    <AppTableColumn>Área de atuação</AppTableColumn>
                     <AppTableColumn>Cidade</AppTableColumn>
                     <AppTableColumn>UF</AppTableColumn>
                     <AppTableColumn>Unidade afetada</AppTableColumn>
@@ -621,6 +871,7 @@ export default function ReportsClient() {
                           <StatusBadge status={ticket.prioridade} size="sm" />
                         </AppTableCell>
                         <AppTableCell>{ticket.client.nome}</AppTableCell>
+                        <AppTableCell>{ticket.client.area_atuacao || "-"}</AppTableCell>
                         <AppTableCell>{ticket.client.cidade}</AppTableCell>
                         <AppTableCell>{ticket.client.estado_uf}</AppTableCell>
                         <AppTableCell>{formatUnidade(ticket.unidade)}</AppTableCell>
@@ -643,8 +894,4 @@ export default function ReportsClient() {
       </FormCard>
     </div>
   );
-
 }
-
-
-
