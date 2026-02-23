@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { addMotivoAction, migrateLegacyTicketToMotivoAction, updateMotivoStatusAction } from "@/app/tickets/actions-motivos";
 import {
   MOTIVO_STATUS_BADGE,
@@ -62,7 +62,9 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
   const [prioridade, setPrioridade] = useState<PrioridadeOption>("Baixa");
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<Array<{ id: number; nome: string; cpf: string }>>([]);
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     if (!showAdd) {
@@ -74,6 +76,7 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
       setMotivoOutro("");
       setStatusMessage(null);
       setErrorMessage(null);
+      setSuccessMessage(null);
       setSuggestions([]);
     }
   }, [showAdd]);
@@ -140,6 +143,30 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
     return true;
   }, [clientId, motivo, motivoOutro, prioridade]);
 
+  const ERROR_MESSAGES: Record<string, string> = {
+    MOTIVO_INVALIDO: "Selecione um motivo válido.",
+    PRIORIDADE_INVALIDA: "Selecione uma prioridade válida.",
+    MOTIVO_OUTRO_REQUIRED: "Descreva o motivo quando selecionar 'Outro'.",
+    CLIENT_REQUIRED: "Selecione um cliente antes de salvar.",
+    UNIDADE_INVALIDA: "A unidade informada é inválida.",
+    MOTIVO_CREATE_FAILED: "Erro ao salvar o motivo. Tente novamente.",
+  };
+
+  const handleSubmitMotivo = (formData: FormData) => {
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    startTransition(async () => {
+      try {
+        await addMotivoAction(formData);
+        setSuccessMessage("Motivo adicionado com sucesso!");
+        setShowAdd(false);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Erro desconhecido.";
+        setErrorMessage(ERROR_MESSAGES[msg] ?? msg);
+      }
+    });
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -197,14 +224,14 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
                   <AppButton
                     type="submit"
                     form="add-motivo-form"
-                    isDisabled={!canSubmitMotivo}
+                    isDisabled={!canSubmitMotivo || isPending}
                   >
-                    Salvar motivo
+                    {isPending ? "Salvando..." : "Salvar motivo"}
                   </AppButton>
                 </div>
               }
             >
-              <form id="add-motivo-form" action={addMotivoAction} className="space-y-4">
+              <form id="add-motivo-form" action={handleSubmitMotivo} className="space-y-4">
                 <input type="hidden" name="ticket_id" value={ticket.id} />
                 <input type="hidden" name="client_id" value={clientId ?? ""} />
                 <Section title="Cliente" description="Busque por CPF ou nome.">
@@ -301,8 +328,18 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
                     />
                   ) : null}
                 </Section>
+                {errorMessage ? (
+                  <div className="rounded-md border border-[var(--color-danger)] bg-[color-mix(in_srgb,var(--color-danger)_10%,transparent)] p-3">
+                    <p className="text-sm font-medium text-[var(--color-danger)]">{errorMessage}</p>
+                  </div>
+                ) : null}
               </form>
             </FormCard>
+          ) : null}
+          {successMessage ? (
+            <div className="rounded-md border border-[var(--color-success)] bg-[color-mix(in_srgb,var(--color-success)_10%,transparent)] p-3">
+              <p className="text-sm font-medium text-[var(--color-success)]">{successMessage}</p>
+            </div>
           ) : null}
 
           <AppTable aria-label="Motivos">
@@ -352,9 +389,9 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
                   <AppTableCell>
                     {item.updated_at
                       ? new Intl.DateTimeFormat("pt-BR", {
-                          dateStyle: "short",
-                          timeStyle: "short",
-                        }).format(new Date(item.updated_at))
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      }).format(new Date(item.updated_at))
                       : "-"}
                   </AppTableCell>
                   <AppTableCell>

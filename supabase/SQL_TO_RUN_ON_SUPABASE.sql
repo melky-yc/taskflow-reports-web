@@ -108,17 +108,21 @@ commit;
 
 -- Function: add_motivo_for_client (transactional add)
 create or replace function public.add_motivo_for_client(
-  p_ticket_id bigint default null,
   p_client_id bigint,
+  p_motivo text,
+  p_profissional_id uuid,
+  p_profissional_nome text,
+  p_ticket_id bigint default null,
   p_unidade text default null,
   p_uso_plataforma text default null,
-  p_motivo text,
   p_motivo_outro text default null,
-  p_prioridade text default 'Baixa',
-  p_profissional_id uuid,
-  p_profissional_nome text
+  p_prioridade text default 'Baixa'
 )
-returns table(ticket_id bigint, motivo_id bigint) language plpgsql as 
+returns table(ticket_id bigint, motivo_id bigint)
+language plpgsql
+security definer
+set search_path = public
+as $$
 declare
   v_ticket_id bigint;
 begin
@@ -192,5 +196,5 @@ begin
   ticket_id := v_ticket_id;
   return next;
 end;
-;
+$$;
 
