@@ -2,267 +2,77 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import {
-  AREA_ATUACAO_OPTIONS,
-  formatPrioridadeLabel,
-} from "@/app/tickets/constants";
 import { useAlerts } from "@/components/alerts/AlertsProvider";
 import {
-  AppAlert,
-  AppBadge,
-  AppButton,
-  AppCard,
-  AppCardBody,
-  AppDivider,
-  AppInput,
-  AppSelect,
-  AppSkeleton,
-  AppTable,
-  AppTableBody,
-  AppTableCell,
-  AppTableColumn,
-  AppTableHeader,
-  AppTableRow,
-  FormCard,
-  PageHeader,
-  Section,
-  StatusBadge,
-  type AppBadgeTone,
-} from "@/app/ui";
+  parseBrDate,
+  parseMonthYear,
+  parseYear,
+  toIsoDate,
+  formatDateBrFromDate,
+  buildFilename,
+} from "@/app/reports/helpers";
 import {
-  exportReportCSV,
-  exportReportXLSX,
-  formatDateBR,
-  mapReportRow,
-  type ReportSummary,
-  type ReportTicket,
-} from "@/utils/exportReports";
-import { formatUnidade, normalizeUnidadeInput } from "@/utils/unidade";
+  ReportsFilterForm,
+  PERIOD_OPTIONS,
+  ALL_SEGMENT_OPTION,
+  type Period,
+} from "@/app/reports/components/ReportsFilterForm";
+import { ReportsSummaryPanel } from "@/app/reports/components/ReportsSummaryPanel";
+import { ReportsDataTable } from "@/app/reports/components/ReportsDataTable";
+import {
+  AppAlert,
+  AppButton,
+  AppDivider,
+  AppSkeleton,
+  FormCard,
+} from "@/app/ui";
+import type {
+  ReportOcorrencia,
+  ReportSummaryV2,
+} from "@/utils/exportReportsV2";
+import {
+  exportReportCSVv2,
+  exportReportXLSXv2,
+} from "@/utils/exportReportsV2";
 
-const LIMIT = 2000;
-const ALL_SEGMENT_OPTION = "all";
+const PAGE_SIZE = 200;
 
-type Period = "daily" | "weekly" | "monthly" | "yearly";
+type ReportQueryParams = {
+  startDateIso: string;
+  endDateIso: string;
+  profissionalId: string;
+  areaAtuacao: string;
+};
 
 type ProfessionalOption = {
   id: string;
   name: string;
 };
 
-type ReportQueryParams = {
-  startDateIso: string;
-  endDateIso: string;
-  startTimeIso: string;
-  endTimeIso: string;
-  profissionalId: string;
-  areaAtuacao: string;
-};
-
-const PERIOD_OPTIONS: { value: Period; label: string }[] = [
-  { value: "daily", label: "Diário" },
-  { value: "weekly", label: "Semanal (últimos 7 dias)" },
-  { value: "monthly", label: "Mensal" },
-  { value: "yearly", label: "Anual" },
-];
-
-function pad(value: number) {
-  return String(value).padStart(2, "0");
-}
-
-function formatDateBrFromDate(date: Date) {
-  return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()}`;
-}
-
-function formatMonthYear(date: Date) {
-  return `${pad(date.getMonth() + 1)}/${date.getFullYear()}`;
-}
-
-function toIsoDate(date: Date) {
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
-    date.getDate()
-  )}`;
-}
-
-function maskDateInput(value: string) {
-  const digits = value.replace(/\D/g, "").slice(0, 8);
-  const day = digits.slice(0, 2);
-  const month = digits.slice(2, 4);
-  const year = digits.slice(4, 8);
-  let result = day;
-  if (digits.length > 2) {
-    result += `/${month}`;
-  }
-  if (digits.length > 4) {
-    result += `/${year}`;
-  }
-  return result;
-}
-
-function maskMonthInput(value: string) {
-  const digits = value.replace(/\D/g, "").slice(0, 6);
-  const month = digits.slice(0, 2);
-  const year = digits.slice(2, 6);
-  let result = month;
-  if (digits.length > 2) {
-    result += `/${year}`;
-  }
-  return result;
-}
-
-function parseBrDate(value: string) {
-  const match = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-  if (!match) {
-    return null;
-  }
-  const day = Number(match[1]);
-  const month = Number(match[2]);
-  const year = Number(match[3]);
-  const date = new Date(year, month - 1, day);
-  if (
-    date.getFullYear() !== year ||
-    date.getMonth() !== month - 1 ||
-    date.getDate() !== day
-  ) {
-    return null;
-  }
-  return date;
-}
-
-function parseMonthYear(value: string) {
-  const match = value.match(/^(\d{2})\/(\d{4})$/);
-  if (!match) {
-    return null;
-  }
-  const month = Number(match[1]);
-  const year = Number(match[2]);
-  if (month < 1 || month > 12 || year < 1900) {
-    return null;
-  }
-  return { month, year };
-}
-
-function parseYear(value: string) {
-  const year = Number(value);
-  if (!year || value.length !== 4) {
-    return null;
-  }
-  return year;
-}
-
-function buildFilename(periodLabel: string, extension: "csv" | "xlsx") {
-  const now = new Date();
-  const stamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(
-    now.getDate()
-  )}_${pad(now.getHours())}-${pad(now.getMinutes())}`;
-  const slug = periodLabel
-    .normalize("NFD")
-    .replace(/[`\-?]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-  return `relatorio_${stamp}_${slug}.${extension}`;
-}
-
-const PRIORITY_TONE_MAP: Record<string, AppBadgeTone> = {
-  Baixa: "default",
-  Media: "warning",
-  Alta: "danger",
-  Critica: "critical",
-};
-
-function priorityTone(label: string): AppBadgeTone {
-  return PRIORITY_TONE_MAP[label] ?? "default";
-}
-
 type ReportState = {
-  tickets: ReportTicket[];
-  summary: ReportSummary;
-  hasMore: boolean;
+  rows: ReportOcorrencia[];
+  totalCount: number;
+  summary: ReportSummaryV2;
   segmentLabel: string;
+  queryParams: ReportQueryParams;
+  page: number;
 };
 
 export default function ReportsClient() {
   const supabase = useMemo(() => createClient(), []);
   const { notify } = useAlerts();
 
-  const today = useMemo(() => new Date(), []);
-  const [period, setPeriod] = useState<Period>("daily");
-  const [baseDate, setBaseDate] = useState(formatDateBrFromDate(today));
-  const [monthValue, setMonthValue] = useState(formatMonthYear(today));
-  const [yearValue, setYearValue] = useState(String(today.getFullYear()));
-  const [selectedProfissionalId, setSelectedProfissionalId] = useState(
-    ALL_SEGMENT_OPTION
-  );
-  const [selectedAreaAtuacao, setSelectedAreaAtuacao] = useState(
-    ALL_SEGMENT_OPTION
-  );
   const [professionals, setProfessionals] = useState<ProfessionalOption[]>([]);
   const [isLoadingProfessionals, setIsLoadingProfessionals] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState("");
   const [report, setReport] = useState<ReportState | null>(null);
 
-  const periodLabel = useMemo(() => {
-    return PERIOD_OPTIONS.find((item) => item.value === period)?.label ?? "Diário";
-  }, [period]);
-
-  const professionalSelectOptions = useMemo(
-    () => [
-      { value: ALL_SEGMENT_OPTION, label: "Todos" },
-      ...professionals.map((professional) => ({
-        value: professional.id,
-        label: professional.name,
-      })),
-    ],
-    [professionals]
-  );
-
-  const areaSelectOptions = useMemo(
-    () => [
-      { value: ALL_SEGMENT_OPTION, label: "Todas" },
-      ...AREA_ATUACAO_OPTIONS.map((area) => ({ value: area, label: area })),
-    ],
-    []
-  );
-
-  const selectedProfessionalName = useMemo(
-    () =>
-      professionals.find((professional) => professional.id === selectedProfissionalId)
-        ?.name ?? "",
-    [professionals, selectedProfissionalId]
-  );
-
-  const segmentLabel = useMemo(() => {
-    const labels: string[] = [];
-    if (selectedProfissionalId !== ALL_SEGMENT_OPTION) {
-      labels.push(
-        `Profissional: ${selectedProfessionalName || selectedProfissionalId}`
-      );
-    }
-    if (selectedAreaAtuacao !== ALL_SEGMENT_OPTION) {
-      labels.push(`Área: ${selectedAreaAtuacao}`);
-    }
-    return labels.length > 0
-      ? labels.join(" • ")
-      : "Todos os profissionais • Todas as áreas";
-  }, [
-    selectedAreaAtuacao,
-    selectedProfessionalName,
-    selectedProfissionalId,
-  ]);
-
-  const hasActiveSegmentationFilters =
-    selectedProfissionalId !== ALL_SEGMENT_OPTION ||
-    selectedAreaAtuacao !== ALL_SEGMENT_OPTION;
-
-  const clearSegmentationFilters = () => {
-    setSelectedProfissionalId(ALL_SEGMENT_OPTION);
-    setSelectedAreaAtuacao(ALL_SEGMENT_OPTION);
-  };
+  /* ── Load professionals ─────────────────────────────── */
 
   useEffect(() => {
     let mounted = true;
-
     const loadProfessionals = async () => {
       setIsLoadingProfessionals(true);
       const { data, error: professionalsError } = await supabase
@@ -271,10 +81,7 @@ export default function ReportsClient() {
         .order("created_at", { ascending: false })
         .limit(5000);
 
-      if (!mounted) {
-        return;
-      }
-
+      if (!mounted) return;
       if (professionalsError) {
         setIsLoadingProfessionals(false);
         return;
@@ -295,166 +102,106 @@ export default function ReportsClient() {
       setProfessionals(options);
       setIsLoadingProfessionals(false);
     };
-
     void loadProfessionals();
-
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, [supabase]);
 
-  const getRange = () => {
-    if (period === "daily" || period === "weekly") {
-      const date = parseBrDate(baseDate);
-      if (!date) return null;
-      const end = new Date(date);
-      const start = new Date(date);
-      if (period === "weekly") {
-        start.setDate(start.getDate() - 6);
-      }
-      return { start, end };
-    }
+  /* ── Fetch page of data ─────────────────────────────── */
 
-    if (period === "monthly") {
-      const parsed = parseMonthYear(monthValue);
-      if (!parsed) return null;
-      const start = new Date(parsed.year, parsed.month - 1, 1);
-      const end = new Date(parsed.year, parsed.month, 0);
-      return { start, end };
-    }
-
-    const year = parseYear(yearValue);
-    if (!year) return null;
-    const start = new Date(year, 0, 1);
-    const end = new Date(year, 11, 31);
-    return { start, end };
-  };
-
-  const buildSummary = (
-    tickets: ReportTicket[],
-    rangeLabel: string
-  ): ReportSummary => {
-    const total = tickets.length;
-    const retroativos = tickets.filter((ticket) => ticket.retroativo).length;
-    const retroativoPercent = total
-      ? `${((retroativos / total) * 100).toFixed(1)}%`
-      : "0%";
-    const prioridades = tickets.reduce(
-      (acc, ticket) => {
-        const key = ticket.prioridade || "Sem prioridade";
-        acc[key] = (acc[key] ?? 0) + 1;
-        return acc;
-      },
-      { Baixa: 0, Media: 0, Alta: 0 } as Record<string, number>
-    );
-
-    const motivosMap = new Map<string, number>();
-    const cidadesMap = new Map<string, number>();
-
-    tickets.forEach((ticket) => {
-      motivosMap.set(ticket.motivo, (motivosMap.get(ticket.motivo) ?? 0) + 1);
-      cidadesMap.set(
-        ticket.client.cidade || "Sem cidade",
-        (cidadesMap.get(ticket.client.cidade || "Sem cidade") ?? 0) + 1
-      );
-    });
-
-    const topMotivos = Array.from(motivosMap.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5);
-
-    const topCidades = Array.from(cidadesMap.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5);
-
-    return {
-      total,
-      retroativos,
-      retroativoPercent,
-      prioridades,
-      topMotivos,
-      topCidades,
-      periodLabel,
-      rangeLabel,
-    };
-  };
-
-  const buildReportQuery = useCallback(
-    (params: ReportQueryParams) => {
-      let query = supabase
-        .from("tickets")
-        .select(
-          "id, created_at, data_atendimento, motivo, prioridade, uso_plataforma, profissional_id, profissional_nome, retroativo, unidade, clients!inner(nome, cpf, cidade, estado_uf, area_atuacao, uso_plataforma, unidade)",
-          { count: "exact" }
-        )
-        .or(
-          `and(data_atendimento.gte.${params.startDateIso},data_atendimento.lte.${params.endDateIso}),and(data_atendimento.is.null,created_at.gte.${params.startTimeIso},created_at.lte.${params.endTimeIso})`
-        );
-
+  const fetchPage = useCallback(
+    async (params: ReportQueryParams, page: number) => {
+      const rpcParams: Record<string, unknown> = {
+        p_start_date: params.startDateIso,
+        p_end_date: params.endDateIso,
+        p_page: page,
+        p_page_size: PAGE_SIZE,
+      };
       if (params.profissionalId !== ALL_SEGMENT_OPTION) {
-        query = query.eq("profissional_id", params.profissionalId);
+        rpcParams.p_profissional_id = params.profissionalId;
       }
       if (params.areaAtuacao !== ALL_SEGMENT_OPTION) {
-        query = query.eq("clients.area_atuacao", params.areaAtuacao);
+        rpcParams.p_area_atuacao = params.areaAtuacao;
       }
 
-      return query.order("created_at", { ascending: false }).range(0, LIMIT - 1);
+      const { data, error: rpcError } = await supabase.rpc(
+        "reports_dataset",
+        rpcParams
+      );
+
+      if (rpcError) throw rpcError;
+
+      const rows = (data ?? []) as ReportOcorrencia[];
+      const totalCount = rows.length > 0 ? Number(rows[0].total_count) : 0;
+      return { rows, totalCount };
     },
     [supabase]
   );
 
-  const fetchReportTickets = useCallback(
-    async (params: ReportQueryParams) => {
-      const { data, error: queryError, count } = await buildReportQuery(params);
-      if (queryError) {
-        return {
-          tickets: [] as ReportTicket[],
-          count: 0,
-          queryError,
-        };
+  /* ── Fetch summary ──────────────────────────────────── */
+
+  const fetchSummary = useCallback(
+    async (params: ReportQueryParams): Promise<ReportSummaryV2> => {
+      const rpcParams: Record<string, unknown> = {
+        p_start_date: params.startDateIso,
+        p_end_date: params.endDateIso,
+      };
+      if (params.profissionalId !== ALL_SEGMENT_OPTION) {
+        rpcParams.p_profissional_id = params.profissionalId;
+      }
+      if (params.areaAtuacao !== ALL_SEGMENT_OPTION) {
+        rpcParams.p_area_atuacao = params.areaAtuacao;
       }
 
-      const tickets: ReportTicket[] = (data ?? []).map((ticket) => {
-        const clientData = Array.isArray(ticket.clients)
-          ? ticket.clients[0]
-          : ticket.clients;
-        return {
-          id: ticket.id,
-          created_at: ticket.created_at,
-          data_atendimento: ticket.data_atendimento,
-          motivo: ticket.motivo,
-          prioridade: ticket.prioridade,
-          profissional_id: String(ticket.profissional_id ?? ""),
-          profissional_nome: ticket.profissional_nome,
-          retroativo: Boolean(ticket.retroativo),
-          uso_plataforma: ticket.uso_plataforma ?? null,
-          unidade: normalizeUnidadeInput(ticket.unidade ?? null),
-          client: {
-            nome: clientData?.nome ?? "",
-            cpf: clientData?.cpf ?? "",
-            cidade: clientData?.cidade ?? "",
-            estado_uf: clientData?.estado_uf ?? "",
-            area_atuacao: clientData?.area_atuacao ?? null,
-            uso_plataforma: clientData?.uso_plataforma ?? null,
-            unidade: normalizeUnidadeInput(clientData?.unidade ?? null),
-          },
-        };
-      });
+      const { data, error: rpcError } = await supabase.rpc(
+        "reports_summary",
+        rpcParams
+      );
+
+      if (rpcError) throw rpcError;
+
+      const d = data as Record<string, unknown>;
+
+      // Safely map RPC array — accepts both {label, count} and {label, cnt}
+      // Guarantees a number, never NaN
+      type RawLC = Record<string, unknown>;
+      const safeNum = (v: unknown): number => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
+      const mapLC = (arr: unknown): ReportSummaryV2["top_motivos"] =>
+        ((arr ?? []) as RawLC[]).map((r) => ({
+          label: String(r.label ?? ""),
+          count: safeNum(r.count ?? r.cnt ?? 0),
+        }));
 
       return {
-        tickets,
-        count: count ?? 0,
-        queryError: null,
+        total_ocorrencias: safeNum(d.total_ocorrencias),
+        total_tickets_unicos: safeNum(d.total_tickets_unicos),
+        retroativos: safeNum(d.retroativos),
+        top_motivos: mapLC(d.top_motivos),
+        top_unidades: mapLC(d.top_unidades),
+        por_status: mapLC(d.por_status),
+        por_prioridade: mapLC(d.por_prioridade),
+        por_uso_plataforma: mapLC(d.por_uso_plataforma),
+        ranking_profissionais: mapLC(d.ranking_profissionais),
+        periodLabel: "",
+        rangeLabel: "",
       };
     },
-    [buildReportQuery]
+    [supabase]
   );
 
-  const handleGenerate = async () => {
+  /* ── Generate handler ───────────────────────────────── */
+
+  const handleGenerate = async (opts: {
+    period: Period;
+    baseDate: string;
+    monthValue: string;
+    yearValue: string;
+    profissionalId: string;
+    areaAtuacao: string;
+  }) => {
     setError("");
     setLoading(true);
     try {
-      const range = getRange();
+      const range = getRange(opts.period, opts.baseDate, opts.monthValue, opts.yearValue);
       if (!range) {
         setError("Informe um período válido para gerar o relatório.");
         return;
@@ -463,38 +210,51 @@ export default function ReportsClient() {
       const startDateIso = toIsoDate(range.start);
       const endDateIso = toIsoDate(range.end);
 
-      const startTime = new Date(range.start);
-      startTime.setHours(0, 0, 0, 0);
-      const endTime = new Date(range.end);
-      endTime.setHours(23, 59, 59, 999);
+      const periodLabel =
+        PERIOD_OPTIONS.find((o) => o.value === opts.period)?.label ?? "Diário";
 
       const rangeLabel =
-        period === "daily"
+        opts.period === "daily"
           ? formatDateBrFromDate(range.start)
-          : `${formatDateBrFromDate(range.start)} - ${formatDateBrFromDate(
-              range.end
-            )}`;
+          : `${formatDateBrFromDate(range.start)} - ${formatDateBrFromDate(range.end)}`;
 
-      const { tickets, count, queryError } = await fetchReportTickets({
+      const segmentParts: string[] = [];
+      if (opts.profissionalId !== ALL_SEGMENT_OPTION) {
+        const profName =
+          professionals.find((p) => p.id === opts.profissionalId)?.name ??
+          opts.profissionalId;
+        segmentParts.push(`Profissional: ${profName}`);
+      }
+      if (opts.areaAtuacao !== ALL_SEGMENT_OPTION) {
+        segmentParts.push(`Área: ${opts.areaAtuacao}`);
+      }
+      const segmentLabel =
+        segmentParts.length > 0
+          ? segmentParts.join(" • ")
+          : "Todos os profissionais • Todas as áreas";
+
+      const queryParams: ReportQueryParams = {
         startDateIso,
         endDateIso,
-        startTimeIso: startTime.toISOString(),
-        endTimeIso: endTime.toISOString(),
-        profissionalId: selectedProfissionalId,
-        areaAtuacao: selectedAreaAtuacao,
-      });
+        profissionalId: opts.profissionalId,
+        areaAtuacao: opts.areaAtuacao,
+      };
 
-      if (queryError) {
-        setError("Não foi possível gerar o relatório. Tente novamente.");
-        return;
-      }
+      const [pageResult, summaryResult] = await Promise.all([
+        fetchPage(queryParams, 1),
+        fetchSummary(queryParams),
+      ]);
 
-      const summary = buildSummary(tickets, rangeLabel);
+      summaryResult.periodLabel = periodLabel;
+      summaryResult.rangeLabel = rangeLabel;
+
       setReport({
-        tickets,
-        summary,
-        hasMore: count > LIMIT,
+        rows: pageResult.rows,
+        totalCount: pageResult.totalCount,
+        summary: summaryResult,
         segmentLabel,
+        queryParams,
+        page: 1,
       });
 
       notify({
@@ -509,163 +269,132 @@ export default function ReportsClient() {
     }
   };
 
-  const handleExport = (type: "csv" | "xlsx") => {
-    if (!report) return;
-    const rows = report.tickets.map(mapReportRow);
-    const filename = buildFilename(periodLabel, type);
+  /* ── Page change ────────────────────────────────────── */
 
-    if (type === "csv") {
-      exportReportCSV(rows, report.summary, filename);
-    } else {
-      exportReportXLSX(rows, report.summary, filename);
+  const handlePageChange = async (newPage: number) => {
+    if (!report) return;
+    setLoading(true);
+    try {
+      const result = await fetchPage(report.queryParams, newPage);
+      setReport((prev) =>
+        prev ? { ...prev, rows: result.rows, totalCount: result.totalCount, page: newPage } : null
+      );
+    } catch {
+      setError("Erro ao carregar página.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* ── Export ──────────────────────────────────────────── */
+
+  const handleExport = async (type: "csv" | "xlsx" | "pdf") => {
+    if (!report) return;
+
+    if (type === "pdf") {
+      setExporting(true);
+      try {
+        const params = new URLSearchParams({
+          start_date: report.queryParams.startDateIso,
+          end_date: report.queryParams.endDateIso,
+        });
+        if (report.queryParams.profissionalId !== ALL_SEGMENT_OPTION) {
+          params.set("profissional_id", report.queryParams.profissionalId);
+        }
+        if (report.queryParams.areaAtuacao !== ALL_SEGMENT_OPTION) {
+          params.set("area_atuacao", report.queryParams.areaAtuacao);
+        }
+        const res = await fetch(`/api/reports/pdf?${params.toString()}`);
+        if (!res.ok) throw new Error("PDF generation failed");
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = buildFilename(report.summary.periodLabel, "pdf");
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        notify({
+          title: "Exportação concluída",
+          description: "PDF corporativo gerado.",
+          tone: "success",
+        });
+      } catch {
+        notify({
+          title: "Erro na exportação",
+          description: "Não foi possível gerar o PDF.",
+          tone: "danger",
+        });
+      } finally {
+        setExporting(false);
+      }
+      return;
     }
 
-    notify({
-      title: "Exportação concluída",
-      description: `Arquivo ${type.toUpperCase()} gerado.`,
-      tone: "success",
-    });
+    // For CSV/XLSX: fetch ALL data (not just current page)
+    setExporting(true);
+    try {
+      let allRows: ReportOcorrencia[] = [];
+      let currentPage = 1;
+      const fetchSize = 500;
+      let hasMore = true;
+
+      while (hasMore) {
+        const rpcParams: Record<string, unknown> = {
+          p_start_date: report.queryParams.startDateIso,
+          p_end_date: report.queryParams.endDateIso,
+          p_page: currentPage,
+          p_page_size: fetchSize,
+        };
+        if (report.queryParams.profissionalId !== ALL_SEGMENT_OPTION) {
+          rpcParams.p_profissional_id = report.queryParams.profissionalId;
+        }
+        if (report.queryParams.areaAtuacao !== ALL_SEGMENT_OPTION) {
+          rpcParams.p_area_atuacao = report.queryParams.areaAtuacao;
+        }
+
+        const { data } = await supabase.rpc("reports_dataset", rpcParams);
+        const batch = (data ?? []) as ReportOcorrencia[];
+        allRows = allRows.concat(batch);
+        hasMore = batch.length === fetchSize;
+        currentPage++;
+      }
+
+      const filename = buildFilename(report.summary.periodLabel, type);
+
+      if (type === "csv") {
+        exportReportCSVv2(allRows, report.summary, filename);
+      } else {
+        await exportReportXLSXv2(allRows, report.summary, filename);
+      }
+
+      notify({
+        title: "Exportação concluída",
+        description: `${type.toUpperCase()} gerado com ${allRows.length} linhas.`,
+        tone: "success",
+      });
+    } catch {
+      notify({
+        title: "Erro na exportação",
+        description: `Não foi possível gerar o ${type.toUpperCase()}.`,
+        tone: "danger",
+      });
+    } finally {
+      setExporting(false);
+    }
   };
+
+  /* ── Render ──────────────────────────────────────────── */
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Relatórios"
-        subtitle="Gere relatórios por período e acompanhe as principais métricas."
+      <ReportsFilterForm
+        professionals={professionals}
+        isLoadingProfessionals={isLoadingProfessionals}
+        loading={loading}
+        onGenerate={handleGenerate}
       />
-
-      <FormCard
-        title="Gerador de relatórios"
-        description="Selecione o período e aplique filtros para segmentar os dados."
-      >
-        <div className="space-y-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between md:gap-6">
-            <div className="flex flex-1 flex-col gap-4 md:flex-row md:flex-wrap md:items-end md:gap-6">
-              <div className="min-w-[200px] flex-1">
-                <AppSelect
-                  label="Período"
-                  value={period}
-                  onValueChange={(value) => setPeriod(value as Period)}
-                  options={PERIOD_OPTIONS.map((option) => ({
-                    value: option.value,
-                    label: option.label,
-                  }))}
-                />
-              </div>
-
-              {(period === "daily" || period === "weekly") && (
-                <div className="min-w-[200px] flex-1">
-                  <AppInput
-                    label="Data base"
-                    value={baseDate}
-                    onValueChange={(value) => setBaseDate(maskDateInput(value))}
-                    placeholder="DD/MM/AAAA"
-                    inputMode="numeric"
-                  />
-                </div>
-              )}
-
-              {period === "monthly" && (
-                <div className="min-w-[200px] flex-1">
-                  <AppInput
-                    label="Mês/Ano"
-                    value={monthValue}
-                    onValueChange={(value) =>
-                      setMonthValue(maskMonthInput(value))
-                    }
-                    placeholder="MM/AAAA"
-                    inputMode="numeric"
-                  />
-                </div>
-              )}
-
-              {period === "yearly" && (
-                <div className="min-w-[160px] flex-1">
-                  <AppInput
-                    label="Ano"
-                    value={yearValue}
-                    onValueChange={(value) =>
-                      setYearValue(value.replace(/\D/g, "").slice(0, 4))
-                    }
-                    placeholder="AAAA"
-                    inputMode="numeric"
-                  />
-                </div>
-              )}
-            </div>
-
-            <div className="flex md:justify-end">
-              <AppButton
-                type="button"
-                onPress={handleGenerate}
-                isLoading={loading}
-                isDisabled={loading}
-                className="w-full md:w-auto"
-              >
-                {loading ? "Gerando..." : "Gerar relatório"}
-              </AppButton>
-            </div>
-          </div>
-
-          <Section
-            title="Segmentação"
-            description="Filtre por profissional e área de atuação. Esses filtros são aplicados junto com o período."
-            showDivider={false}
-          >
-            <div className="grid gap-4 md:grid-cols-2">
-              <AppSelect
-                label="Profissional"
-                placeholder="Todos"
-                value={selectedProfissionalId}
-                onValueChange={setSelectedProfissionalId}
-                options={professionalSelectOptions}
-                helperText={
-                  isLoadingProfessionals
-                    ? "Carregando profissionais..."
-                    : "Com o menu aberto, digite para navegação rápida (typeahead)."
-                }
-                isDisabled={isLoadingProfessionals}
-              />
-              <AppSelect
-                label="Área de atuação"
-                placeholder="Todas"
-                value={selectedAreaAtuacao}
-                onValueChange={setSelectedAreaAtuacao}
-                options={areaSelectOptions}
-              />
-            </div>
-
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              {hasActiveSegmentationFilters ? (
-                <>
-                  {selectedProfissionalId !== ALL_SEGMENT_OPTION ? (
-                    <AppBadge tone="primary" variant="soft" size="sm">
-                      Profissional: {selectedProfessionalName || selectedProfissionalId}
-                    </AppBadge>
-                  ) : null}
-                  {selectedAreaAtuacao !== ALL_SEGMENT_OPTION ? (
-                    <AppBadge tone="warning" variant="soft" size="sm">
-                      Área: {selectedAreaAtuacao}
-                    </AppBadge>
-                  ) : null}
-                  <AppButton
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    onPress={clearSegmentationFilters}
-                  >
-                    Limpar filtros
-                  </AppButton>
-                </>
-              ) : (
-                <AppBadge tone="default" variant="soft" size="sm">
-                  Sem segmentação ativa
-                </AppBadge>
-              )}
-            </div>
-          </Section>
-        </div>
-      </FormCard>
 
       {error ? (
         <AppAlert
@@ -689,7 +418,8 @@ export default function ReportsClient() {
               variant="ghost"
               size="sm"
               onPress={() => handleExport("csv")}
-              isDisabled={!report || report.tickets.length === 0}
+              isDisabled={!report || report.totalCount === 0 || exporting}
+              isLoading={exporting}
             >
               Exportar CSV
             </AppButton>
@@ -698,9 +428,20 @@ export default function ReportsClient() {
               variant="ghost"
               size="sm"
               onPress={() => handleExport("xlsx")}
-              isDisabled={!report || report.tickets.length === 0}
+              isDisabled={!report || report.totalCount === 0 || exporting}
+              isLoading={exporting}
             >
               Exportar XLSX
+            </AppButton>
+            <AppButton
+              type="button"
+              variant="ghost"
+              size="sm"
+              onPress={() => handleExport("pdf")}
+              isDisabled={!report || report.totalCount === 0 || exporting}
+              isLoading={exporting}
+            >
+              Baixar PDF
             </AppButton>
           </div>
         }
@@ -711,179 +452,26 @@ export default function ReportsClient() {
             <AppSkeleton className="h-32 w-full" />
           </div>
         ) : report ? (
-          report.tickets.length === 0 ? (
+          report.totalCount === 0 ? (
             <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-muted-soft)] px-4 py-6 text-sm text-[var(--color-muted-strong)]">
-              Nenhum chamado encontrado no período e segmentação selecionados.
+              Nenhuma ocorrência encontrada no período e segmentação selecionados.
             </div>
           ) : (
             <>
-              {report.hasMore ? (
-                <AppAlert
-                  tone="warning"
-                  title="Limite de registros atingido"
-                  description={`Limite de ${LIMIT} registros atingido. Refine os filtros para ver todos os chamados.`}
-                />
-              ) : null}
-
-              <div className="grid gap-4 md:gap-6 md:grid-cols-3">
-                <AppCard>
-                  <AppCardBody className="p-4 md:p-6">
-                    <div className="text-xs font-medium text-[var(--color-muted)]">
-                      Total de chamados
-                    </div>
-                    <div className="mt-2 text-2xl font-semibold text-[var(--color-text)]">
-                      {report.summary.total}
-                    </div>
-                  </AppCardBody>
-                </AppCard>
-                <AppCard>
-                  <AppCardBody className="p-4 md:p-6">
-                    <div className="text-xs font-medium text-[var(--color-muted)]">
-                      Retroativos
-                    </div>
-                    <div className="mt-2 flex items-baseline gap-2">
-                      <span className="text-2xl font-semibold text-[var(--color-text)]">
-                        {report.summary.retroativoPercent}
-                      </span>
-                      <span className="text-sm text-[var(--color-muted)]">
-                        ({report.summary.retroativos})
-                      </span>
-                    </div>
-                  </AppCardBody>
-                </AppCard>
-                <AppCard>
-                  <AppCardBody className="p-4 md:p-6">
-                    <div className="text-xs font-medium text-[var(--color-muted)]">
-                      Segmentação aplicada
-                    </div>
-                    <div className="mt-2 text-sm font-semibold text-[var(--color-text)]">
-                      {report.segmentLabel}
-                    </div>
-                  </AppCardBody>
-                </AppCard>
-              </div>
-
-              <div className="grid gap-4 md:gap-6 lg:grid-cols-3">
-                <AppCard>
-                  <AppCardBody className="p-4 md:p-6">
-                    <div className="text-sm font-semibold text-[var(--color-text)]">
-                      Distribuição por prioridade
-                    </div>
-                    <div className="mt-3 space-y-2 text-sm text-[var(--color-muted-strong)]">
-                      {Object.entries(report.summary.prioridades).map(
-                        ([label, count]) => (
-                          <div key={label} className="flex items-center justify-between">
-                            <span>{formatPrioridadeLabel(label)}</span>
-                            <AppBadge
-                              tone={priorityTone(label)}
-                              variant="soft"
-                              size="sm"
-                            >
-                              {count}
-                            </AppBadge>
-                          </div>
-                        )
-                      )}
-                    </div>
-                  </AppCardBody>
-                </AppCard>
-
-                <AppCard>
-                  <AppCardBody className="p-4 md:p-6">
-                    <div className="text-sm font-semibold text-[var(--color-text)]">
-                      Top 5 motivos
-                    </div>
-                    <div className="mt-3 space-y-2 text-sm text-[var(--color-muted-strong)]">
-                      {report.summary.topMotivos.length === 0
-                        ? "Sem dados"
-                        : report.summary.topMotivos.map(([label, count]) => (
-                            <div
-                              key={label}
-                              className="flex items-center justify-between"
-                            >
-                              <span>{label}</span>
-                              <span className="font-medium text-[var(--color-text)]">
-                                {count}
-                              </span>
-                            </div>
-                          ))}
-                    </div>
-                  </AppCardBody>
-                </AppCard>
-
-                <AppCard>
-                  <AppCardBody className="p-4 md:p-6">
-                    <div className="text-sm font-semibold text-[var(--color-text)]">
-                      Top 5 cidades
-                    </div>
-                    <div className="mt-3 space-y-2 text-sm text-[var(--color-muted-strong)]">
-                      {report.summary.topCidades.length === 0
-                        ? "Sem dados"
-                        : report.summary.topCidades.map(([label, count]) => (
-                            <div
-                              key={label}
-                              className="flex items-center justify-between"
-                            >
-                              <span>{label}</span>
-                              <span className="font-medium text-[var(--color-text)]">
-                                {count}
-                              </span>
-                            </div>
-                          ))}
-                    </div>
-                  </AppCardBody>
-                </AppCard>
-              </div>
+              <ReportsSummaryPanel
+                summary={report.summary}
+                segmentLabel={report.segmentLabel}
+              />
 
               <AppDivider />
 
-              <Section
-                title={`Listagem resumida (${report.tickets.length})`}
-                showDivider={false}
-              >
-                <AppTable
-                  aria-label="Listagem resumida"
-                  stickyHeader
-                  classNames={{ base: "overflow-x-auto", table: "min-w-[1160px]" }}
-                >
-                  <AppTableHeader>
-                    <AppTableColumn>ID</AppTableColumn>
-                    <AppTableColumn>Data atendimento</AppTableColumn>
-                    <AppTableColumn>Profissional</AppTableColumn>
-                    <AppTableColumn>Motivo</AppTableColumn>
-                    <AppTableColumn>Prioridade</AppTableColumn>
-                    <AppTableColumn>Cliente</AppTableColumn>
-                    <AppTableColumn>Área de atuação</AppTableColumn>
-                    <AppTableColumn>Cidade</AppTableColumn>
-                    <AppTableColumn>UF</AppTableColumn>
-                    <AppTableColumn>Unidade afetada</AppTableColumn>
-                    <AppTableColumn>Retroativo</AppTableColumn>
-                    <AppTableColumn>Criado em</AppTableColumn>
-                  </AppTableHeader>
-                  <AppTableBody>
-                    {report.tickets.map((ticket) => (
-                      <AppTableRow key={ticket.id}>
-                        <AppTableCell className="font-medium">#{ticket.id}</AppTableCell>
-                        <AppTableCell>{formatDateBR(ticket.data_atendimento)}</AppTableCell>
-                        <AppTableCell>{ticket.profissional_nome}</AppTableCell>
-                        <AppTableCell>{ticket.motivo}</AppTableCell>
-                        <AppTableCell>
-                          <StatusBadge status={ticket.prioridade} size="sm" />
-                        </AppTableCell>
-                        <AppTableCell>{ticket.client.nome}</AppTableCell>
-                        <AppTableCell>{ticket.client.area_atuacao || "-"}</AppTableCell>
-                        <AppTableCell>{ticket.client.cidade}</AppTableCell>
-                        <AppTableCell>{ticket.client.estado_uf}</AppTableCell>
-                        <AppTableCell>{formatUnidade(ticket.unidade)}</AppTableCell>
-                        <AppTableCell>
-                          {ticket.retroativo ? "Sim" : "Não"}
-                        </AppTableCell>
-                        <AppTableCell>{formatDateBR(ticket.created_at)}</AppTableCell>
-                      </AppTableRow>
-                    ))}
-                  </AppTableBody>
-                </AppTable>
-              </Section>
+              <ReportsDataTable
+                rows={report.rows}
+                totalCount={report.totalCount}
+                page={report.page}
+                pageSize={PAGE_SIZE}
+                onPageChange={handlePageChange}
+              />
             </>
           )
         ) : (
@@ -894,4 +482,34 @@ export default function ReportsClient() {
       </FormCard>
     </div>
   );
+}
+
+/* ── Pure helper ──────────────────────────────────────── */
+
+function getRange(
+  period: Period,
+  baseDate: string,
+  monthValue: string,
+  yearValue: string,
+) {
+  if (period === "daily" || period === "weekly") {
+    const date = parseBrDate(baseDate);
+    if (!date) return null;
+    const end = new Date(date);
+    const start = new Date(date);
+    if (period === "weekly") start.setDate(start.getDate() - 6);
+    return { start, end };
+  }
+  if (period === "monthly") {
+    const parsed = parseMonthYear(monthValue);
+    if (!parsed) return null;
+    const start = new Date(parsed.year, parsed.month - 1, 1);
+    const end = new Date(parsed.year, parsed.month, 0);
+    return { start, end };
+  }
+  const year = parseYear(yearValue);
+  if (!year) return null;
+  const start = new Date(year, 0, 1);
+  const end = new Date(year, 11, 31);
+  return { start, end };
 }

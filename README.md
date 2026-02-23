@@ -39,6 +39,21 @@ Regras de cadastro:
   - se unidade do ticket vier vazia, o sistema preenche com `clients.unidade`
 - Cliente multi-unidade (`multi_unidade = true`):
   - unidade do ticket é obrigatória
+- Emails de clientes:
+  - Emails ficam em `client_emails` (`email_norm` gerado minúsculo/trim, único).
+  - Lookup prioriza CPF, depois email, e por último nome (sugestões).
+  - Clientes legados sem email podem receber email opcional durante o cadastro/atendimento.
+- Tickets gerais com múltiplos motivos:
+  - Tabela `tickets` agora é o container (prioridade, retroativo, profissional).
+  - Motivos ficam em `ticket_motivos` com status individual e relacionamento com cliente.
+  - Status geral do ticket é derivado dos itens (RESOLVIDO se todos itens resolvidos/cancelados).
+  - Script: `supabase/ticket_motivos.sql` para criar tabela e RLS.
+
+### Cadastro de Unidades (name_status)
+- Tabela `units` separa o dado real (`unit_name`) do estado (`name_status`).
+- Quando a unidade está sem nome: `unit_name = null` e `name_status` obrigatório (`NAO_INFORMADO`, `NAO_ENCONTRADO` ou `SEM_NOME`).
+- Quando o nome é informado: `name_status = INFORMADO` e `unit_name` precisa de no mínimo 3 caracteres (bloqueia valores lixo como S/N, NA, N/A, "-").
+- Fallback na listagem: se `unit_name` for nulo, exibimos `— (Não informado|Não encontrado|Sem nome)` conforme `name_status`.
 
 ## Como rodar local
 ### Pré-requisitos

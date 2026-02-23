@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {
   BarChart3,
+  Building2,
   CircleHelp,
   Home,
   LayoutDashboard,
@@ -19,7 +20,8 @@ type SidebarIcon =
   | "reports"
   | "config"
   | "home"
-  | "help";
+  | "help"
+  | "building";
 
 const ICONS: Record<SidebarIcon, ComponentType<{ className?: string }>> = {
   dashboard: LayoutDashboard,
@@ -28,6 +30,7 @@ const ICONS: Record<SidebarIcon, ComponentType<{ className?: string }>> = {
   config: Settings,
   home: Home,
   help: CircleHelp,
+  building: Building2,
 };
 
 export type SidebarItem = {

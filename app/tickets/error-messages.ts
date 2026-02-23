@@ -7,6 +7,8 @@
   cliente: "Não foi possível salvar o cliente.",
   ticket: "Não foi possível salvar o chamado.",
   editar: "Não foi possível editar o chamado.",
+  email: "Email inválido ou não pôde ser salvo.",
+  email_conflict: "Este email já está vinculado a outro cliente.",
   unidade_multi:
     "Este cliente abre chamados para múltiplas unidades. Selecione a unidade afetada.",
   unidade_padrao:

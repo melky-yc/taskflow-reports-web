@@ -11,6 +11,7 @@ import {
 } from "@/app/tickets/constants";
 import type { TicketErrorCode } from "@/app/tickets/error-messages";
 import { normalizeUnidadeInput } from "@/utils/unidade";
+import { createTicketSchema, updateTicketSchema, formDataToRecord } from "@/lib/validation/schemas";
 
 type ClientTicketContext = {
   multiUnidade: boolean;
@@ -21,6 +22,62 @@ type ResolvedUnidade = {
   ticketUnidade: string;
   clientDefaultUnidade: string | null;
 };
+
+async function ensureClientEmail(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  clientId: number,
+  rawEmail?: string | null
+) {
+  const email = normalizeEmail(rawEmail ?? "");
+  if (!email) {
+    return;
+  }
+  if (!isValidEmail(email)) {
+    redirectWithTicketError("email");
+  }
+
+  const { data: existingEmail, error: existingError } = await supabase
+    .from("client_emails")
+    .select("client_id")
+    .eq("email_norm", email)
+    .maybeSingle();
+
+  if (existingError) {
+    redirectWithTicketError("email");
+  }
+
+  if (existingEmail?.client_id && existingEmail.client_id !== clientId) {
+    redirectWithTicketError("email_conflict");
+  }
+
+  const { data: alreadyLinked } = await supabase
+    .from("client_emails")
+    .select("id")
+    .eq("client_id", clientId)
+    .eq("email_norm", email)
+    .maybeSingle();
+
+  if (alreadyLinked?.id) {
+    return;
+  }
+
+  const { count } = await supabase
+    .from("client_emails")
+    .select("id", { count: "exact", head: true })
+    .eq("client_id", clientId);
+
+  const isPrimary = !count || count === 0;
+
+  const { error: insertError } = await supabase.from("client_emails").insert({
+    client_id: clientId,
+    email,
+    is_primary: isPrimary,
+  });
+
+  if (insertError) {
+    redirectWithTicketError("email");
+  }
+}
 
 function onlyDigits(value: string) {
   return value.replace(/\D/g, "").slice(0, 11);
@@ -50,6 +107,14 @@ function isRetroativo(dataAtendimento?: string | null) {
   return dataAtendimento < getTodayIso();
 }
 
+function normalizeEmail(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
 function getProfissionalNome(user: {
   email?: string | null;
   user_metadata?: Record<string, unknown>;
@@ -76,16 +141,16 @@ type RequiredTicketData = {
 function isRequiredTicketDataValid(input: RequiredTicketData) {
   return Boolean(
     input.motivo &&
-      MOTIVOS_OPTIONS.includes(input.motivo as MotivoOption) &&
-      input.prioridade &&
-      isPrioridadeOption(input.prioridade) &&
-      input.nome &&
-      input.cpf &&
-      input.cidade &&
-      input.estadoUf &&
-      AREA_ATUACAO_OPTIONS.includes(
-        input.areaAtuacao as (typeof AREA_ATUACAO_OPTIONS)[number]
-      )
+    MOTIVOS_OPTIONS.includes(input.motivo as MotivoOption) &&
+    input.prioridade &&
+    isPrioridadeOption(input.prioridade) &&
+    input.nome &&
+    input.cpf &&
+    input.cidade &&
+    input.estadoUf &&
+    AREA_ATUACAO_OPTIONS.includes(
+      input.areaAtuacao as (typeof AREA_ATUACAO_OPTIONS)[number]
+    )
   );
 }
 
@@ -148,6 +213,26 @@ export async function createTicketAction(formData: FormData) {
     redirect("/login");
   }
 
+  // ── Zod validation gate ──────────────────────────────
+  const raw = formDataToRecord(formData);
+  const zodResult = createTicketSchema.safeParse(raw);
+  if (!zodResult.success) {
+    const firstError = zodResult.error.issues[0];
+    // Map Zod paths to existing error codes where possible
+    const pathToCode: Record<string, TicketErrorCode> = {
+      cliente_cpf: "cpf",
+      cliente_estado: "estado",
+      cliente_nome: "campos",
+      motivo: "campos",
+      prioridade: "campos",
+      cliente_cidade: "campos",
+      area_atuacao: "campos",
+      motivo_outro_descricao: "motivo",
+    };
+    const code = pathToCode[firstError?.path?.[0] as string] ?? "campos";
+    redirectWithTicketError(code);
+  }
+
   const motivo = normalizeMotivo(String(formData.get("motivo") || ""));
   const motivoOutro = normalizeText(
     String(formData.get("motivo_outro_descricao") || "")
@@ -164,6 +249,7 @@ export async function createTicketAction(formData: FormData) {
 
   const nome = normalizeText(String(formData.get("cliente_nome") || ""));
   const cpf = onlyDigits(String(formData.get("cliente_cpf") || ""));
+  const emailInput = normalizeEmail(String(formData.get("cliente_email") || ""));
   const cidade = normalizeText(String(formData.get("cliente_cidade") || ""));
   const estadoUf = normalizeText(
     String(formData.get("cliente_estado") || "")
@@ -171,8 +257,8 @@ export async function createTicketAction(formData: FormData) {
   const usoPlataforma = normalizeText(
     String(
       formData.get("uso_plataforma") ||
-        formData.get("cliente_uso_plataforma") ||
-        ""
+      formData.get("cliente_uso_plataforma") ||
+      ""
     )
   );
   const areaAtuacao = normalizeText(
@@ -181,8 +267,8 @@ export async function createTicketAction(formData: FormData) {
   const ticketUnidadeInput = normalizeUnidadeInput(
     String(
       formData.get("ticket_unidade") ||
-        formData.get("cliente_unidade") ||
-        ""
+      formData.get("cliente_unidade") ||
+      ""
     )
   );
   const clientIdFromForm = Number(formData.get("client_id") || 0);
@@ -203,6 +289,10 @@ export async function createTicketAction(formData: FormData) {
 
   if (cpf.length !== 11) {
     redirectWithTicketError("cpf");
+  }
+
+  if (emailInput && !isValidEmail(emailInput)) {
+    redirectWithTicketError("email");
   }
 
   if (estadoUf.length !== 2) {
@@ -281,6 +371,8 @@ export async function createTicketAction(formData: FormData) {
     if (updateError) {
       redirectWithTicketError("cliente");
     }
+
+    await ensureClientEmail(supabase, clientId, emailInput);
   } else {
     const { data: insertedClient, error: insertError } = await supabase
       .from("clients")
@@ -301,7 +393,9 @@ export async function createTicketAction(formData: FormData) {
       redirectWithTicketError("cliente");
     }
 
-    clientId = insertedClient.id;
+    const newClientId = insertedClient.id as number;
+    clientId = newClientId;
+    await ensureClientEmail(supabase, newClientId, emailInput);
   }
 
   const { error: ticketError } = await supabase.from("tickets").insert({
@@ -358,6 +452,7 @@ export async function updateTicketAction(formData: FormData) {
 
   const nome = normalizeText(String(formData.get("cliente_nome") || ""));
   const cpf = onlyDigits(String(formData.get("cliente_cpf") || ""));
+  const emailInput = normalizeEmail(String(formData.get("cliente_email") || ""));
   const cidade = normalizeText(String(formData.get("cliente_cidade") || ""));
   const estadoUf = normalizeText(
     String(formData.get("cliente_estado") || "")
@@ -365,8 +460,8 @@ export async function updateTicketAction(formData: FormData) {
   const usoPlataforma = normalizeText(
     String(
       formData.get("uso_plataforma") ||
-        formData.get("cliente_uso_plataforma") ||
-        ""
+      formData.get("cliente_uso_plataforma") ||
+      ""
     )
   );
   const areaAtuacao = normalizeText(
@@ -375,8 +470,8 @@ export async function updateTicketAction(formData: FormData) {
   const ticketUnidadeInput = normalizeUnidadeInput(
     String(
       formData.get("ticket_unidade") ||
-        formData.get("cliente_unidade") ||
-        ""
+      formData.get("cliente_unidade") ||
+      ""
     )
   );
 
@@ -400,6 +495,10 @@ export async function updateTicketAction(formData: FormData) {
 
   if (cpf.length !== 11) {
     redirectWithTicketError("cpf");
+  }
+
+  if (emailInput && !isValidEmail(emailInput)) {
+    redirectWithTicketError("email");
   }
 
   if (estadoUf.length !== 2) {
@@ -441,7 +540,7 @@ export async function updateTicketAction(formData: FormData) {
       area_atuacao: areaAtuacao,
       unidade: currentClient.multi_unidade
         ? normalizeUnidadeInput(currentClient.unidade) ??
-          resolvedUnidade.ticketUnidade
+        resolvedUnidade.ticketUnidade
         : resolvedUnidade.clientDefaultUnidade,
     })
     .eq("id", clientId);
@@ -449,6 +548,8 @@ export async function updateTicketAction(formData: FormData) {
   if (clientError) {
     redirectWithTicketError("cliente");
   }
+
+  await ensureClientEmail(supabase, clientId, emailInput);
 
   const { error: ticketError } = await supabase
     .from("tickets")

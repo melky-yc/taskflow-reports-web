@@ -49,6 +49,14 @@ export const USO_PLATAFORMA_OPTIONS = [
   "Não informado",
 ] as const;
 
+export const MOTIVO_STATUS_OPTIONS = [
+  "ABERTO",
+  "EM_ANDAMENTO",
+  "AGUARDANDO",
+  "RESOLVIDO",
+  "CANCELADO",
+] as const;
+
 export const UF_PADRAO = "PI";
 
 export const AREA_ATUACAO_OPTIONS = [
@@ -73,6 +81,23 @@ export type MotivoOption = (typeof MOTIVOS_OPTIONS)[number];
 export type PrioridadeOption = (typeof PRIORIDADES_OPTIONS)[number];
 export type UsoPlataformaOption = (typeof USO_PLATAFORMA_OPTIONS)[number];
 export type AreaAtuacaoOption = (typeof AREA_ATUACAO_OPTIONS)[number];
+export type MotivoStatusOption = (typeof MOTIVO_STATUS_OPTIONS)[number];
+
+export const MOTIVO_STATUS_LABEL: Record<MotivoStatusOption, string> = {
+  ABERTO: "Aberto",
+  EM_ANDAMENTO: "Em andamento",
+  AGUARDANDO: "Aguardando",
+  RESOLVIDO: "Resolvido",
+  CANCELADO: "Cancelado",
+};
+
+export const MOTIVO_STATUS_BADGE: Record<MotivoStatusOption, string> = {
+  ABERTO: "default",
+  EM_ANDAMENTO: "warning",
+  AGUARDANDO: "primary",
+  RESOLVIDO: "success",
+  CANCELADO: "danger",
+};
 
 export function getPriorityBadgeVariant(prioridade: string) {
   return PRIORITY_BADGE_VARIANTS[prioridade as PrioridadeOption] ?? "muted";

@@ -14,6 +14,7 @@
     "@heroui/react": "^2.8.8",
     "@heroui/use-aria-overlay": "^2.0.5",
     "@radix-ui/react-dialog": "^1.1.15",
+    "@react-pdf/renderer": "^4.3.2",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.95.3",
     "framer-motion": "^12.34.0",
@@ -22,7 +23,8 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "recharts": "^3.7.0",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

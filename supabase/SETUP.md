@@ -14,6 +14,16 @@
 2. Abra o arquivo `supabase/dashboard_rpc.sql` e execute no SQL Editor.
 3. Abra o arquivo `supabase/unidade_triagem.sql` e execute no SQL Editor.
 4. Abra o arquivo `supabase/reports_filters_indexes.sql` e execute no SQL Editor.
+5. Abra o arquivo `supabase/units_alter.sql` e execute no SQL Editor.
+6. Abra o arquivo `supabase/units_cleanup.sql` e execute no SQL Editor.
+7. Abra o arquivo `supabase/client_emails.sql` e execute no SQL Editor.
+8. Abra o arquivo `supabase/ticket_motivos.sql` e execute no SQL Editor.
+9. Abra o arquivo `supabase/tickets_container_alter.sql` e execute no SQL Editor.
+10. Abra o arquivo `supabase/ticket_motivos_alter.sql` e execute no SQL Editor.
+11. Reaplique (ou rode) `supabase/ticket_motivos.sql` se a constraint `ticket_motivos_motivo_outro_chk` ainda existir.
+12. Rode `supabase/ticket_motivos_prioridade_alter.sql` para mover prioridade para os motivos.
+13. Rode `supabase/tickets_status_backfill.sql` para popular status/updated_at nos tickets antigos.
+14. Rode `supabase/tickets_status_unique_idx.sql` para garantir 1 ticket ativo por cliente.
 
 ## 4) (Opcional) Rodar o seed
 1. Abra o arquivo `supabase/seed.sql` e copie todo o conteúdo.
