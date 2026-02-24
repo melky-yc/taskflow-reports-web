@@ -14,6 +14,7 @@ import {
   type PrioridadeOption,
   type UsoPlataformaOption,
 } from "@/app/tickets/constants";
+import cidadesPi from "@/data/cidades-pi.json";
 import { formatCPF, maskCPF, unmaskCPF } from "@/utils/cpf";
 import {
   AppBadge,
@@ -53,15 +54,18 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
   const [clientNome, setClientNome] = useState("");
   const [clientNomeInput, setClientNomeInput] = useState("");
   const [clientCidade, setClientCidade] = useState("");
-  const [clientEstado, setClientEstado] = useState("");
+  const [clientEstado, setClientEstado] = useState("PI");
+  const [clientEmail, setClientEmail] = useState("");
+  const [clientEmailFromLookup, setClientEmailFromLookup] = useState<string | null>(null);
   const [unidade, setUnidade] = useState("");
   const [usoPlataforma, setUsoPlataforma] = useState<UsoPlataformaOption | "">("");
   const [prioridade, setPrioridade] = useState<PrioridadeOption>("Baixa");
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [suggestions, setSuggestions] = useState<Array<{ id: number; nome: string; cpf: string }>>([]);
   const [isPending, startTransition] = useTransition();
+  const CIDADES_PI = (cidadesPi as { cidades: string[] }).cidades;
+  const isCpfValid = (value: string) => unmaskCPF(value).length === 11;
 
   useEffect(() => {
     if (!showAdd) {
@@ -70,14 +74,15 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
       setClientNome("");
       setClientNomeInput("");
       setClientCidade("");
-      setClientEstado("");
+      setClientEstado("PI");
+      setClientEmail("");
+      setClientEmailFromLookup(null);
       setUnidade("");
       setUsoPlataforma("");
       setMotivoOutro("");
       setStatusMessage(null);
       setErrorMessage(null);
       setSuccessMessage(null);
-      setSuggestions([]);
     }
   }, [showAdd]);
 
@@ -103,7 +108,13 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
         setClientNome(result.client.nome ?? "");
         setClientNomeInput(result.client.nome ?? "");
         setClientCidade(result.client.cidade ?? "");
-        setClientEstado((result.client.estado_uf ?? "").toString().toUpperCase());
+        setClientEstado((result.client.estado_uf ?? "PI").toString().toUpperCase());
+        const emailFound =
+          (result.client.email as string | null | undefined) ??
+          (result.primary_email as string | null | undefined) ??
+          null;
+        setClientEmail(emailFound ?? "");
+        setClientEmailFromLookup(emailFound ?? null);
         setStatusMessage(
           result.status === "FOUND_MISSING_EMAIL"
             ? "Cliente encontrado (sem email cadastrado)."
@@ -112,6 +123,8 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
       } else {
         setClientId(null);
         setClientNome("");
+        setClientEmail("");
+        setClientEmailFromLookup(null);
         setStatusMessage("Cliente não encontrado.");
       }
     } catch (error) {
@@ -120,30 +133,42 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
     }
   };
 
-  const handleNameSuggestions = async (nome: string) => {
-    const query = nome.trim();
-    if (query.length < 3) {
-      setSuggestions([]);
-      return;
-    }
+  const handleLookupEmail = async (email: string) => {
+    const trimmed = email.trim();
+    setClientEmail(trimmed);
+    if (!trimmed) return;
+    if (clientId) return; // already resolved by CPF
     try {
       const res = await fetch("/api/client/lookup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nome: query }),
+        body: JSON.stringify({ email: trimmed }),
       });
       if (!res.ok) throw new Error("lookup_failed");
       const result = await res.json();
-      setSuggestions(result.suggestions ?? []);
+      if (result?.client?.id) {
+        const parsedId = Number(result.client.id);
+        setClientId(Number.isFinite(parsedId) ? parsedId : null);
+        setClientNome(result.client.nome ?? "");
+        setClientNomeInput(result.client.nome ?? "");
+        setClientCidade(result.client.cidade ?? "");
+        setClientEstado((result.client.estado_uf ?? "PI").toString().toUpperCase());
+        const emailFound =
+          (result.client.email as string | null | undefined) ??
+          (result.primary_email as string | null | undefined) ??
+          trimmed;
+        setClientEmail(emailFound ?? "");
+        setClientEmailFromLookup(emailFound ?? null);
+        setStatusMessage("Cliente encontrado pelo email.");
+      }
     } catch (error) {
       console.error(error);
-      setSuggestions([]);
     }
   };
 
   const isFormValid = useMemo(() => {
     const hasClient = Boolean(clientId);
-    const hasCpf = clientCpfDigits.length === 11;
+    const hasCpf = isCpfValid(clientCpfDigits);
     const hasPrioridade = PRIORIDADES_OPTIONS.includes(prioridade as PrioridadeOption);
     const outroOk = motivo !== "Outro" || Boolean(motivoOutro.trim());
     const isExistingClient = hasClient;
@@ -169,11 +194,29 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
     setSuccessMessage(null);
     startTransition(async () => {
       try {
-        // Ensure we have a client id. Create client if needed.
+        // Ensure we have a client id. Create or update client if needed.
         let ensuredClientId = Number(formData.get("client_id"));
         const cpfDigits = unmaskCPF(String(formData.get("client_cpf") ?? ""));
+        const emailInput = String(formData.get("client_email") ?? clientEmail).trim() || null;
 
-        if (!ensuredClientId) {
+        // Fallback lookup by email if CPF lookup failed.
+        if (!ensuredClientId && emailInput) {
+          const emailLookup = await fetch("/api/client/lookup", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: emailInput }),
+          });
+          if (emailLookup.ok) {
+            const result = await emailLookup.json();
+            if (result?.client?.id) {
+              ensuredClientId = Number(result.client.id);
+              formData.set("client_id", String(ensuredClientId));
+              setClientId(ensuredClientId);
+            }
+          }
+        }
+
+        const ensureClientUpsert = async () => {
           const nome = String(formData.get("client_nome") ?? clientNomeInput).trim();
           const cidade = String(formData.get("client_cidade") ?? clientCidade).trim();
           const estado = String(formData.get("client_estado") ?? clientEstado).trim().toUpperCase();
@@ -186,7 +229,7 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
               nome,
               cidade,
               estado_uf: estado,
-              email: null,
+              email: emailInput,
               uso_plataforma: usoPlataforma || null,
               area_atuacao: null,
               unidade: unidade || null,
@@ -195,9 +238,17 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
 
           if (!upsertRes.ok) throw new Error("CLIENT_CREATE_FAILED");
           const upsertData = await upsertRes.json();
-          ensuredClientId = Number(upsertData?.client_id);
-          if (!ensuredClientId) throw new Error("CLIENT_CREATE_FAILED");
-          formData.set("client_id", String(ensuredClientId));
+          const newClientId = Number(upsertData?.client_id);
+          if (!newClientId) throw new Error("CLIENT_CREATE_FAILED");
+          formData.set("client_id", String(newClientId));
+          setClientId(newClientId);
+        };
+
+        if (!ensuredClientId) {
+          await ensureClientUpsert();
+        } else if (emailInput && (!clientEmailFromLookup || emailInput !== clientEmailFromLookup)) {
+          // Existing client, add email if missing/different.
+          await ensureClientUpsert();
         }
 
         await addMotivoAction(formData);
@@ -277,7 +328,7 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
               <form id="add-motivo-form" action={handleSubmitMotivo} className="space-y-4">
                 <input type="hidden" name="ticket_id" value={ticket.id} />
                 <input type="hidden" name="client_id" value={clientId ?? ""} />
-                <Section title="Cliente" description="Busque por CPF ou nome.">
+                <Section title="Cliente" description="Identifique pelo CPF ou email.">
                   <div className="grid gap-3 md:grid-cols-2">
                     <AppInput
                       label="CPF"
@@ -288,9 +339,12 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
                     />
                     <input type="hidden" name="client_cpf" value={clientCpfDigits} />
                     <AppInput
-                      label="Buscar por nome (sugestões)"
-                      onChange={(event) => handleNameSuggestions(event.target.value)}
-                      placeholder="Nome do cliente"
+                      label="Email (opcional)"
+                      name="client_email"
+                      type="email"
+                      value={clientEmail}
+                      onChange={(event) => handleLookupEmail(event.target.value)}
+                      placeholder="cliente@exemplo.com"
                     />
                     <AppInput
                       label="Nome (preencha se for cliente novo)"
@@ -299,18 +353,20 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
                       onChange={(event) => setClientNomeInput(event.target.value)}
                       placeholder="Nome completo"
                     />
-                    <AppInput
+                    <AppSelect
                       label="Cidade"
                       name="client_cidade"
+                      placeholder="Selecione a cidade"
                       value={clientCidade}
-                      onChange={(event) => setClientCidade(event.target.value)}
-                      placeholder="Cidade do cliente"
+                      onValueChange={(value) => setClientCidade(value)}
+                      options={CIDADES_PI.map((c) => ({ value: c, label: c }))}
+                      isRequired={!clientId}
                     />
                     <AppInput
                       label="Estado (UF)"
                       name="client_estado"
                       value={clientEstado}
-                      onChange={(event) => setClientEstado(event.target.value.toUpperCase())}
+                      isReadOnly
                       placeholder="UF"
                       maxLength={2}
                     />
@@ -320,27 +376,6 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
                   ) : null}
                   {errorMessage ? (
                     <p className="text-xs text-[var(--color-danger)] mt-1">{errorMessage}</p>
-                  ) : null}
-                  {suggestions.length > 0 ? (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {suggestions.map((item) => (
-                        <AppButton
-                          key={item.id}
-                          size="sm"
-                          variant="ghost"
-                          onPress={() => {
-                            setClientId(Number(item.id));
-                            setClientNome(item.nome);
-                            setClientNomeInput(item.nome);
-                            setClientCpfDigits(unmaskCPF(item.cpf));
-                            setStatusMessage("Cliente selecionado por nome.");
-                            setSuggestions([]);
-                          }}
-                        >
-                          {item.nome} — {maskCPF(item.cpf)}
-                        </AppButton>
-                      ))}
-                    </div>
                   ) : null}
                   {clientNome ? (
                     <p className="text-xs text-[var(--color-muted-strong)] mt-1">

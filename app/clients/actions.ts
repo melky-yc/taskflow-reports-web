@@ -120,27 +120,6 @@ export async function lookupClientAction(params: {
     }
   }
 
-  // Priority 3: Nome (suggestions only)
-  if (nome.length >= 3) {
-    const { data: matches, error: nameError } = await supabase
-      .from("clients")
-      .select("id, nome, cpf")
-      .ilike("nome", `%${nome}%`)
-      .order("nome", { ascending: true })
-      .limit(5);
-
-    if (nameError) return failure("DB_ERROR", nameError.message);
-
-    if (matches && matches.length > 0) {
-      return success<LookupResult>({
-        status: "AMBIGUOUS_NAME",
-        client: null,
-        primary_email: null,
-        suggestions: matches as Array<{ id: number; nome: string; cpf: string }>,
-      });
-    }
-  }
-
   return success<LookupResult>({ status: "NOT_FOUND", client: null, primary_email: null });
 }
 
@@ -225,6 +204,7 @@ export async function upsertClientAction(payload: {
     uso_plataforma: uso_plataforma || null,
     area_atuacao: area_atuacao || null,
     unidade: unidade ?? "",
+    email: normalizeEmail(email) || null,
   };
 
   const { data: existing, error: findError } = await supabase
@@ -250,6 +230,7 @@ export async function upsertClientAction(payload: {
         uso_plataforma: baseClient.uso_plataforma,
         area_atuacao: baseClient.area_atuacao,
         unidade: baseClient.unidade,
+        email: baseClient.email,
       })
       .eq("id", clientId);
 
