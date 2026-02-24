@@ -13,6 +13,7 @@ import {
   type MotivoOption,
   type PrioridadeOption,
   type UsoPlataformaOption,
+  AREA_ATUACAO_OPTIONS,
 } from "@/app/tickets/constants";
 import cidadesPi from "@/data/cidades-pi.json";
 import { formatCPF, maskCPF, unmaskCPF } from "@/utils/cpf";
@@ -57,6 +58,7 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
   const [clientEstado, setClientEstado] = useState("PI");
   const [clientEmail, setClientEmail] = useState("");
   const [clientEmailFromLookup, setClientEmailFromLookup] = useState<string | null>(null);
+  const [clientAreaAtuacao, setClientAreaAtuacao] = useState("");
   const [unidade, setUnidade] = useState("");
   const [usoPlataforma, setUsoPlataforma] = useState<UsoPlataformaOption | "">("");
   const [prioridade, setPrioridade] = useState<PrioridadeOption>("Baixa");
@@ -77,6 +79,7 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
       setClientEstado("PI");
       setClientEmail("");
       setClientEmailFromLookup(null);
+      setClientAreaAtuacao("");
       setUnidade("");
       setUsoPlataforma("");
       setMotivoOutro("");
@@ -109,6 +112,7 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
         setClientNomeInput(result.client.nome ?? "");
         setClientCidade(result.client.cidade ?? "");
         setClientEstado((result.client.estado_uf ?? "PI").toString().toUpperCase());
+        setClientAreaAtuacao((result.client.area_atuacao as string | null | undefined) ?? "");
         const emailFound =
           (result.client.email as string | null | undefined) ??
           (result.primary_email as string | null | undefined) ??
@@ -175,9 +179,20 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
     const isNewClientValid =
       clientNomeInput.trim().length > 2 &&
       clientCidade.trim().length > 2 &&
-      clientEstado.trim().length === 2;
+      clientEstado.trim().length === 2 &&
+      clientAreaAtuacao.trim().length > 0;
     return hasCpf && hasPrioridade && outroOk && (isExistingClient || isNewClientValid);
-  }, [clientCpfDigits, clientId, clientCidade, clientEstado, clientNomeInput, motivo, motivoOutro, prioridade]);
+  }, [
+    clientAreaAtuacao,
+    clientCpfDigits,
+    clientId,
+    clientCidade,
+    clientEstado,
+    clientNomeInput,
+    motivo,
+    motivoOutro,
+    prioridade,
+  ]);
 
   const ERROR_MESSAGES: Record<string, string> = {
     MOTIVO_INVALIDO: "Selecione um motivo válido.",
@@ -220,6 +235,7 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
           const nome = String(formData.get("client_nome") ?? clientNomeInput).trim();
           const cidade = String(formData.get("client_cidade") ?? clientCidade).trim();
           const estado = String(formData.get("client_estado") ?? clientEstado).trim().toUpperCase();
+          const area_atuacao = String(formData.get("client_area_atuacao") ?? clientAreaAtuacao).trim();
 
           const upsertRes = await fetch("/api/client/upsert", {
             method: "POST",
@@ -231,7 +247,7 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
               estado_uf: estado,
               email: emailInput,
               uso_plataforma: usoPlataforma || null,
-              area_atuacao: null,
+              area_atuacao,
               unidade: unidade || null,
             }),
           });
@@ -360,6 +376,15 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
                       value={clientCidade}
                       onValueChange={(value) => setClientCidade(value)}
                       options={CIDADES_PI.map((c) => ({ value: c, label: c }))}
+                      isRequired={!clientId}
+                    />
+                    <AppSelect
+                      label="Área de atuação"
+                      name="client_area_atuacao"
+                      placeholder="Selecione"
+                      value={clientAreaAtuacao}
+                      onValueChange={(value) => setClientAreaAtuacao(value)}
+                      options={AREA_ATUACAO_OPTIONS.map((a) => ({ value: a, label: a }))}
                       isRequired={!clientId}
                     />
                     <AppInput
