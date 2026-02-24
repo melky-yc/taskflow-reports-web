@@ -51,6 +51,9 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
   const [clientCpfDigits, setClientCpfDigits] = useState("");
   const [clientId, setClientId] = useState<number | null>(null);
   const [clientNome, setClientNome] = useState("");
+  const [clientNomeInput, setClientNomeInput] = useState("");
+  const [clientCidade, setClientCidade] = useState("");
+  const [clientEstado, setClientEstado] = useState("");
   const [unidade, setUnidade] = useState("");
   const [usoPlataforma, setUsoPlataforma] = useState<UsoPlataformaOption | "">("");
   const [prioridade, setPrioridade] = useState<PrioridadeOption>("Baixa");
@@ -65,6 +68,9 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
       setClientCpfDigits("");
       setClientId(null);
       setClientNome("");
+      setClientNomeInput("");
+      setClientCidade("");
+      setClientEstado("");
       setUnidade("");
       setUsoPlataforma("");
       setMotivoOutro("");
@@ -95,6 +101,9 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
         const parsedId = Number(result.client.id);
         setClientId(Number.isFinite(parsedId) ? parsedId : null);
         setClientNome(result.client.nome ?? "");
+        setClientNomeInput(result.client.nome ?? "");
+        setClientCidade(result.client.cidade ?? "");
+        setClientEstado((result.client.estado_uf ?? "").toString().toUpperCase());
         setStatusMessage(
           result.status === "FOUND_MISSING_EMAIL"
             ? "Cliente encontrado (sem email cadastrado)."
@@ -102,6 +111,7 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
         );
       } else {
         setClientId(null);
+        setClientNome("");
         setStatusMessage("Cliente não encontrado.");
       }
     } catch (error) {
@@ -136,8 +146,13 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
     const hasCpf = clientCpfDigits.length === 11;
     const hasPrioridade = PRIORIDADES_OPTIONS.includes(prioridade as PrioridadeOption);
     const outroOk = motivo !== "Outro" || Boolean(motivoOutro.trim());
-    return hasClient && hasCpf && hasPrioridade && outroOk;
-  }, [clientCpfDigits, clientId, motivo, motivoOutro, prioridade]);
+    const isExistingClient = hasClient;
+    const isNewClientValid =
+      clientNomeInput.trim().length > 2 &&
+      clientCidade.trim().length > 2 &&
+      clientEstado.trim().length === 2;
+    return hasCpf && hasPrioridade && outroOk && (isExistingClient || isNewClientValid);
+  }, [clientCpfDigits, clientId, clientCidade, clientEstado, clientNomeInput, motivo, motivoOutro, prioridade]);
 
   const ERROR_MESSAGES: Record<string, string> = {
     MOTIVO_INVALIDO: "Selecione um motivo válido.",
@@ -146,6 +161,7 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
     CLIENT_REQUIRED: "Selecione um cliente antes de salvar.",
     UNIDADE_INVALIDA: "A unidade informada é inválida.",
     MOTIVO_CREATE_FAILED: "Erro ao salvar o motivo. Tente novamente.",
+    CLIENT_CREATE_FAILED: "Erro ao salvar o cliente. Verifique os dados e tente novamente.",
   };
 
   const handleSubmitMotivo = (formData: FormData) => {
@@ -153,6 +169,37 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
     setSuccessMessage(null);
     startTransition(async () => {
       try {
+        // Ensure we have a client id. Create client if needed.
+        let ensuredClientId = Number(formData.get("client_id"));
+        const cpfDigits = unmaskCPF(String(formData.get("client_cpf") ?? ""));
+
+        if (!ensuredClientId) {
+          const nome = String(formData.get("client_nome") ?? clientNomeInput).trim();
+          const cidade = String(formData.get("client_cidade") ?? clientCidade).trim();
+          const estado = String(formData.get("client_estado") ?? clientEstado).trim().toUpperCase();
+
+          const upsertRes = await fetch("/api/client/upsert", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              cpf: cpfDigits,
+              nome,
+              cidade,
+              estado_uf: estado,
+              email: null,
+              uso_plataforma: usoPlataforma || null,
+              area_atuacao: null,
+              unidade: unidade || null,
+            }),
+          });
+
+          if (!upsertRes.ok) throw new Error("CLIENT_CREATE_FAILED");
+          const upsertData = await upsertRes.json();
+          ensuredClientId = Number(upsertData?.client_id);
+          if (!ensuredClientId) throw new Error("CLIENT_CREATE_FAILED");
+          formData.set("client_id", String(ensuredClientId));
+        }
+
         await addMotivoAction(formData);
         setSuccessMessage("Motivo adicionado com sucesso!");
         setShowAdd(false);
@@ -245,6 +292,28 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
                       onChange={(event) => handleNameSuggestions(event.target.value)}
                       placeholder="Nome do cliente"
                     />
+                    <AppInput
+                      label="Nome (preencha se for cliente novo)"
+                      name="client_nome"
+                      value={clientNomeInput}
+                      onChange={(event) => setClientNomeInput(event.target.value)}
+                      placeholder="Nome completo"
+                    />
+                    <AppInput
+                      label="Cidade"
+                      name="client_cidade"
+                      value={clientCidade}
+                      onChange={(event) => setClientCidade(event.target.value)}
+                      placeholder="Cidade do cliente"
+                    />
+                    <AppInput
+                      label="Estado (UF)"
+                      name="client_estado"
+                      value={clientEstado}
+                      onChange={(event) => setClientEstado(event.target.value.toUpperCase())}
+                      placeholder="UF"
+                      maxLength={2}
+                    />
                   </div>
                   {statusMessage ? (
                     <p className="text-xs text-[var(--color-success)] mt-1">{statusMessage}</p>
@@ -262,6 +331,7 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
                           onPress={() => {
                             setClientId(Number(item.id));
                             setClientNome(item.nome);
+                            setClientNomeInput(item.nome);
                             setClientCpfDigits(unmaskCPF(item.cpf));
                             setStatusMessage("Cliente selecionado por nome.");
                             setSuggestions([]);
