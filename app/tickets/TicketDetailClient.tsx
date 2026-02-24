@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { addMotivoAction, migrateLegacyTicketToMotivoAction, updateMotivoStatusAction } from "@/app/tickets/actions-motivos";
@@ -14,6 +14,7 @@ import {
   type PrioridadeOption,
   type UsoPlataformaOption,
 } from "@/app/tickets/constants";
+import { formatCPF, maskCPF, unmaskCPF } from "@/utils/cpf";
 import {
   AppBadge,
   AppButton,
@@ -37,13 +38,6 @@ import {
 import type { AppBadgeTone } from "@/app/ui/badge";
 import type { TicketDetail, TicketMotivoItem } from "@/app/tickets/[id]/page";
 
-function maskCpf(digits: string) {
-  if (!digits) return "-";
-  const clean = digits.replace(/\D/g, "");
-  if (clean.length !== 11) return digits;
-  return `${clean.slice(0, 3)}.***.***-${clean.slice(9, 11)}`;
-}
-
 type Props = {
   ticket: TicketDetail;
   motivos: TicketMotivoItem[];
@@ -54,7 +48,7 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
   const [showAdd, setShowAdd] = useState(false);
   const [motivo, setMotivo] = useState<MotivoOption>("Problema de acesso");
   const [motivoOutro, setMotivoOutro] = useState("");
-  const [clientCpf, setClientCpf] = useState("");
+  const [clientCpfDigits, setClientCpfDigits] = useState("");
   const [clientId, setClientId] = useState<number | null>(null);
   const [clientNome, setClientNome] = useState("");
   const [unidade, setUnidade] = useState("");
@@ -68,7 +62,7 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
 
   useEffect(() => {
     if (!showAdd) {
-      setClientCpf("");
+      setClientCpfDigits("");
       setClientId(null);
       setClientNome("");
       setUnidade("");
@@ -82,8 +76,8 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
   }, [showAdd]);
 
   const handleLookupCpf = async (cpf: string) => {
-    const digits = cpf.replace(/\D/g, "").slice(0, 11);
-    setClientCpf(digits);
+    const digits = unmaskCPF(cpf);
+    setClientCpfDigits(digits);
     if (digits.length !== 11) {
       setStatusMessage(null);
       setClientId(null);
@@ -136,12 +130,13 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
     }
   };
 
-  const canSubmitMotivo = useMemo(() => {
-    if (!clientId) return false;
-    if (motivo === "Outro" && !motivoOutro.trim()) return false;
-    if (!prioridade) return false;
-    return true;
-  }, [clientId, motivo, motivoOutro, prioridade]);
+  const isFormValid = useMemo(() => {
+    const hasClient = Number.isInteger(clientId) && (clientId ?? 0) > 0;
+    const hasCpf = clientCpfDigits.length === 11;
+    const hasPrioridade = PRIORIDADES_OPTIONS.includes(prioridade as PrioridadeOption);
+    const outroOk = motivo !== "Outro" || Boolean(motivoOutro.trim());
+    return hasClient && hasCpf && hasPrioridade && outroOk;
+  }, [clientCpfDigits, clientId, motivo, motivoOutro, prioridade]);
 
   const ERROR_MESSAGES: Record<string, string> = {
     MOTIVO_INVALIDO: "Selecione um motivo válido.",
@@ -224,7 +219,7 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
                   <AppButton
                     type="submit"
                     form="add-motivo-form"
-                    isDisabled={!canSubmitMotivo || isPending}
+                    isDisabled={!isFormValid || isPending}
                   >
                     {isPending ? "Salvando..." : "Salvar motivo"}
                   </AppButton>
@@ -238,11 +233,12 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
                   <div className="grid gap-3 md:grid-cols-2">
                     <AppInput
                       label="CPF"
-                      value={clientCpf}
+                      value={formatCPF(clientCpfDigits)}
                       onChange={(event) => handleLookupCpf(event.target.value)}
-                      placeholder="00000000000"
+                      placeholder="000.000.000-00"
                       inputMode="numeric"
                     />
+                    <input type="hidden" name="client_cpf" value={clientCpfDigits} />
                     <AppInput
                       label="Buscar por nome (sugestões)"
                       onChange={(event) => handleNameSuggestions(event.target.value)}
@@ -265,19 +261,19 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
                           onPress={() => {
                             setClientId(item.id);
                             setClientNome(item.nome);
-                            setClientCpf(item.cpf);
+                            setClientCpfDigits(unmaskCPF(item.cpf));
                             setStatusMessage("Cliente selecionado por nome.");
                             setSuggestions([]);
                           }}
                         >
-                          {item.nome} — {maskCpf(item.cpf)}
+                          {item.nome} — {maskCPF(item.cpf)}
                         </AppButton>
                       ))}
                     </div>
                   ) : null}
                   {clientNome ? (
                     <p className="text-xs text-[var(--color-muted-strong)] mt-1">
-                      Selecionado: {clientNome} ({maskCpf(clientCpf)})
+                      Selecionado: {clientNome} ({maskCPF(clientCpfDigits)})
                     </p>
                   ) : null}
                 </Section>
@@ -362,7 +358,7 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
                         {item.cliente_nome || "—"}
                       </span>
                       <span className="text-xs text-[var(--color-muted)]">
-                        {maskCpf(item.cliente_cpf)}
+                        {maskCPF(item.cliente_cpf)}
                       </span>
                     </div>
                   </AppTableCell>
@@ -423,3 +419,5 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
     </div>
   );
 }
+
+

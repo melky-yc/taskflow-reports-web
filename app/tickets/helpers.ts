@@ -3,27 +3,15 @@
  *
  * Keep pure — no React, no side effects.
  */
+import { formatCPF, maskCPF } from "@/utils/cpf";
 import { getTodayLocalISODate } from "@/utils/date";
 
 /* ── CPF ──────────────────────────────────────────────────── */
 
-export function formatCpf(digits: string) {
-    const clean = digits.replace(/\D/g, "").slice(0, 11);
-    const p1 = clean.slice(0, 3);
-    const p2 = clean.slice(3, 6);
-    const p3 = clean.slice(6, 9);
-    const p4 = clean.slice(9, 11);
-    if (!clean) return "";
-    if (clean.length <= 3) return p1;
-    if (clean.length <= 6) return `${p1}.${p2}`;
-    if (clean.length <= 9) return `${p1}.${p2}.${p3}`;
-    return `${p1}.${p2}.${p3}-${p4}`;
-}
-
-export function maskCpf(digits: string) {
-    if (digits.length !== 11) return digits;
-    return `${digits.slice(0, 3)}.***.***-${digits.slice(9, 11)}`;
-}
+// Backwards-compatible aliases that keep old imports working.
+export const formatCpf = (digits: string) => formatCPF(digits);
+export const maskCpf = (digits: string) => maskCPF(digits);
+export { formatCPF, maskCPF };
 
 /* ── Date / Time ──────────────────────────────────────────── */
 
