@@ -17,6 +17,7 @@ import {
 } from "@/app/tickets/constants";
 import cidadesPi from "@/data/cidades-pi.json";
 import { formatCPF, maskCPF, unmaskCPF } from "@/utils/cpf";
+import { useAlerts } from "@/components/alerts/AlertsProvider";
 import {
   AppBadge,
   AppButton,
@@ -47,6 +48,7 @@ type Props = {
 };
 
 export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props) {
+  const { notify } = useAlerts();
   const [showAdd, setShowAdd] = useState(false);
   const [motivo, setMotivo] = useState<MotivoOption>("Problema de acesso");
   const [motivoOutro, setMotivoOutro] = useState("");
@@ -59,6 +61,8 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
   const [clientEmail, setClientEmail] = useState("");
   const [clientEmailFromLookup, setClientEmailFromLookup] = useState<string | null>(null);
   const [clientAreaAtuacao, setClientAreaAtuacao] = useState("");
+  const [cityQuery, setCityQuery] = useState("");
+  const [cityHighlightIndex, setCityHighlightIndex] = useState(0);
   const [unidade, setUnidade] = useState("");
   const [usoPlataforma, setUsoPlataforma] = useState<UsoPlataformaOption | "">("");
   const [prioridade, setPrioridade] = useState<PrioridadeOption>("Baixa");
@@ -68,6 +72,19 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
   const [isPending, startTransition] = useTransition();
   const CIDADES_PI = (cidadesPi as { cidades: string[] }).cidades;
   const isCpfValid = (value: string) => unmaskCPF(value).length === 11;
+  const filteredCities = useMemo(() => {
+    const q = cityQuery.trim();
+    if (!q) return [];
+    const normalize = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+    const nq = normalize(q);
+    return CIDADES_PI.filter((c) => normalize(c).startsWith(nq)).slice(0, 12);
+  }, [CIDADES_PI, cityQuery]);
+
+  useEffect(() => {
+    if (cityHighlightIndex >= filteredCities.length) {
+      setCityHighlightIndex(filteredCities.length > 0 ? filteredCities.length - 1 : 0);
+    }
+  }, [filteredCities, cityHighlightIndex]);
 
   useEffect(() => {
     if (!showAdd) {
@@ -80,6 +97,8 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
       setClientEmail("");
       setClientEmailFromLookup(null);
       setClientAreaAtuacao("");
+      setCityQuery("");
+      setCityHighlightIndex(0);
       setUnidade("");
       setUsoPlataforma("");
       setMotivoOutro("");
@@ -110,7 +129,9 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
         setClientId(Number.isFinite(parsedId) ? parsedId : null);
         setClientNome(result.client.nome ?? "");
         setClientNomeInput(result.client.nome ?? "");
-        setClientCidade(result.client.cidade ?? "");
+        const cidadeFound = result.client.cidade ?? "";
+        setClientCidade(cidadeFound);
+        setCityQuery(cidadeFound);
         setClientEstado((result.client.estado_uf ?? "PI").toString().toUpperCase());
         setClientAreaAtuacao((result.client.area_atuacao as string | null | undefined) ?? "");
         const emailFound =
@@ -155,7 +176,9 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
         setClientId(Number.isFinite(parsedId) ? parsedId : null);
         setClientNome(result.client.nome ?? "");
         setClientNomeInput(result.client.nome ?? "");
-        setClientCidade(result.client.cidade ?? "");
+        const cidadeFound = result.client.cidade ?? "";
+        setClientCidade(cidadeFound);
+        setCityQuery(cidadeFound);
         setClientEstado((result.client.estado_uf ?? "PI").toString().toUpperCase());
         const emailFound =
           (result.client.email as string | null | undefined) ??
@@ -168,6 +191,18 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
     } catch (error) {
       console.error(error);
     }
+  };
+
+  const handleCityInput = (value: string) => {
+    setCityQuery(value);
+    setClientCidade("");
+    setCityHighlightIndex(0);
+  };
+
+  const commitCity = (value: string) => {
+    setClientCidade(value);
+    setCityQuery(value);
+    setCityHighlightIndex(0);
   };
 
   const isFormValid = useMemo(() => {
@@ -268,6 +303,12 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
         }
 
         await addMotivoAction(formData);
+        notify({
+          title: "Motivo adicionado",
+          description: "O motivo foi criado com sucesso.",
+          tone: "success",
+          durationMs: 3000,
+        });
         setSuccessMessage("Motivo adicionado com sucesso!");
         setShowAdd(false);
       } catch (err: unknown) {
@@ -369,15 +410,62 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
                       onChange={(event) => setClientNomeInput(event.target.value)}
                       placeholder="Nome completo"
                     />
-                    <AppSelect
-                      label="Cidade"
-                      name="client_cidade"
-                      placeholder="Selecione a cidade"
-                      value={clientCidade}
-                      onValueChange={(value) => setClientCidade(value)}
-                      options={CIDADES_PI.map((c) => ({ value: c, label: c }))}
-                      isRequired={!clientId}
-                    />
+                    <div className="relative">
+                      <AppInput
+                        label="Cidade"
+                        name="client_cidade_search"
+                        placeholder="Digite para filtrar (PI)"
+                        value={cityQuery}
+                        onChange={(e) => handleCityInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "ArrowDown") {
+                            e.preventDefault();
+                            setCityHighlightIndex((prev) =>
+                              Math.min(prev + 1, Math.max(filteredCities.length - 1, 0))
+                            );
+                          } else if (e.key === "ArrowUp") {
+                            e.preventDefault();
+                            setCityHighlightIndex((prev) => Math.max(prev - 1, 0));
+                          } else if (e.key === "Enter") {
+                            e.preventDefault();
+                            if (filteredCities[cityHighlightIndex]) {
+                              commitCity(filteredCities[cityHighlightIndex]);
+                            }
+                          } else if (e.key === "Escape") {
+                            setCityQuery("");
+                            setClientCidade("");
+                          }
+                        }}
+                        autoComplete="off"
+                        isRequired={!clientId}
+                      />
+                      <input type="hidden" name="client_cidade" value={clientCidade} />
+                      {filteredCities.length > 0 && cityQuery && !clientCidade ? (
+                        <div className="absolute z-20 mt-1 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm">
+                          <ul className="max-h-48 overflow-auto">
+                            {filteredCities.map((city, idx) => {
+                              const match = city.slice(0, cityQuery.length);
+                              const rest = city.slice(cityQuery.length);
+                              const isActive = idx === cityHighlightIndex;
+                              return (
+                                <li
+                                  key={city}
+                                  className={`cursor-pointer px-3 py-2 text-sm ${isActive ? "bg-[var(--color-primary-soft)]" : ""}`}
+                                  onMouseEnter={() => setCityHighlightIndex(idx)}
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    commitCity(city);
+                                  }}
+                                >
+                                  <span className="font-semibold">{match}</span>
+                                  <span>{rest}</span>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      ) : null}
+                    </div>
                     <AppSelect
                       label="Área de atuação"
                       name="client_area_atuacao"
