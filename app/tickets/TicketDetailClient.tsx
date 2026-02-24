@@ -92,7 +92,8 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
       if (!res.ok) throw new Error("lookup_failed");
       const result = await res.json();
       if (result?.client?.id) {
-        setClientId(result.client.id as number);
+        const parsedId = Number(result.client.id);
+        setClientId(Number.isFinite(parsedId) ? parsedId : null);
         setClientNome(result.client.nome ?? "");
         setStatusMessage(
           result.status === "FOUND_MISSING_EMAIL"
@@ -131,7 +132,7 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
   };
 
   const isFormValid = useMemo(() => {
-    const hasClient = Number.isInteger(clientId) && (clientId ?? 0) > 0;
+    const hasClient = Boolean(clientId);
     const hasCpf = clientCpfDigits.length === 11;
     const hasPrioridade = PRIORIDADES_OPTIONS.includes(prioridade as PrioridadeOption);
     const outroOk = motivo !== "Outro" || Boolean(motivoOutro.trim());
@@ -259,7 +260,7 @@ export default function TicketDetailClient({ ticket, motivos, isLegacy }: Props)
                           size="sm"
                           variant="ghost"
                           onPress={() => {
-                            setClientId(item.id);
+                            setClientId(Number(item.id));
                             setClientNome(item.nome);
                             setClientCpfDigits(unmaskCPF(item.cpf));
                             setStatusMessage("Cliente selecionado por nome.");
